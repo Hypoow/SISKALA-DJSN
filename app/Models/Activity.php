@@ -24,6 +24,8 @@ class Activity extends Model
         'disposition_to',
         'dresscode',
         'attachment_path',
+        'minutes_path',
+        'assignment_letter_path',
     ];
 
     protected $casts = [
@@ -33,22 +35,37 @@ class Activity extends Model
     ];
 
     // Council Members List
-    public const COUNCIL_MEMBERS = [
-        'Prof. Dr. Ir. R. Nunung Nuryartono, M. Si',
-        'Sudarto, S.E., M.B.A., M.KOM., Ph.D., CGEIT., CA',
-        'Kunta Wibawa Dasa Nugraha, S.E., M.A., Ph.D',
-        'Dra. Indah Anggoro Putri, M. Bus',
-        'Robben Rico, AMd., LLAJ., S.H., S.T., M.Si',
-        'dr. Agus Taufiqurrohman M.Kes., Sp.S',
-        'Muttaqien, MPH., AAK',
-        'Prof. Dr. Rudi Purwono',
-        'dr. Mahesa Paranadipa Maykel MH, MARS',
-        'Dr.rer.pol. Syamsul Hidayat Pasaribu',
-        'Mickael Bobby Hoelman, SE., M.Si., CGOP',
-        'Nikodemus Beriman Purba, S.Psi., M.H',
-        'Drs. Paulus Agung Pambudhi, M.M',
-        'Royanto Purba, ST.',
-        'Hermansyah, S.H., AK3',
+    // Council Structure
+    public const COUNCIL_STRUCTURE = [
+        'Ketua DJSN' => [
+            'Prof. Dr. Ir. R. Nunung Nuryartono, M.Si.'
+        ],
+        'Komisi PME' => [
+            'Muttaqien, S.S., M.P.H., A.A.K.',
+            'Nikodemus Beriman Purba, S.Psi., M.H.',
+            'Sudarto, S.E., M.B.A., M.Kom., Ph.D., CGEIT., CA.',
+            'Robben Rico, A.Md., LLAJ., S.H., S.T., M.Si.',
+            'Dr. dr. Mahesa Paranadipa Maykel, M.H., MARS.',
+            'Dr.rer.pol. Syamsul Hidayat Pasaribu, S.E., M.Si.',
+            'Hermansyah, S.H., AK3.'
+        ],
+        'Komisi Komjakum' => [
+            'Drs. Paulus Agung Pambudhi, M.M.',
+            'dr. H. Agus Taufiqurrohman, M.Kes., Sp.S.',
+            'Kunta Wibawa Dasa Nugraha, S.E., M.A., Ph.D.',
+            'Dra. Indah Anggoro Putri, M.Bus.',
+            'Prof. Dr. Rudi Purwono, S.E., M.SE.',
+            'Mickael Bobby Hoelman, S.E., M.Si.',
+            'Royanto Purba, S.T.'
+        ]
+    ];
+
+    // Internal PIC Options
+    public const INTERNAL_PICS = [
+        'Ketua DJSN',
+        'Komisi PME',
+        'Komisi Komjakum',
+        'Sekretariat DJSN'
     ];
 
     // Constants for Status

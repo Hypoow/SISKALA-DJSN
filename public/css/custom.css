@@ -1,192 +1,279 @@
 /* ===== GLOBAL STYLES ===== */
+:root {
+    --primary-color: #004a99;
+    --primary-dark: #003366;
+    --primary-light: #e3f2fd;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --info-color: #17a2b8;
+    --bg-color: #f7f9fc;
+    --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    --hover-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    --border-radius: 12px;
+}
+
 body {
-    background-color: #f0f2f5;
-    /* Soft gray-blue background */
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    color: #343a40;
+    background-color: var(--bg-color);
+    font-family: 'Inter', sans-serif;
+    color: #495057;
+    -webkit-font-smoothing: antialiased;
 }
 
 /* ===== SIDEBAR STYLES ===== */
 .sidebar-left {
-    background: linear-gradient(180deg, #004a99 0%, #003366 100%);
-    /* Deep Blue Gradient */
-    border-right: none;
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    background: #ffffff;
+    border-right: 1px solid #e9ecef;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.02);
 }
 
 .sidebar-left .navbar-brand-img {
-    filter: brightness(0) invert(1);
-    /* White logo */
+    filter: none;
+    /* Keep original logo colors if needed, or adjust */
 }
 
 /* Sidebar Links */
 .vertnav .nav-link {
-    color: rgba(255, 255, 255, 0.8) !important;
-    margin: 4px 12px;
-    border-radius: 8px;
-    transition: all 0.2s ease;
+    color: #6c757d !important;
+    margin: 8px 16px;
+    padding: 10px 16px;
+    border-radius: var(--border-radius);
+    transition: all 0.3s ease;
+    font-weight: 500;
 }
 
 .vertnav .nav-link:hover {
-    color: #004a99 !important;
-    background-color: #fff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    color: var(--primary-color) !important;
+    background-color: var(--primary-light);
+    transform: translateX(5px);
 }
 
 .vertnav .nav-item.active .nav-link {
-    color: #004a99 !important;
-    background-color: #fff;
+    color: var(--primary-color) !important;
+    background-color: var(--primary-light);
     font-weight: 600;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: none;
 }
 
 .vertnav .nav-link i {
     color: inherit !important;
+    margin-right: 12px;
 }
 
 /* ===== NAVBAR STYLES ===== */
 .topnav {
-    background-color: #fff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    border-bottom: 1px solid #e9ecef;
+    background-color: #ffffff;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.03);
+    border-bottom: none;
+    padding: 1rem 2rem;
 }
 
 /* ===== CARD STYLES ===== */
 .card {
     border: none;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    background-color: #fff;
-    border-top: 3px solid #0056b3;
-    /* Blue Accent Top */
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+    background-color: #ffffff;
+    transition: all 0.3s ease;
+    margin-bottom: 24px;
 }
 
 .card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-5px);
+    box-shadow: var(--hover-shadow);
 }
 
 .card-header {
-    background-color: #fff;
-    border-bottom: 1px solid #f0f2f5;
-    padding: 1.25rem;
+    background-color: transparent;
+    border-bottom: 1px solid #f0f0f0;
+    padding: 1.5rem;
 }
 
 .card-title {
-    color: #003366;
-    font-weight: 600;
+    color: var(--primary-dark);
+    font-weight: 700;
     margin-bottom: 0;
+    font-size: 1.1rem;
 }
 
 /* ===== BUTTON STYLES ===== */
+.btn {
+    border-radius: 8px;
+    padding: 0.6rem 1.2rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
 .btn-primary {
-    background: linear-gradient(135deg, #0056b3 0%, #004494 100%);
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
     border: none;
-    box-shadow: 0 2px 4px rgba(0, 86, 179, 0.2);
 }
 
 .btn-primary:hover {
-    background: linear-gradient(135deg, #004494 0%, #003366 100%);
-    box-shadow: 0 4px 8px rgba(0, 86, 179, 0.3);
+    background: linear-gradient(135deg, var(--primary-dark) 0%, #002244 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+    border: none;
 }
 
 /* ===== TABLE STYLES ===== */
 .table thead th {
-    background-color: #e3f2fd;
-    /* Light Blue Header */
-    color: #003366;
-    border-bottom: 2px solid #90caf9;
+    background-color: #f8f9fa;
+    color: #6c757d;
+    border-bottom: 2px solid #e9ecef;
     font-weight: 600;
     text-transform: uppercase;
-    font-size: 0.8rem;
-    letter-spacing: 0.5px;
+    font-size: 0.75rem;
+    letter-spacing: 0.8px;
+    padding: 1rem;
+}
+
+.table td {
+    padding: 1rem;
+    vertical-align: middle;
+    color: #495057;
 }
 
 .table-hover tbody tr:hover {
-    background-color: #f8f9fa;
+    background-color: #f1f3f5;
+}
+
+/* Row Highlights */
+.row-internal {
+    background-color: rgba(0, 123, 255, 0.05) !important;
+}
+
+.row-external {
+    background-color: rgba(253, 126, 20, 0.05) !important;
 }
 
 /* ===== BADGE STYLES ===== */
 .badge {
     padding: 0.5em 0.8em;
     border-radius: 6px;
-    font-weight: 500;
-    letter-spacing: 0.3px;
-}
-
-.badge-primary {
-    background-color: #0056b3;
-}
-
-/* Internal */
-.badge-info {
-    background-color: #17a2b8;
-}
-
-/* External */
-.badge-success {
-    background-color: #28a745;
-}
-
-/* On Schedule */
-.badge-warning {
-    background-color: #ffc107;
-    color: #212529;
-}
-
-/* Reschedule */
-.badge-danger {
-    background-color: #dc3545;
-}
-
-/* Cancelled */
-.badge-secondary {
-    background-color: #6c757d;
-}
-
-/* No Dispo */
-
-/* ===== PAGE TITLE ===== */
-.page-title {
-    color: #003366;
-    font-weight: 700;
+    font-weight: 600;
+    font-size: 0.75rem;
 }
 
 /* ===== CALENDAR STYLES ===== */
 .fc-toolbar h2 {
-    color: #003366;
-    font-size: 1.5rem;
-    font-weight: 600;
+    color: var(--primary-dark);
+    font-size: 1.75rem;
+    font-weight: 700;
 }
 
-.fc-day-header {
-    background-color: #f8f9fa;
-    padding: 10px 0;
-    color: #495057;
-    font-weight: 600;
+.fc-button {
+    border-radius: 8px !important;
+    text-transform: capitalize;
+    font-weight: 500;
+    box-shadow: none !important;
 }
 
 .fc-button-primary {
-    background-color: #0056b3 !important;
-    border-color: #0056b3 !important;
+    background-color: #fff !important;
+    border: 1px solid #dee2e6 !important;
+    color: #495057 !important;
 }
 
-/* ===== FORM STYLES ===== */
-.form-control:focus {
-    border-color: #0056b3;
-    box-shadow: 0 0 0 0.2rem rgba(0, 86, 179, 0.25);
+.fc-button-primary:hover,
+.fc-button-primary:active {
+    background-color: #f8f9fa !important;
+    color: #212529 !important;
 }
 
-/* ===== COLLAPSED SIDEBAR FIX ===== */
-.vertical.collapsed .vertnav .nav-link {
-    margin: 4px 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    text-align: center;
-    justify-content: center;
+.fc-button-active {
+    background-color: var(--primary-light) !important;
+    border-color: var(--primary-light) !important;
+    color: var(--primary-color) !important;
+    font-weight: 600;
 }
 
-.vertical.collapsed .vertnav .nav-link i {
-    margin-right: 0 !important;
+.fc-event {
+    border: none;
+    border-radius: 6px;
+    padding: 2px 4px;
+    font-size: 0.85rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== UTILITIES ===== */
+.text-muted {
+    color: #868e96 !important;
+}
+
+.page-title {
+    font-size: 1.75rem;
+    color: var(--primary-dark);
+    letter-spacing: -0.5px;
+}
+
+/* Status Dot */
+.status-dot {
+    height: 10px;
+    width: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+}
+
+/* ===== RESPONSIVE TWEAKS ===== */
+@media (max-width: 768px) {
+    .page-title {
+        font-size: 1.5rem;
+        text-align: center;
+    }
+
+    /* FullCalendar Mobile Toolbar */
+    .fc-toolbar {
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 1rem !important;
+    }
+
+    .fc-toolbar>div {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Order: Title first, then Nav buttons, then View buttons */
+    .fc-toolbar .fc-center {
+        order: 1;
+        margin-bottom: 0.75rem;
+    }
+
+    .fc-toolbar .fc-left {
+        order: 2;
+        margin-bottom: 0.5rem;
+    }
+
+    .fc-toolbar .fc-right {
+        order: 3;
+    }
+
+    .fc-toolbar h2 {
+        font-size: 1.25rem;
+        margin: 0;
+    }
+
+    /* Mobile Buttons */
+    .fc-button {
+        padding: 0.3rem 0.6rem !important;
+        font-size: 0.85rem !important;
+        margin: 0 2px !important;
+    }
+
+    /* Wrap buttons if necessary */
+    .fc-left,
+    .fc-right {
+        flex-wrap: wrap;
+    }
 }

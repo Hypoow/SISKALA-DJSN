@@ -15,7 +15,7 @@ class UserSeeder extends Seeder
     {
         // Admin (TU)
         User::updateOrCreate(
-            ['email' => 'admin@djsn.go.id'],
+            ['email' => 'admin@djsn.com'],
             [
                 'name' => 'Admin TU',
                 'password' => Hash::make('password'),
@@ -26,7 +26,7 @@ class UserSeeder extends Seeder
 
         // User (Other Division)
         User::updateOrCreate(
-            ['email' => 'user@djsn.go.id'],
+            ['email' => 'user@djsn.com'],
             [
                 'name' => 'User Divisi',
                 'password' => Hash::make('password'),

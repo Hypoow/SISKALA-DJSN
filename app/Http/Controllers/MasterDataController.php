@@ -23,7 +23,15 @@ class MasterDataController extends Controller
 
     public function index()
     {
-        $users = User::orderBy('created_at', 'desc')->get();
+        $users = User::orderByRaw("CASE 
+            WHEN role = 'admin' THEN 1 
+            WHEN role = 'user' THEN 2 
+            WHEN role = 'Dewan' THEN 3 
+            ELSE 4 END")
+            ->orderBy('order', 'asc') // Sort by the assigned order
+            ->orderBy('name', 'asc')  // Fallback to name if order is null
+            ->get();
+            
         return view('master-data.index', compact('users'));
     }
 
@@ -33,7 +41,7 @@ class MasterDataController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
-            'role' => 'required|in:admin,user',
+            'role' => 'required|in:admin,user,Dewan',
             'divisi' => 'nullable|string|max:255',
         ]);
 
@@ -53,7 +61,7 @@ class MasterDataController extends Controller
         $rules = [
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'role' => 'required|in:admin,user',
+            'role' => 'required|in:admin,user,Dewan',
             'divisi' => 'nullable|string|max:255',
         ];
         

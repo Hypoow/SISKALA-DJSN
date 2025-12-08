@@ -18,54 +18,60 @@
     <!-- table -->
     <div class="card shadow">
       <div class="card-body">
-        <table class="table table-borderless table-hover">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Divisi</th>
-              <th>Email</th>
-              <th>Tanggal Dibuat</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            @forelse($users as $user)
-            <tr>
-              <td>{{ $user->id }}</td>
-              <td>
-                <p class="mb-0 text-muted"><strong>{{ $user->name }}</strong></p>
-                <small class="mb-0 text-muted">{{ $user->divisi ?? 'Tidak ada divisi' }}</small>
-              </td>
-              <td>
-                <p class="mb-0 text-muted">{{ $user->email }}</p>
-                <small class="mb-0 text-muted">
-                  <span class="badge badge-{{ $user->role === 'admin' ? 'primary' : 'secondary' }}">
-                    {{ $user->role === 'admin' ? 'Admin' : 'User' }}
-                  </span>
-                </small>
-              </td>
-              <td class="text-muted">{{ $user->created_at->format('d/m/Y') }}</td>
-              <td>
-                <button class="btn btn-sm dropdown-toggle more-horizontal" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                  <span class="text-muted sr-only">Aksi</span>
-                </button>
-                <div class="dropdown-menu dropdown-menu-right">
-                  <a class="dropdown-item" href="#" onclick="editUser({{ $user->id }}, '{{ $user->name }}', '{{ $user->email }}', '{{ $user->role }}', '{{ $user->divisi }}')">Edit</a>
-                  <form method="POST" action="{{ route('master-data.destroy', $user) }}" class="d-inline">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="dropdown-item" onclick="return confirm('Apakah Anda yakin ingin menghapus akun ini?')">Hapus</button>
-                  </form>
-                </div>
-              </td>
-            </tr>
-            @empty
-            <tr>
-              <td colspan="5" class="text-center">Tidak ada data</td>
-            </tr>
-            @endforelse
-          </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table table-borderless table-hover">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Divisi</th>
+                  <th>Email</th>
+                  <th>Akses</th>
+                  <th>Tanggal Dibuat</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                @forelse($users as $user)
+                <tr>
+                  <td>{{ $user->id }}</td>
+                  <td>
+                    <p class="mb-0 text-muted"><strong>{{ $user->name }}</strong></p>
+                    <small class="mb-0 text-muted">{{ $user->divisi ?? 'Tidak ada divisi' }}</small>
+                  </td>
+                  <td>
+                    <p class="mb-0 text-muted">{{ $user->email }}</p>
+                  </td>
+                  <td>
+                      @if($user->role === 'admin')
+                        <span class="badge badge-primary">Admin</span>
+                      @elseif($user->role === 'Dewan')
+                        <span class="badge badge-success">Dewan</span>
+                      @else
+                        <span class="badge badge-secondary">User</span>
+                      @endif
+                  </td>
+                  <td class="text-muted">{{ $user->created_at->format('d/m/Y') }}</td>
+                  <td>
+                    <button class="btn btn-sm btn-outline-success" type="button" onclick="editUser({{ $user->id }}, '{{ $user->name }}', '{{ $user->email }}', '{{ $user->role }}', '{{ $user->divisi }}')">
+                      <span class="fe fe-edit fe-12 mr-1"></span> Edit
+                    </button>
+                    <form method="POST" action="{{ route('master-data.destroy', $user) }}" class="d-inline delete-form">
+                      @csrf
+                      @method('DELETE')
+                      <button type="button" class="btn btn-sm btn-outline-danger confirm-delete">
+                        <span class="fe fe-trash-2 fe-12 mr-1"></span> Hapus
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+                @empty
+                <tr>
+                  <td colspan="5" class="text-center">Tidak ada data</td>
+                </tr>
+                @endforelse
+              </tbody>
+            </table>
+        </div>
       </div>
     </div>
   </div> <!-- .col-12 -->
@@ -104,6 +110,7 @@
             <select class="form-control" id="userRole" name="role" required>
               <option value="user">User</option>
               <option value="admin">Admin</option>
+              <option value="Dewan">Dewan</option>
             </select>
           </div>
           <div class="form-group">
@@ -142,6 +149,33 @@ $('#userModal').on('hidden.bs.modal', function () {
   $('#formMethod').val('POST');
   $('#userForm')[0].reset();
   $('#userPassword').attr('required', true);
+});
+
+// SweetAlert2 for Delete Confirmation
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteButtons = document.querySelectorAll('.confirm-delete');
+    
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const form = this.closest('form');
+            
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: "Data akun ini akan dihapus permanen!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        });
+    });
 });
 </script>
 @endpush

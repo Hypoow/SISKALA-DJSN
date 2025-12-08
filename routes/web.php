@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MasterDataController;
+use App\Http\Controllers\ActivityController;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,7 +32,10 @@ Route::middleware('auth')->group(function () {
     Route::delete('/dashboard/events/{event}', [DashboardController::class, 'destroy'])->name('dashboard.events.destroy');
     
     // Unified Activities
-    Route::resource('activities', \App\Http\Controllers\ActivityController::class);
+    Route::get('/activities/past', [ActivityController::class, 'past'])->name('activities.past');
+    Route::post('/activities/{activity}/upload-minutes', [ActivityController::class, 'uploadMinutes'])->name('activities.upload-minutes');
+    Route::post('/activities/{activity}/upload-assignment', [ActivityController::class, 'uploadAssignmentLetter'])->name('activities.upload-assignment');
+    Route::resource('activities', ActivityController::class);
 
     // Master Data Routes (Admin Only - checked in controller)
     Route::prefix('master-data')->name('master-data.')->group(function () {

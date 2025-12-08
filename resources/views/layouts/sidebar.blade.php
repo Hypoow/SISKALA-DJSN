@@ -45,6 +45,12 @@
               <span class="ml-3 item-text">Daftar Kegiatan</span>
             </a>
         </li>
+        <li class="nav-item w-100 {{ request()->routeIs('activities.past') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('activities.past') }}">
+              <i class="fe fe-clock fe-15"></i>
+              <span class="ml-2 item-text">Kegiatan Lampau</span>
+            </a>
+        </li>
       </ul>
     </nav>
   </aside>

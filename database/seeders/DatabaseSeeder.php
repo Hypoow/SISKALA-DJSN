@@ -13,12 +13,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::firstOrCreate(
-            ['email' => 'admin@example.com'],
-            [
-                'name' => 'Administrator',
-                'password' => 'admin123',
-            ]
-        );
+        $this->call([
+            UserSeeder::class,
+            DewanSeeder::class,
+            ActivitySeeder::class,
+        ]);
     }
 }
