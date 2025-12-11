@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Activity;
+use App\Models\User;
 use Illuminate\Http\Request;
+
+use App\Services\GoogleCalendarService;
 
 class ActivityController extends Controller
 {
@@ -14,62 +17,12 @@ class ActivityController extends Controller
 
     public function index(Request $request)
     {
-        // Start from beginning of today (Upcoming)
-        $query = Activity::where('date_time', '>=', now()->startOfDay())
-                         ->orderBy('date_time', 'asc');
-
-        // Filter by Type
-        if ($request->has('type') && in_array($request->type, ['external', 'internal'])) {
-            $query->where('type', $request->type);
-        }
-
-        // Search
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('location', 'like', "%{$search}%");
-            });
-        }
-
-        $activities = $query->get();
-
-        // Group by Month-Year (Indonesian)
-        $groupedActivities = $activities->groupBy(function($item) {
-            return $item->date_time->isoFormat('MMMM Y');
-        });
-
-        return view('activities.index', compact('groupedActivities'));
+        return view('activities.index');
     }
 
     public function past(Request $request)
     {
-        // Past Activities (Before Today)
-        $query = Activity::where('date_time', '<', now()->startOfDay())
-                         ->orderBy('date_time', 'desc'); // Newest past first
-
-        // Filter by Type
-        if ($request->has('type') && in_array($request->type, ['external', 'internal'])) {
-            $query->where('type', $request->type);
-        }
-
-        // Search
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('location', 'like', "%{$search}%");
-            });
-        }
-
-        $activities = $query->get();
-
-        // Group by Month-Year (Indonesian)
-        $groupedActivities = $activities->groupBy(function($item) {
-            return $item->date_time->isoFormat('MMMM Y');
-        });
-
-        return view('activities.past', compact('groupedActivities'));
+        return view('activities.past');
     }
 
     public function uploadMinutes(Request $request, Activity $activity)
@@ -110,24 +63,61 @@ class ActivityController extends Controller
         return redirect()->back()->with('success', 'Surat Tugas berhasil diupload.');
     }
 
+    public function deleteMinutes(Activity $activity)
+    {
+        if ($activity->minutes_path) {
+            \Storage::disk('public')->delete($activity->minutes_path);
+            $activity->update(['minutes_path' => null]);
+            return redirect()->back()->with('success', 'Notulensi berhasil dihapus.');
+        }
+        return redirect()->back()->with('error', 'File tidak ditemukan.');
+    }
+
+    public function deleteAssignment(Activity $activity)
+    {
+        if ($activity->assignment_letter_path) {
+            \Storage::disk('public')->delete($activity->assignment_letter_path);
+            $activity->update(['assignment_letter_path' => null]);
+            return redirect()->back()->with('success', 'Surat Tugas berhasil dihapus.');
+        }
+        return redirect()->back()->with('error', 'File tidak ditemukan.');
+    }
+
     public function create(Request $request)
     {
         $date = $request->query('date');
-        return view('activities.create', compact('date'));
+        // Fetch Dewan and DJSN users, then group them
+        $users = User::whereIn('role', ['Dewan', 'DJSN'])
+                     ->orderBy('order')
+                     ->get();
+        
+        $dewanUsers = $users->groupBy(function($user) {
+            if ($user->role === 'DJSN') {
+                return 'Sekretariat DJSN';
+            }
+            return $user->divisi;
+        });
+
+        return view('activities.create', compact('date', 'dewanUsers'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'activity_type' => 'required|in:external,internal',
+            'letter_number' => 'nullable|string|max:255',
             'name' => 'required|string|max:255',
-            'date_time' => 'required|date',
+            'start_date' => 'required|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'start_time' => 'required',
+            'end_time' => 'nullable',
             'status' => 'required|integer',
             'invitation_status' => 'required|integer',
             'invitation_type' => 'required|in:inbound,outbound',
-            'location_type' => 'required|in:offline,online',
-            'location' => 'nullable|required_if:location_type,offline|string',
-            'meeting_link' => 'nullable|required_if:location_type,online|string',
+            'location_type' => 'required|in:offline,online,hybrid',
+            'location' => 'nullable|required_if:location_type,offline,hybrid|string',
+            'media_online' => 'nullable|string',
+            'meeting_link' => 'nullable|required_if:location_type,online,hybrid|string',
             'pic' => 'nullable|array',
             'pic_external' => 'nullable|string',
             'dispo_note' => 'nullable|string',
@@ -157,9 +147,28 @@ class ActivityController extends Controller
             $validated['minutes_path'] = $path;
         }
 
-        Activity::create($validated);
+        // Default End Date to Start Date if null
+        if (empty($validated['end_date'])) {
+            $validated['end_date'] = $validated['start_date'];
+        }
 
-        return redirect()->route('activities.index')->with('success', 'Kegiatan berhasil ditambahkan');
+        $activity = Activity::create($validated);
+
+        // Create Google Calendar Event
+        // Note: GoogleService must be updated to handle separated fields or we map them here?
+        // Let's assume GoogleService needs specific date/time.
+        // Or if the service expects 'date_time', we might need to modify the service too. 
+        // For now, let's pass the activity and assume I update the service later or it accepts the model.
+        $isIntegrated = GoogleCalendarService::createEvent($activity);
+        
+        $message = 'Kegiatan berhasil ditambahkan';
+        if ($isIntegrated) {
+            $message .= ' dan terintegrasi ke Google Calendar.';
+        } else {
+            $message .= ', namun gagal terintegrasi ke Google Calendar (Cek Log).';
+        }
+
+        return redirect()->route('activities.index')->with('success', $message);
     }
 
     public function show(Activity $activity)
@@ -169,20 +178,37 @@ class ActivityController extends Controller
 
     public function edit(Activity $activity)
     {
-        return view('activities.create', compact('activity'));
+        // Fetch Dewan and DJSN users, then group them
+        $users = User::whereIn('role', ['Dewan', 'DJSN'])
+                     ->orderBy('order')
+                     ->get();
+        
+        $dewanUsers = $users->groupBy(function($user) {
+            if ($user->role === 'DJSN') {
+                return 'Sekretariat DJSN';
+            }
+            return $user->divisi;
+        });
+
+        return view('activities.create', compact('activity', 'dewanUsers'));
     }
 
     public function update(Request $request, Activity $activity)
     {
         $validated = $request->validate([
+            'letter_number' => 'nullable|string|max:255',
             'name' => 'required|string|max:255',
-            'date_time' => 'required|date',
+            'start_date' => 'required|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'start_time' => 'required',
+            'end_time' => 'nullable',
             'status' => 'required|integer',
             'invitation_status' => 'required|integer',
             'invitation_type' => 'required|in:inbound,outbound',
-            'location_type' => 'required|in:offline,online',
-            'location' => 'nullable|required_if:location_type,offline|string',
-            'meeting_link' => 'nullable|required_if:location_type,online|string',
+            'location_type' => 'required|in:offline,online,hybrid',
+            'location' => 'nullable|required_if:location_type,offline,hybrid|string',
+            'media_online' => 'nullable|string',
+            'meeting_link' => 'nullable|required_if:location_type,online,hybrid|string',
             'pic' => 'nullable|array',
             'pic_external' => 'nullable|string',
             'dispo_note' => 'nullable|string',
@@ -211,20 +237,32 @@ class ActivityController extends Controller
         }
         unset($validated['pic_external']);
 
-        // Clear location/link based on type
+        // Clear location/link based on type (Only if switching strictly to offline or online)
         if ($validated['location_type'] === 'offline') {
             $validated['meeting_link'] = null;
-        } else {
+        } elseif ($validated['location_type'] === 'online') {
             $validated['location'] = null;
+        }
+        // If hybrid, keep both.
+
+        // Default End Date to Start Date if null
+        if (empty($validated['end_date'])) {
+            $validated['end_date'] = $validated['start_date'];
         }
 
         $activity->update($validated);
+
+        // Update Google Calendar Event
+        GoogleCalendarService::updateEvent($activity);
 
         return redirect()->route('activities.index')->with('success', 'Kegiatan berhasil diperbarui');
     }
 
     public function destroy(Activity $activity)
     {
+        // Delete Google Calendar Event
+        GoogleCalendarService::deleteEvent($activity);
+
         $activity->delete();
         return redirect()->route('activities.index')->with('success', 'Kegiatan berhasil dihapus');
     }

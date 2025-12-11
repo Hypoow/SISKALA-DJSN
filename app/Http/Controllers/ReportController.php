@@ -1,0 +1,168 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\Activity;
+use Carbon\Carbon;
+
+class ReportController extends Controller
+{
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
+    public function index(Request $request)
+    {
+        // Default to tomorrow if not specified
+        $dateStr = $request->input('date', Carbon::tomorrow()->format('Y-m-d'));
+        $date = Carbon::parse($dateStr);
+        
+        $activities = Activity::whereDate('start_date', '<=', $date)
+                              ->whereDate('end_date', '>=', $date)
+                              ->orderBy('start_date', 'asc')
+                              ->orderBy('start_time', 'asc')
+                              ->get();
+                              
+        // Generate Report Text
+        $reportText = $this->generateWhatsAppText($date, $activities);
+
+        return view('reports.h1', compact('dateStr', 'reportText', 'activities'));
+    }
+
+    public function visualH1(Request $request)
+    {
+        // Default to tomorrow if not specified
+        $dateStr = $request->input('date', Carbon::tomorrow()->format('Y-m-d'));
+        $date = Carbon::parse($dateStr);
+        
+        $activities = Activity::whereDate('start_date', '<=', $date)
+                              ->whereDate('end_date', '>=', $date)
+                              ->orderBy('start_date', 'asc')
+                              ->orderBy('start_time', 'asc')
+                              ->get();
+
+        return view('reports.h1_visual', compact('dateStr', 'activities'));
+    }
+
+    private function generateWhatsAppText($date, $activities)
+    {
+        // Locale settings
+        Carbon::setLocale('id');
+        
+        $headerDate = $date->isoFormat('dddd, D MMMM YYYY');
+        $text = "Agenda DJSN untuk *{$headerDate}*. Kegiatan telah terinput di Google Calender, berikut terlampir :\n\n";
+
+        if ($activities->isEmpty()) {
+            $text .= "Tidak ada kegiatan terjadwal.\n";
+            return $text;
+        }
+
+        foreach ($activities as $index => $activity) {
+            $num = $index + 1;
+            $typeStr = $activity->type === 'external' ? 'Kegiatan Eksternal' : 'Kegiatan Internal';
+            
+            // Item Header
+            $text .= "*{$num}) {$typeStr}*\n";
+            
+            // Name/Description (usually "Undangan dari...")
+            // If name doesn't start with "Undangan", just print name.
+            // Example splits "Undangan dari Kemenko PM" and "terkait ...".
+            // Our `name` field usually contains proper subject.
+            $text .= "{$activity->name}, yang akan diselenggarakan pada:\n\n";
+            
+            // Date Line
+            // User example: "Hari, tanggal : Selasa, 9 Desember 2025"
+            // If we only have single date:
+            // Date Line
+            // User example: "Hari, tanggal : Selasa, 9 Desember 2025" or "Senin-Jumat, 9-13 Desember 2025"
+            $start = Carbon::parse($activity->start_date);
+            $end = Carbon::parse($activity->end_date);
+            
+            $dateLine = $start->isoFormat('dddd, D MMMM YYYY');
+            
+            if ($activity->start_date != $activity->end_date) {
+                 // Check if same month/year for concise formatting?
+                 // Simple approach: "Senin-Jumat, 9-13 Desember 2025"
+                 // Or just full range: "Senin, 9 Desember 2025 - Jumat, 13 Desember 2025"
+                 // User example: "Senin-Jumat, 8-12 Desember 2025"
+                 
+                 $dayRange = $start->isoFormat('dddd') . '-' . $end->isoFormat('dddd');
+                 $dateRange = $start->day . '-' . $end->isoFormat('D MMMM YYYY');
+                 // If different months?
+                 if ($start->month != $end->month) {
+                     $dateRange = $start->isoFormat('D MMMM') . ' - ' . $end->isoFormat('D MMMM YYYY');
+                 }
+                 
+                 $dateLine = "{$dayRange}, {$dateRange}";
+            }
+            
+            $text .= "Hari, tanggal : {$dateLine}\n";
+            
+            // Time Line
+            // User example: "07.30 WIB s.d. Selesai"
+            $startTime = Carbon::parse($activity->start_time)->format('H.i');
+            $endTime = $activity->end_time ? Carbon::parse($activity->end_time)->format('H.i') : 'Selesai';
+            
+            $timeLine = "{$startTime} WIB s.d. {$endTime}";
+            if ($endTime != 'Selesai') {
+                 $timeLine .= " WIB";
+            }
+            
+            $text .= "Waktu : {$timeLine}\n";
+            
+            // Location/Media Line
+            if ($activity->location_type === 'online') {
+                $text .= "Media : Zoom Meeting\n";
+                // Try parse link/ID
+                // Example: "Meeting ID : ... Passcode : ..."
+                if ($activity->meeting_link) {
+                    $text .= "{$activity->meeting_link}\n"; 
+                    // User might have put raw link or "ID: xxx Pass: yyy" in `meeting_link`.
+                    // We just dump it here.
+                }
+            } elseif ($activity->location_type === 'hybrid') {
+                 $text .= "Tempat : " . ($activity->location ?? '-') . "\n";
+                 $text .= "Media : Zoom Meeting\n";
+                 if ($activity->meeting_link) {
+                    $text .= "{$activity->meeting_link}\n"; 
+                 }
+            } else {
+                // Offline
+                $text .= "Tempat : " . ($activity->location ?? '-') . "\n";
+            }
+            
+            $text .= "\n";
+            
+            // Disposition/PIC
+            // "Kegiatan ditujukan untuk :"
+            // Check `disposition_to` (Dewan) and `pic` (Internal/External)
+            $targets = [];
+            
+            // Include Dewan Dispositions
+            if (!empty($activity->disposition_to)) {
+                $targets = array_merge($targets, $activity->disposition_to);
+            }
+            
+            // Include Internal PICs (e.g. "Tim Sekretariat")
+            if (!empty($activity->pic)) {
+                 $targets = array_merge($targets, $activity->pic);
+            }
+
+            $targetStr = empty($targets) ? '-' : implode(', ', array_unique($targets));
+            
+            // Fix "Bapak/Ibu" prefix if needed? 
+            // User example: "Bapak Niko, Bapak Agus..."
+            // Our DB stores names like "Nikodemus Beriman...". 
+            // Mapping full names to nicknames ("Bapak Niko") is hard without a mapping table.
+            // I will output full names for now.
+            
+            $text .= "Kegiatan ditujukan untuk : {$targetStr}\n\n";
+        }
+        
+        $text .= "Demikian disampaikan, terima kasih.";
+        
+        return $text;
+    }
+}

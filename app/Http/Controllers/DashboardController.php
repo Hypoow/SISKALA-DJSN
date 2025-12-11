@@ -14,7 +14,7 @@ class DashboardController extends Controller
         $currentYear = now()->year;
 
         $user = auth()->user();
-        $query = Activity::whereMonth('date_time', $currentMonth)->whereYear('date_time', $currentYear);
+        $query = Activity::whereMonth('start_date', $currentMonth)->whereYear('start_date', $currentYear);
 
         // If Dewan, technically they see all, but maybe highlight theirs? 
         // For stats, let's just show ALL activities for now as "Overview", 
@@ -26,7 +26,7 @@ class DashboardController extends Controller
         $externalActivities = (clone $query)->where('type', 'external')->count();
         
         // Today's Activities
-        $todayActivities = Activity::whereDate('date_time', now()->today())->count();
+        $todayActivities = Activity::whereDate('start_date', now()->today())->count();
 
         return view('dashboard.index', compact('totalActivities', 'internalActivities', 'externalActivities', 'todayActivities'));
     }
@@ -63,7 +63,7 @@ class DashboardController extends Controller
             $events[] = [
                 'id' => $activity->id,
                 'title' => $activity->name,
-                'start' => $activity->date_time->toIso8601String(),
+                'start' => \Carbon\Carbon::parse($activity->start_date->format('Y-m-d') . ' ' . $activity->start_time)->toIso8601String(),
                 'backgroundColor' => $color,
                 'borderColor' => $color,
                 // 'url' => route('activities.show', $activity->id), // Removed to prevent auto-navigation

@@ -51,7 +51,7 @@
 
                     {{-- Attachment Field Moved Here --}}
                     <div class="form-group mb-3" id="attachment_group">
-                        <label for="attachment_path">Lampiran Surat (PDF/Image) <small class="text-muted">- Upload untuk Auto-Fill Form</small></label>
+                        <label for="attachment_path">Lampiran Surat (PDF/Image) <small class="text-muted" id="ocr_label_hint">- Upload untuk Auto-Fill Form</small></label>
                         <div class="custom-file">
                             <input type="file" class="custom-file-input" id="attachment_path" name="attachment_path" accept="application/pdf, image/*" onchange="handleFileUpload(event)" disabled>
                             <label class="custom-file-label" for="attachment_path">
@@ -64,7 +64,7 @@
                             </div>
                             <span class="text-primary ml-2">Sedang memproses surat... Mohon tunggu.</span>
                         </div>
-                        <small class="form-text text-muted">Format: PDF atau Gambar. Sistem akan mencoba membaca isi surat.</small>
+                        <small class="form-text text-muted" id="ocr_info_hint">Format: PDF atau Gambar. Sistem akan mencoba membaca isi surat.</small>
                         @if(isset($activity) && $activity->attachment_path)
                             <small class="form-text text-muted">File saat ini: <a href="{{ Storage::url($activity->attachment_path) }}" target="_blank">Lihat File</a></small>
                         @endif
@@ -78,14 +78,32 @@
                             <input type="text" class="form-control" id="name" name="name" value="{{ old('name', $activity->name ?? '') }}" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="date_time">Tanggal & Jam Pelaksanaan</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control drgpicker" id="date_time_picker" value="{{ isset($activity) ? $activity->date_time->format('m/d/Y H:i') : (isset($date) ? \Carbon\Carbon::parse($date)->format('m/d/Y H:i') : now()->format('m/d/Y H:i')) }}" required>
-                                <input type="hidden" name="date_time" id="date_time" value="{{ isset($activity) ? $activity->date_time->format('Y-m-d H:i:s') : (isset($date) ? \Carbon\Carbon::parse($date)->format('Y-m-d H:i:s') : now()->format('Y-m-d H:i:s')) }}">
-                                <div class="input-group-append">
-                                    <div class="input-group-text" id="button-addon-date"><span class="fe fe-calendar fe-16"></span></div>
-                                </div>
-                            </div>
+                            <label for="letter_number">Nomor Surat</label>
+                            <input type="text" class="form-control" id="letter_number" name="letter_number" value="{{ old('letter_number', $activity->letter_number ?? '') }}" placeholder="Masukkan Nomor Surat">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="col-md-6 mb-3">
+                            <label for="start_date">Tanggal Mulai</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" value="{{ old('start_date', isset($activity) ? $activity->start_date->format('Y-m-d') : (isset($date) ? $date : now()->format('Y-m-d'))) }}" required onchange="syncDates()">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="end_date">Tanggal Selesai <small class="text-muted">(Opsional)</small></label>
+                            <input type="date" class="form-control" id="end_date" name="end_date" value="{{ old('end_date', isset($activity) ? $activity->end_date->format('Y-m-d') : '') }}">
+                            <small class="form-text text-muted">Abaikan jika 1 hari.</small>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="col-md-6 mb-3">
+                            <label for="start_time">Jam Mulai</label>
+                            <input type="time" class="form-control" id="start_time" name="start_time" value="{{ old('start_time', isset($activity) ? \Carbon\Carbon::parse($activity->start_time)->format('H:i') : '09:00') }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="end_time">Jam Selesai <small class="text-muted">(Opsional)</small></label>
+                            <input type="time" class="form-control" id="end_time" name="end_time" value="{{ old('end_time', (isset($activity) && $activity->end_time) ? \Carbon\Carbon::parse($activity->end_time)->format('H:i') : '') }}">
+                            <small class="form-text text-muted">Kosongkan jika "s/d Selesai".</small>
                         </div>
                     </div>
 
@@ -124,26 +142,35 @@
                             <label for="location_type">Tipe Lokasi</label>
                             <select class="form-control select2" id="location_type" name="location_type" onchange="updateLocationInput()" required>
                                 <option value="offline" {{ (old('location_type', $activity->location_type ?? '') == 'offline') ? 'selected' : '' }}>Offline</option>
-                                <option value="online" {{ (old('location_type', $activity->location_type ?? '') == 'online') ? 'selected' : '' }}>Online (Zoom/Meet)</option>
+                                <option value="online" {{ (old('location_type', $activity->location_type ?? '') == 'online') ? 'selected' : '' }}>Online</option>
+                                <option value="hybrid" {{ (old('location_type', $activity->location_type ?? '') == 'hybrid') ? 'selected' : '' }}>Hybrid (Offline & Online)</option>
                             </select>
                         </div>
-                        <div class="col-md-8 mb-3">
-                            <div id="location_input_group">
+                        <div class="col-md-8">
+                            <div class="form-group mb-3" id="media_online_group" style="display: none;">
+                                <label for="media_online">Media Online</label>
+                                <select class="form-control select2" id="media_online" name="media_online">
+                                    <option value="" disabled selected>-- Pilih Media Online --</option>
+                                    <option value="Zoom" {{ (old('media_online', $activity->media_online ?? '') == 'Zoom') ? 'selected' : '' }}>Zoom</option>
+                                    <option value="Google Meet" {{ (old('media_online', $activity->media_online ?? '') == 'Google Meet') ? 'selected' : '' }}>Google Meet</option>
+                                    <option value="Microsoft Teams" {{ (old('media_online', $activity->media_online ?? '') == 'Microsoft Teams') ? 'selected' : '' }}>Microsoft Teams</option>
+                                    <option value="Lainnya" {{ (old('media_online', $activity->media_online ?? '') == 'Lainnya') ? 'selected' : '' }}>Lainnya</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group mb-3" id="location_input_group">
                                 <label for="location">Lokasi Kegiatan</label>
                                 <input type="text" class="form-control" id="location" name="location" value="{{ old('location', $activity->location ?? '') }}">
                             </div>
-                            <div id="link_input_group" style="display: none;">
+
+                            <div class="form-group mb-3" id="link_input_group" style="display: none;">
                                 <label for="meeting_link">Link Meeting / ID & Passcode</label>
                                 <input type="text" class="form-control" id="meeting_link" name="meeting_link" value="{{ old('meeting_link', $activity->meeting_link ?? '') }}" placeholder="Contoh: https://zoom.us/... atau ID: 123 Pass: abc">
                             </div>
                         </div>
                     </div>
 
-                    <div class="form-group mb-3">
-                        <label for="dispo_note">Keterangan Dispo</label>
-                        <div id="quill-editor" style="height: 150px;">{!! old('dispo_note', $activity->dispo_note ?? '') !!}</div>
-                        <input type="hidden" name="dispo_note" id="dispo_note">
-                    </div>
+
 
                     <div class="form-group mb-3">
                         <label for="dresscode">Dresscode</label>
@@ -183,52 +210,70 @@
                     </div>
 
                     <div class="form-group mb-3">
-                        <label>Tujuan Disposisi (Dewan)</label>
-                        <div class="accordion" id="accordionDewan">
-                            @php
-                                $councilStructure = \App\Models\Activity::COUNCIL_STRUCTURE;
-                                $selectedDewan = isset($activity) && $activity->disposition_to ? $activity->disposition_to : [];
-                                $groupIndex = 0;
-                            @endphp
+                            <label>Tujuan Disposisi</label>
                             
-                            @foreach($councilStructure as $groupName => $members)
-                            <div class="card mb-2 shadow-sm">
-                                <div class="card-header d-flex justify-content-between align-items-center" id="heading{{ $groupIndex }}">
-                                    <h2 class="mb-0">
-                                        <button class="btn btn-link btn-block text-left text-dark font-weight-bold collapsed" type="button" data-toggle="collapse" data-target="#collapse{{ $groupIndex }}" aria-expanded="false" aria-controls="collapse{{ $groupIndex }}">
-                                            {{ $groupName }}
-                                        </button>
-                                    </h2>
-                                    <div class="custom-control custom-checkbox">
-                                        <input type="checkbox" class="custom-control-input group-check-all" id="checkAll{{ $groupIndex }}" data-target=".group-{{ $groupIndex }}">
-                                        <label class="custom-control-label" for="checkAll{{ $groupIndex }}">Pilih Semua</label>
-                                    </div>
-                                </div>
-                        
-                                <div id="collapse{{ $groupIndex }}" class="collapse show" aria-labelledby="heading{{ $groupIndex }}" data-parent="#accordionDewan">
-                                    <div class="card-body">
-                                        <div class="row">
-                                            @foreach($members as $member)
-                                            <div class="col-md-12">
-                                                <div class="custom-control custom-checkbox mb-2">
-                                                    <input type="checkbox" class="custom-control-input dewan-checkbox group-{{ $groupIndex }}" id="dewan_{{ Str::slug($member) }}" name="disposition_to[]" value="{{ $member }}" {{ in_array($member, $selectedDewan) ? 'checked' : '' }}>
-                                                    <label class="custom-control-label" for="dewan_{{ Str::slug($member) }}">{{ $member }}</label>
+                            
+                            {{-- Disposition Groups --}}
+                            <div class="accordion" id="accordionDewan">
+                                @php $groupIndex = 0; @endphp
+                                @foreach($dewanUsers as $groupName => $members)
+                                    @php $groupIndex++; @endphp
+                                    <div class="card mb-2 shadow-sm">
+                                        <div class="card-header d-flex justify-content-between align-items-center" id="heading{{ $groupIndex }}">
+                                            <h2 class="mb-0">
+                                                <button class="btn btn-link btn-block text-left text-dark font-weight-bold collapsed" type="button" data-toggle="collapse" data-target="#collapse{{ $groupIndex }}" aria-expanded="true" aria-controls="collapse{{ $groupIndex }}">
+                                                    {{ $groupName }}
+                                                </button>
+                                            </h2>
+                                            <div class="custom-control custom-checkbox">
+                                                <input type="checkbox" class="custom-control-input group-check-all" id="checkAll{{ $groupIndex }}" data-target=".group-{{ $groupIndex }}">
+                                                <label class="custom-control-label" for="checkAll{{ $groupIndex }}">Pilih Semua</label>
+                                            </div>
+                                        </div>
+                                
+                                        {{-- Remove data-parent to allow multiple sections to be open --}}
+                                        <div id="collapse{{ $groupIndex }}" class="collapse show" aria-labelledby="heading{{ $groupIndex }}">
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    @foreach($members as $member)
+                                                    @php 
+                                                        $selectedDewan = (isset($activity) && is_array($activity->disposition_to)) ? $activity->disposition_to : [];
+                                                    @endphp
+                                                    <div class="col-md-12">
+                                                        <div class="custom-control custom-checkbox mb-2">
+                                                            <input type="checkbox" class="custom-control-input dewan-checkbox group-{{ $groupIndex }}" id="dewan_{{ $member->id }}" name="disposition_to[]" value="{{ $member->name }}" {{ in_array($member->name, $selectedDewan) ? 'checked' : '' }}>
+                                                            <label class="custom-control-label" for="dewan_{{ $member->id }}">
+                                                                {{ $member->name }}
+                                                                @if($groupName === 'Sekretariat DJSN')
+                                                                    <br><small class="text-muted">{{ $member->divisi }}</small>
+                                                                @endif
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                    @endforeach
                                                 </div>
                                             </div>
-                                            @endforeach
                                         </div>
                                     </div>
-                                </div>
+                                @endforeach
                             </div>
-                            @php $groupIndex++; @endphp
-                            @endforeach
+
                         </div>
-                    </div>
 
                     {{-- Attachment Field Moved to Top --}}
 
+
+                    <div class="form-group mb-3">
+                        <label for="dispo_note">Keterangan</label>
+                        <button type="button" class="btn btn-sm btn-info float-right mb-2" onclick="syncToDescription()">
+                            <i class="fe fe-refresh-cw"></i> Sinkronisasi Info ke Keterangan
+                        </button>
+                        <div id="quill-editor" style="height: 150px;">{!! old('dispo_note', $activity->dispo_note ?? '') !!}</div>
+                        <input type="hidden" name="dispo_note" id="dispo_note">
+                    </div>
+
                     <button class="btn btn-primary" type="submit" id="submitBtn">Simpan Kegiatan</button>
-                    <a href="{{ route('activities.index') }}" class="btn btn-secondary">Cancel</a>
+                    <a href="{{ route('activities.index') }}" class="btn btn-secondary">Batal</a>
                 </form>
             </div> <!-- /.card-body -->
         </div> <!-- /.card -->
@@ -279,48 +324,35 @@
 
     $('.select2').select2({
         theme: 'bootstrap4',
+        width: '100%',
         templateResult: formatState,
         templateSelection: formatState
     });
 
-    // Datepicker
-    $('.drgpicker').daterangepicker({
-        singleDatePicker: true,
-        timePicker: true,
-        timePicker24Hour: true,
-        showDropdowns: true,
-        locale: {
-            format: 'MM/DD/YYYY HH:mm'
-        }
-    }, function(start, end, label) {
-        $('#date_time').val(start.format('YYYY-MM-DD HH:mm:ss'));
-    });
-
-    // Initial Date Value
-    function updateHiddenDate() {
-        var rawVal = $('#date_time_picker').val();
-        if(rawVal) {
-            var formatted = moment(rawVal, 'MM/DD/YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss');
-            $('#date_time').val(formatted);
-        }
+    function syncDates() {
+        // Did user want auto-sync?
+        // User said: "saya mau untuk tanggal selesai nya di -- dlu aja... kalo semisalkan di patokin jadi tgl sekarang , saya kudu ngeubah tgl selesai nya juga"
+        // So we do NOT auto-fill end date.
     }
-
-    // Update on manual change/blur
-    $('#date_time_picker').on('change blur', function() {
-        updateHiddenDate();
-    });
-
-    // Initial set
-    updateHiddenDate();
 
     function updateLocationInput() {
         const type = document.getElementById('location_type').value;
+        const locInput = document.getElementById('location_input_group');
+        const linkInput = document.getElementById('link_input_group');
+        const mediaGroup = document.getElementById('media_online_group');
+
         if (type === 'online') {
-            document.getElementById('location_input_group').style.display = 'none';
-            document.getElementById('link_input_group').style.display = 'block';
-        } else {
-            document.getElementById('location_input_group').style.display = 'block';
-            document.getElementById('link_input_group').style.display = 'none';
+            locInput.style.display = 'none';
+            linkInput.style.display = 'block';
+            mediaGroup.style.display = 'block';
+        } else if (type === 'offline') {
+            locInput.style.display = 'block';
+            linkInput.style.display = 'none';
+            mediaGroup.style.display = 'none';
+        } else if (type === 'hybrid') {
+            locInput.style.display = 'block';
+            linkInput.style.display = 'block';
+            mediaGroup.style.display = 'block';
         }
     }
 
@@ -333,13 +365,18 @@
         const attachmentInput = document.getElementById('attachment_path');
         const invTypeSelect = $('#invitation_type');
         
+        const ocrLabelHint = document.getElementById('ocr_label_hint');
+        const ocrInfoHint = document.getElementById('ocr_info_hint');
+        
         const currentInvStatus = {{ isset($activity) ? $activity->invitation_status : 'null' }};
 
         // Enable file input if type is selected
-        if (type) {
-            attachmentInput.disabled = false;
-        } else {
-            attachmentInput.disabled = true;
+        if (attachmentInput) {
+            if (type) {
+                attachmentInput.disabled = false;
+            } else {
+                attachmentInput.disabled = true;
+            }
         }
 
         if (type === 'external') {
@@ -359,10 +396,18 @@
             ];
             populateSelect(invStatus, options, currentInvStatus);
 
+            // Hide OCR Hints for External
+            if(ocrLabelHint) ocrLabelHint.style.display = 'none';
+            if(ocrInfoHint) ocrInfoHint.style.display = 'none';
+
         } else if (type === 'internal') {
             picGroup.style.display = 'block';
             picInternalWrapper.style.display = 'block';
             picExternalWrapper.style.display = 'none';
+            
+            // Show OCR Hints for Internal
+            if(ocrLabelHint) ocrLabelHint.style.display = 'inline';
+            if(ocrInfoHint) ocrInfoHint.style.display = 'block';
 
             // Auto-set Invitation Type to "Surat Keluar" (outbound)
             invTypeSelect.val('outbound').trigger('change');
@@ -529,6 +574,14 @@
     function parseAndFillForm(text) {
         console.log("Raw OCR Text:", text); // Debugging
 
+        // 0. Nomor Surat
+        // Capture until 2+ spaces or 'Jakarta' or Newline
+        const noMatch = text.match(/(?:Nomor|No\.?)\s*:\s*(.*?)(?=\s{2,}|\s+Jakarta|\n|$)/i);
+        if (noMatch && noMatch[1]) {
+            const noSurat = noMatch[1].trim();
+            $('#letter_number').val(noSurat);
+        }
+
         // 1. Nama Kegiatan (Hal / Perihal)
         // Capture multiline text until "Yth" or "Lampiran" or double newline
         const halMatch = text.match(/(?:Hal|Perihal)\s*:\s*([\s\S]*?)(?=\n\s*(?:Yth|Lampiran)|$)/i);
@@ -538,40 +591,69 @@
             $('#name').val(hal);
         }
 
-        // 2. Tanggal & Jam
-        // Flexible matching for Hari/Tanggal (handling spaces around slash)
-        const dateMatch = text.match(/(?:Hari\s*[\/|]\s*Tanggal)\s*:\s*(.*)/i);
-        const timeMatch = text.match(/(?:Waktu|Pukul|Jam)\s*:\s*(.*)/i);
-
-        if (dateMatch && dateMatch[1]) {
-            let dateStr = dateMatch[1].trim(); // "Selasa, 25 November 2025"
-            // Remove day name (Selasa,)
-            dateStr = dateStr.replace(/^[a-zA-Z]+,\s*/, '');
+        // 2. Tanggal (Hari, tanggal : ...)
+        function parseIndoDate(dateStr) {
+             const months = {
+                'januari': '01', 'februari': '02', 'maret': '03', 'april': '04', 'mei': '05', 'juni': '06',
+                'juli': '07', 'agustus': '08', 'september': '09', 'oktober': '10', 'november': '11', 'desember': '12',
+                'jan': '01', 'feb': '02', 'mar': '03', 'apr': '04', 'may': '05', 'jun': '06',
+                'jul': '07', 'aug': '08', 'sep': '09', 'oct': '10', 'nov': '11', 'dec': '12'
+            };
             
-            let timeStr = "09:00"; // Default
-            if (timeMatch && timeMatch[1]) {
-                // Extract first time "13.30"
-                const times = timeMatch[1].match(/(\d{1,2}[.:]\d{2})/);
-                if (times) {
-                    timeStr = times[1].replace('.', ':');
+            let cleanStr = dateStr.replace(/^[a-zA-Z]+,\s*/, '').trim();
+            
+            // Range: "9-10 Desember 2025"
+            let rangeMatch = cleanStr.match(/(\d+)\s*[-–]\s*(\d+)\s+([a-zA-Z]+)\s+(\d+)/);
+            if (rangeMatch) {
+               let startDay = rangeMatch[1].padStart(2, '0');
+               let endDay = rangeMatch[2].padStart(2, '0');
+               let month = months[rangeMatch[3].toLowerCase()];
+               let year = rangeMatch[4];
+               if (month) {
+                   return { start: `${year}-${month}-${startDay}`, end: `${year}-${month}-${endDay}` };
+               }
+            }
+            
+            // Single: "9 Desember 2025"
+            let singleMatch = cleanStr.match(/(\d+)\s+([a-zA-Z]+)\s+(\d+)/);
+            if (singleMatch) {
+                let day = singleMatch[1].padStart(2, '0');
+                let month = months[singleMatch[2].toLowerCase()];
+                let year = singleMatch[3];
+                if (month) {
+                     let date = `${year}-${month}-${day}`;
+                     return { start: date, end: date };
                 }
             }
+            return null;
+        }
 
-            // Combine and parse
-            const monthsInd = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-            const monthsEng = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-            
-            monthsInd.forEach((m, i) => {
-                dateStr = dateStr.replace(new RegExp(m, 'i'), monthsEng[i]);
-            });
+        const dateMatch = text.match(/(?:Hari|Tanggal)\s*:\s*(.*?)(?=\n|$)/i);
+        if (dateMatch && dateMatch[1]) {
+            const parsed = parseIndoDate(dateMatch[1].trim());
+            if (parsed) {
+                $('#start_date').val(parsed.start);
+                $('#end_date').val(parsed.end);
+            }
+        }
 
-            const fullDateTimeString = `${dateStr} ${timeStr}`;
-            const parsedDate = moment(fullDateTimeString, 'D MMMM YYYY HH:mm');
-            
-            if (parsedDate.isValid()) {
-                $('#date_time_picker').data('daterangepicker').setStartDate(parsedDate);
-                $('#date_time_picker').data('daterangepicker').setEndDate(parsedDate);
-                $('#date_time').val(parsedDate.format('YYYY-MM-DD HH:mm:ss'));
+        // 3. Waktu
+        const timeMatch = text.match(/(?:Waktu|Pukul|Jam)\s*:\s*(.*)/i);
+        if (timeMatch && timeMatch[1]) {
+            // "08.00 s.d. Selesai" or "08.00 - 10.00"
+            const times = timeMatch[1].match(/(\d{1,2}[.:]\d{2})/g);
+            if (times && times.length > 0) {
+                let start = times[0].replace('.', ':');
+                if (start.length === 4) start = '0' + start;
+                $('#start_time').val(start);
+                
+                if (times.length > 1) {
+                    let end = times[1].replace('.', ':');
+                    if (end.length === 4) end = '0' + end;
+                    $('#end_time').val(end);
+                } else if (/selesai/i.test(timeMatch[1])) {
+                    $('#end_time').val('');
+                }
             }
         }
 
@@ -619,40 +701,53 @@
         // Map Full Name (Checkbox Value) -> [Keywords to Search]
         // Keywords should be unique enough to identify the person but simple enough to survive OCR.
         const councilKeywords = {
-            'Prof. Dr. Ir. R. Nunung Nuryartono, M.Si.': ['Nunung', 'Nuryartono'],
-            'Muttaqien, S.S., M.P.H., A.A.K.': ['Muttaqien'],
-            'Nikodemus Beriman Purba, S.Psi., M.H.': ['Nikodemus', 'Beriman'],
-            'Sudarto, S.E., M.B.A., M.Kom., Ph.D., CGEIT., CA.': ['Sudarto'],
-            'Robben Rico, A.Md., LLAJ., S.H., S.T., M.Si.': ['Robben', 'Rico'],
-            'Dr. dr. Mahesa Paranadipa Maykel, M.H., MARS.': ['Mahesa', 'Paranadipa'],
-            'Dr.rer.pol. Syamsul Hidayat Pasaribu, S.E., M.Si.': ['Syamsul', 'Hidayat'],
-            'Hermansyah, S.H., AK3.': ['Hermansyah'],
-            'Drs. Paulus Agung Pambudhi, M.M.': ['Paulus', 'Agung'],
-            'dr. H. Agus Taufiqurrohman, M.Kes., Sp.S.': ['Agus', 'Taufiqurrohman'],
-            'Kunta Wibawa Dasa Nugraha, S.E., M.A., Ph.D.': ['Kunta', 'Wibawa'],
-            'Dra. Indah Anggoro Putri, M.Bus.': ['Indah', 'Anggoro'],
-            'Prof. Dr. Rudi Purwono, S.E., M.SE.': ['Rudi', 'Purwono'],
-            'Mickael Bobby Hoelman, S.E., M.Si.': ['Mickael', 'Bobby'],
-            'Royanto Purba, S.T.': ['Royanto', 'Purba']
+            'Nunung Nuryartono': ['Nunung', 'Nuryartono'],
+            'Muttaqien': ['Muttaqien'],
+            'Nikodemus Beriman Purba': ['Nikodemus', 'Beriman'],
+            'Sudarto': ['Sudarto'],
+            'Robben Rico': ['Robben', 'Rico'],
+            'Mahesa Paranadipa Maykel': ['Mahesa', 'Paranadipa'],
+            'Syamsul Hidayat Pasaribu': ['Syamsul', 'Hidayat'],
+            'Hermansyah': ['Hermansyah'],
+            'Paulus Agung Pambudhi': ['Paulus', 'Agung'],
+            'Agus Taufiqurrohman': ['Agus', 'Taufiqurrohman'],
+            'Kunta Wibawa Dasa Nugraha': ['Kunta', 'Wibawa'],
+            'Indah Anggoro Putri': ['Indah', 'Anggoro'],
+            'Rudi Purwono': ['Rudi', 'Purwono'],
+            'Mickael Bobby Hoelman': ['Mickael', 'Bobby'],
+            'Royanto Purba': ['Royanto', 'Purba'],
+            // Sekretariat
+            'Imron Rosadi': ['Imron', 'Rosadi'],
+            'Dwi Janatun Rahayu': ['Dwi', 'Janatun', 'Rahayu'],
+            'Wenny Kartika Ayunungtyas': ['Wenny', 'Kartika', 'Ayunungtyas'],
+            'Annisa': ['Annisa'],
+            'Eko Sudarmawan': ['Eko', 'Sudarmawan']
         };
 
         // Map Person -> Commission (Internal PIC)
         const personToCommission = {
-            'Prof. Dr. Ir. R. Nunung Nuryartono, M.Si.': 'Ketua DJSN',
-            'Muttaqien, S.S., M.P.H., A.A.K.': 'Komisi PME',
-            'Nikodemus Beriman Purba, S.Psi., M.H.': 'Komisi PME',
-            'Sudarto, S.E., M.B.A., M.Kom., Ph.D., CGEIT., CA.': 'Komisi PME',
-            'Robben Rico, A.Md., LLAJ., S.H., S.T., M.Si.': 'Komisi PME',
-            'Dr. dr. Mahesa Paranadipa Maykel, M.H., MARS.': 'Komisi PME',
-            'Dr.rer.pol. Syamsul Hidayat Pasaribu, S.E., M.Si.': 'Komisi PME',
-            'Hermansyah, S.H., AK3.': 'Komisi PME',
-            'Drs. Paulus Agung Pambudhi, M.M.': 'Komisi Komjakum',
-            'dr. H. Agus Taufiqurrohman, M.Kes., Sp.S.': 'Komisi Komjakum',
-            'Kunta Wibawa Dasa Nugraha, S.E., M.A., Ph.D.': 'Komisi Komjakum',
-            'Dra. Indah Anggoro Putri, M.Bus.': 'Komisi Komjakum',
-            'Prof. Dr. Rudi Purwono, S.E., M.SE.': 'Komisi Komjakum',
-            'Mickael Bobby Hoelman, S.E., M.Si.': 'Komisi Komjakum',
-            'Royanto Purba, S.T.': 'Komisi Komjakum'
+            'Nunung Nuryartono': 'Ketua DJSN',
+            'Muttaqien': 'Komisi PME',
+            'Nikodemus Beriman Purba': 'Komisi PME',
+            'Sudarto': 'Komisi PME',
+            'Robben Rico': 'Komisi PME',
+            'Mahesa Paranadipa Maykel': 'Komisi PME',
+            'Syamsul Hidayat Pasaribu': 'Komisi PME',
+            'Hermansyah': 'Komisi PME',
+            'Paulus Agung Pambudhi': 'Komisi Komjakum',
+            'Agus Taufiqurrohman': 'Komisi Komjakum',
+            'Kunta Wibawa Dasa Nugraha': 'Komisi Komjakum',
+            'Indah Anggoro Putri': 'Komisi Komjakum',
+            'Rudi Purwono': 'Komisi Komjakum',
+            'Rudi Purwono': 'Komisi Komjakum',
+            'Mickael Bobby Hoelman': 'Komisi Komjakum',
+            'Royanto Purba': 'Komisi Komjakum',
+            // Sekretariat
+            'Imron Rosadi': 'Sekretariat DJSN',
+            'Dwi Janatun Rahayu': 'Sekretariat DJSN',
+            'Wenny Kartika Ayunungtyas': 'Sekretariat DJSN',
+            'Annisa': 'Sekretariat DJSN',
+            'Eko Sudarmawan': 'Sekretariat DJSN'
         };
 
         // Determine Search Scope
@@ -737,6 +832,139 @@
             confirmButtonText: 'OK',
             confirmButtonColor: '#3085d6'
         });
+    }
+
+    // Sync Form to Description
+    function syncToDescription() {
+        // Gather Values
+        let name = $('#name').val();
+        let letterNumber = $('#letter_number').val();
+        
+        let startDate = $('#start_date').val();
+        let endDate = $('#end_date').val();
+        let startTime = $('#start_time').val();
+        let endTime = $('#end_time').val();
+        
+        let locationType = $('#location_type').val();
+        let location = $('#location').val();
+        let mediaOnline = $('#media_online').val();
+        let meetingLink = $('#meeting_link').val();
+        let dresscode = $('#dresscode').val();
+        
+        let dispos = [];
+        $('input[name="disposition_to[]"]:checked').each(function() {
+            dispos.push($(this).val());
+        });
+
+        // Format Date
+        let dateStr = formatDate(startDate);
+        if (endDate && endDate !== startDate) {
+            dateStr += ' s.d. ' + formatDate(endDate);
+        }
+
+        // Format Time
+        let timeStr = startTime + ' WIB';
+        if (endTime) {
+            timeStr += ' s.d. ' + endTime + ' WIB';
+        } else {
+            timeStr += ' s.d. Selesai';
+        }
+
+        // Format Location
+        let locStr = '';
+        if (locationType === 'online') {
+            locStr = (mediaOnline ? 'Media: ' + mediaOnline : 'Online') + (meetingLink ? ' (' + meetingLink + ')' : '');
+        } else if (locationType === 'offline') {
+            locStr = location || '-';
+        } else {
+            // Hybrid
+            let onlinePart = (mediaOnline ? 'Media: ' + mediaOnline : 'Online') + (meetingLink ? ' (' + meetingLink + ')' : ' (Link Menyusul)');
+            let offlinePart = location || '-';
+            locStr = offlinePart + ' & ' + onlinePart;
+        }
+
+        // Helper to strip titles (Generic Regex Approach)
+        // Removes common titles like Dr., Ir., Prof., S.E., etc.
+        function stripTitles(name) {
+            // Remove known titles prefix/suffix
+            // Pre-process: split by comma, usually name is first part before titles in Indonesia if strictly "Name, Title"
+            // But here names are mixed like "Prof. Dr. Ir. R. Nunung Nuryartono, M.Si."
+            
+            // Strategy: 
+            // 1. Remove generic titles (Prof, Dr, Ir, Drs, Dra)
+            // 2. Remove trailing degrees (S.X, M.X, Ph.D, dkk after comma)
+            
+            let cleanName = name;
+            
+            // Remove prefixes (case insensitive)
+            cleanName = cleanName.replace(/^(Prof\.|Dr\.|Drs\.|Dra\.|Ir\.|H\.|Hj\.|dr\.)\s*/gi, '');
+            // Repeat to catch multiple prefixes like "Prof. Dr. Ir."
+            cleanName = cleanName.replace(/^(Prof\.|Dr\.|Drs\.|Dra\.|Ir\.|H\.|Hj\.|dr\.)\s*/gi, '');
+            cleanName = cleanName.replace(/^(Prof\.|Dr\.|Drs\.|Dra\.|Ir\.|H\.|Hj\.|dr\.)\s*/gi, '');
+            
+            // Remove suffixes (after comma)
+            // Note: Some names might not use comma properly, but standard academic format does.
+            if (cleanName.includes(',')) {
+                cleanName = cleanName.split(',')[0];
+            }
+            
+            return cleanName.trim();
+        }
+
+        // Gather Names Without Titles
+        let dispoNames = [];
+        $('input[name="disposition_to[]"]:checked').each(function() {
+            let originalName = $(this).val();
+            dispoNames.push(stripTitles(originalName));
+        });
+
+        // Build Text
+        let text = '';
+        
+        // 1. Yth Section
+        if (dispoNames.length > 0) {
+            text += `<p>Yth,</p>`;
+            text += `<p>${dispoNames.join(', ')}</p><br>`;
+        }
+
+        // Opening Greeting
+        text += `<p>Bersama ini kami sampaikan informasi kegiatan dengah detail sebagai berikut:</p><br>`;
+        
+        text += `<p><strong>Nama Kegiatan:</strong> ${name}</p>`;
+        if (letterNumber) text += `<p><strong>Nomor Surat:</strong> ${letterNumber}</p>`;
+        text += `<p><strong>Waktu:</strong> ${dateStr}, Pukul ${timeStr}</p>`;
+        text += `<p><strong>Lokasi:</strong> ${locStr}</p>`;
+        
+        // Dresscode Logic
+        let dresscodeStr = dresscode ? dresscode : '-';
+        text += `<p><strong>Dresscode:</strong> ${dresscodeStr}</p>`;
+        
+        // Removed "Tujuan Disposisi" list because user wants it at the top as "Yth"
+        // But maybe keep it? User said "template keterangan nya itu seperti ini: Yth, (nama dewan)... lalu isi keterangan..."
+        // So Yth replaces the old list.
+
+        text += `<p><br></p><p><strong>Keterangan Tambahan:</strong></p>`;
+
+        // Closing Greeting
+        text += `<br><p>Demikian kami sampaikan, atas perhatian dan kehadiran Bapak/Ibu diucapkan terima kasih.</p>`;
+
+        // Set to Quill
+        quill.root.innerHTML = text;
+
+        Swal.fire({
+            title: 'Tersinkronisasi!',
+            text: 'Info kegiatan telah disalin ke  sesuai format.',
+            icon: 'success',
+            timer: 1500,
+            showConfirmButton: false
+        });
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return '';
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const date = new Date(dateString);
+        return date.toLocaleDateString('id-ID', options);
     }
 </script>
 @endpush

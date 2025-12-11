@@ -37,6 +37,18 @@
               <span class="ml-3 item-text">Kegiatan Baru</span>
             </a>
         </li>
+        <li class="nav-item w-100 {{ request()->routeIs('report.h1') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('report.h1') }}">
+              <i class="fe fe-file-text fe-16"></i>
+              <span class="ml-3 item-text">Pelaporan H-1</span>
+            </a>
+        </li>
+        <li class="nav-item w-100 {{ request()->routeIs('report.h1-visual') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('report.h1-visual') }}">
+              <i class="fe fe-monitor fe-16"></i>
+              <span class="ml-3 item-text">Visualisasi H-1</span>
+            </a>
+        </li>
         @endif
 
         <li class="nav-item w-100 {{ request()->routeIs('activities.index') ? 'active' : '' }}">

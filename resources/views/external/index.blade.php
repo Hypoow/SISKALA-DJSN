@@ -49,7 +49,7 @@
                                     <th>Nama Kegiatan</th>
                                     <th>Waktu</th>
                                     <th>Lokasi</th>
-                                    <th>Keterangan Dispo</th>
+                                    <th>Keterangan</th>
                                     <th>Pelaksanaan</th>
                                     <th>Undangan</th>
                                     <th>Lampiran</th>

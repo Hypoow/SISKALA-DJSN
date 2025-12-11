@@ -19,46 +19,47 @@ class DewanSeeder extends Seeder
 
         $councilMembers = [
             // Ketua DJSN
-            'Prof. Dr. Ir. R. Nunung Nuryartono, M.Si.' => ['order' => 1, 'divisi' => 'Ketua DJSN'],
+            'Nunung Nuryartono' => ['order' => 1, 'divisi' => 'Ketua DJSN'],
             
-            // Komisi PME
-            'Muttaqien, S.S., M.P.H., A.A.K.' => ['order' => 2, 'divisi' => 'Komisi PME'],
-            'Nikodemus Beriman Purba, S.Psi., M.H.' => ['order' => 3, 'divisi' => 'Komisi PME'],
-            'Sudarto, S.E., M.B.A., M.Kom., Ph.D., CGEIT., CA.' => ['order' => 4, 'divisi' => 'Komisi PME'],
-            'Robben Rico, A.Md., LLAJ., S.H., S.T., M.Si.' => ['order' => 5, 'divisi' => 'Komisi PME'],
-            'Dr. dr. Mahesa Paranadipa Maykel, M.H., MARS.' => ['order' => 6, 'divisi' => 'Komisi PME'],
-            'Dr.rer.pol. Syamsul Hidayat Pasaribu, S.E., M.Si.' => ['order' => 7, 'divisi' => 'Komisi PME'],
-            'Hermansyah, S.H., AK3.' => ['order' => 8, 'divisi' => 'Komisi PME'],
+            // Komisi Pengawasan Monitoring dan Evaluasi (PME)
+            'Muttaqien' => ['order' => 2, 'divisi' => 'Komisi PME'],
+            'Nikodemus Beriman Purba' => ['order' => 3, 'divisi' => 'Komisi PME'],
+            'Sudarto' => ['order' => 4, 'divisi' => 'Komisi PME'],
+            'Robben Rico' => ['order' => 5, 'divisi' => 'Komisi PME'],
+            'Mahesa Paranadipa Maykel' => ['order' => 6, 'divisi' => 'Komisi PME'],
+            'Syamsul Hidayat Pasaribu' => ['order' => 7, 'divisi' => 'Komisi PME'],
+            'Hermansyah' => ['order' => 8, 'divisi' => 'Komisi PME'],
             
-            // Komisi Komjakum
-            'Drs. Paulus Agung Pambudhi, M.M.' => ['order' => 9, 'divisi' => 'Komisi Komjakum'],
-            'dr. H. Agus Taufiqurrohman, M.Kes., Sp.S.' => ['order' => 10, 'divisi' => 'Komisi Komjakum'],
-            'Kunta Wibawa Dasa Nugraha, S.E., M.A., Ph.D.' => ['order' => 11, 'divisi' => 'Komisi Komjakum'],
-            'Dra. Indah Anggoro Putri, M.Bus.' => ['order' => 12, 'divisi' => 'Komisi Komjakum'],
-            'Prof. Dr. Rudi Purwono, S.E., M.SE.' => ['order' => 13, 'divisi' => 'Komisi Komjakum'],
-            'Mickael Bobby Hoelman, S.E., M.Si.' => ['order' => 14, 'divisi' => 'Komisi Komjakum'],
-            'Royanto Purba, S.T.' => ['order' => 15, 'divisi' => 'Komisi Komjakum']
+            // Komisi Kebijakan Umum (Komjakum)
+            'Paulus Agung Pambudhi' => ['order' => 9, 'divisi' => 'Komisi Komjakum'],
+            'Agus Taufiqurrohman' => ['order' => 10, 'divisi' => 'Komisi Komjakum'],
+            'Kunta Wibawa Dasa Nugraha' => ['order' => 11, 'divisi' => 'Komisi Komjakum'],
+            'Indah Anggoro Putri' => ['order' => 12, 'divisi' => 'Komisi Komjakum'],
+            'Rudi Purwono' => ['order' => 13, 'divisi' => 'Komisi Komjakum'],
+            'Mickael Bobby Hoelman' => ['order' => 14, 'divisi' => 'Komisi Komjakum'],
+            'Royanto Purba' => ['order' => 15, 'divisi' => 'Komisi Komjakum']
         ];
 
         foreach ($councilMembers as $name => $data) {
-            // Create email from name: lowercase, remove titles, replace spaces with dots
-            // Example: "Prof. Dr. Ir. R. Nunung Nuryartono, M.Si." -> "nunung.nuryartono@djsn.go.id"
-            // For simplicity, let's use a simplified email generation or just first.last
+            // Remove titles to get the base name for email
+            // Pattern matches common titles and honorifics followed by dot and optional space, repeated at the start
+            $cleanName = preg_replace('/^((Prof|Dr|Ir|Drs|Dra|H|R|rer\.pol)\.\s*)+/', '', $name); 
             
-            // Cleaning the name for email
-            $cleanName = preg_replace('/^(Prof\.|Dr\.|Ir\.|Drs\.|Dra\.|H\.|R\.|rer\.pol\.)\s+/', '', $name); // Remove front titles
-            $cleanName = preg_replace('/,.+$/', '', $cleanName); // Remove back titles
-            // Get first name only
-            $parts = explode(' ', $cleanName);
-            $firstName = strtolower($parts[0]);
+            // Remove trailing titles starting with comma
+            $cleanName = preg_replace('/,.+$/', '', $cleanName);
             
-            $email = $firstName . '@djsn.com';
+            // Trim whitespace
+            $cleanName = trim($cleanName);
+            
+            // Construct email: firstname.lastname@djsn.com
+            $emailName = strtolower(str_replace(' ', '.', $cleanName));
+            $email = $emailName . '@djsn.com';
 
             User::updateOrCreate(
                 ['email' => $email],
                 [
                     'name' => $name,
-                    'password' => Hash::make('password'), // Default password
+                    'password' => Hash::make('password'),
                     'role' => 'Dewan',
                     'divisi' => $data['divisi'],
                     'order' => $data['order'],

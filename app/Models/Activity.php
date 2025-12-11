@@ -11,14 +11,19 @@ class Activity extends Model
 
     protected $fillable = [
         'type',
+        'letter_number',
         'name',
-        'date_time',
+        'start_date',
+        'end_date',
+        'start_time',
+        'end_time',
         'pic',
         'status',
         'invitation_status',
         'invitation_type',
         'location_type',
         'location',
+        'media_online',
         'meeting_link',
         'dispo_note',
         'disposition_to',
@@ -26,37 +31,47 @@ class Activity extends Model
         'attachment_path',
         'minutes_path',
         'assignment_letter_path',
+        'google_event_id',
     ];
 
     protected $casts = [
-        'date_time' => 'datetime',
+        'start_date' => 'date',
+        'end_date' => 'date',
         'pic' => 'array',
         'disposition_to' => 'array',
     ];
 
+    /**
+     * Virtual accessor for date_time to maintain backward compatibility with views.
+     */
+    public function getDateTimeAttribute()
+    {
+        return \Carbon\Carbon::parse($this->start_date->format('Y-m-d') . ' ' . $this->start_time);
+    }
+    
     // Council Members List
     // Council Structure
     public const COUNCIL_STRUCTURE = [
         'Ketua DJSN' => [
-            'Prof. Dr. Ir. R. Nunung Nuryartono, M.Si.'
+            'Nunung Nuryartono'
         ],
         'Komisi PME' => [
-            'Muttaqien, S.S., M.P.H., A.A.K.',
-            'Nikodemus Beriman Purba, S.Psi., M.H.',
-            'Sudarto, S.E., M.B.A., M.Kom., Ph.D., CGEIT., CA.',
-            'Robben Rico, A.Md., LLAJ., S.H., S.T., M.Si.',
-            'Dr. dr. Mahesa Paranadipa Maykel, M.H., MARS.',
-            'Dr.rer.pol. Syamsul Hidayat Pasaribu, S.E., M.Si.',
-            'Hermansyah, S.H., AK3.'
+            'Muttaqien',
+            'Nikodemus Beriman Purba',
+            'Sudarto',
+            'Robben Rico',
+            'Mahesa Paranadipa Maykel',
+            'Syamsul Hidayat Pasaribu',
+            'Hermansyah'
         ],
         'Komisi Komjakum' => [
-            'Drs. Paulus Agung Pambudhi, M.M.',
-            'dr. H. Agus Taufiqurrohman, M.Kes., Sp.S.',
-            'Kunta Wibawa Dasa Nugraha, S.E., M.A., Ph.D.',
-            'Dra. Indah Anggoro Putri, M.Bus.',
-            'Prof. Dr. Rudi Purwono, S.E., M.SE.',
-            'Mickael Bobby Hoelman, S.E., M.Si.',
-            'Royanto Purba, S.T.'
+            'Paulus Agung Pambudhi',
+            'Agus Taufiqurrohman',
+            'Kunta Wibawa Dasa Nugraha',
+            'Indah Anggoro Putri',
+            'Rudi Purwono',
+            'Mickael Bobby Hoelman',
+            'Royanto Purba'
         ]
     ];
 

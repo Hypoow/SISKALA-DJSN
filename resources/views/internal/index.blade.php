@@ -52,7 +52,7 @@
                                     <th>Lokasi</th>
                                     <th>Pelaksanaan</th>
                                     <th>Undangan</th>
-                                    <th>Keterangan Dispo</th>
+                                    <th>Keterangan</th>
                                     <th>Lampiran</th>
                                 </tr>
                             </thead>

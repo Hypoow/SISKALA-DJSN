@@ -46,6 +46,8 @@
                         <span class="badge badge-primary">Admin</span>
                       @elseif($user->role === 'Dewan')
                         <span class="badge badge-success">Dewan</span>
+                      @elseif($user->role === 'DJSN')
+                        <span class="badge badge-info text-white">DJSN</span>
                       @else
                         <span class="badge badge-secondary">User</span>
                       @endif
@@ -55,6 +57,7 @@
                     <button class="btn btn-sm btn-outline-success" type="button" onclick="editUser({{ $user->id }}, '{{ $user->name }}', '{{ $user->email }}', '{{ $user->role }}', '{{ $user->divisi }}')">
                       <span class="fe fe-edit fe-12 mr-1"></span> Edit
                     </button>
+                    <br></br>
                     <form method="POST" action="{{ route('master-data.destroy', $user) }}" class="d-inline delete-form">
                       @csrf
                       @method('DELETE')
@@ -111,6 +114,7 @@
               <option value="user">User</option>
               <option value="admin">Admin</option>
               <option value="Dewan">Dewan</option>
+              <option value="DJSN">DJSN</option>
             </select>
           </div>
           <div class="form-group">

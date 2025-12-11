@@ -34,8 +34,14 @@ Route::middleware('auth')->group(function () {
     // Unified Activities
     Route::get('/activities/past', [ActivityController::class, 'past'])->name('activities.past');
     Route::post('/activities/{activity}/upload-minutes', [ActivityController::class, 'uploadMinutes'])->name('activities.upload-minutes');
+    Route::delete('/activities/{activity}/minutes', [ActivityController::class, 'deleteMinutes'])->name('activities.delete-minutes');
     Route::post('/activities/{activity}/upload-assignment', [ActivityController::class, 'uploadAssignmentLetter'])->name('activities.upload-assignment');
+    Route::delete('/activities/{activity}/assignment', [ActivityController::class, 'deleteAssignment'])->name('activities.delete-assignment');
     Route::resource('activities', ActivityController::class);
+
+    // Reporting
+    Route::get('/report/h1', [\App\Http\Controllers\ReportController::class, 'index'])->name('report.h1');
+    Route::get('/report/h1-visual', [\App\Http\Controllers\ReportController::class, 'visualH1'])->name('report.h1-visual');
 
     // Master Data Routes (Admin Only - checked in controller)
     Route::prefix('master-data')->name('master-data.')->group(function () {

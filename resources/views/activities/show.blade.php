@@ -200,7 +200,7 @@
                         
                         @if($activity->dispo_note)
                         <div>
-                            <label class="text-muted small text-uppercase font-weight-bold">Keterangan Dispo</label>
+                            <label class="text-muted small text-uppercase font-weight-bold">Keterangan</label>
                             <div class="bg-light p-3 rounded markdown-content">
                                 {!! $activity->dispo_note !!}
                             </div>

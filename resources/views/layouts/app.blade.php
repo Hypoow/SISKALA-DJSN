@@ -16,12 +16,21 @@
     <!-- Date Range Picker CSS -->
     <link rel="stylesheet" href="{{ asset('tinydash/css/daterangepicker.css') }}">
     <!-- App CSS -->
+    <link rel="stylesheet" href="{{ asset('tinydash/css/app-dark.css') }}" id="darkTheme" disabled>
     <link rel="stylesheet" href="{{ asset('tinydash/css/app-light.css') }}" id="lightTheme">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @livewireStyles
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
     @stack('styles')
+    <script>
+      // Force Light Mode
+      localStorage.setItem("mode", "light");
+    </script>
   </head>
   <body class="vertical light">
     <div class="wrapper">
@@ -34,7 +43,7 @@
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle text-muted pr-0" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
               <span class="avatar avatar-sm mt-2">
-                <img src="{{ asset('assets/images/djsn.png') }}" alt="..." class="avatar-img rounded-circle">
+                <img src="{{ asset('assets/images/logo.svg') }}" alt="..." class="avatar-img rounded-circle">
               </span>
             </a>
             <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
@@ -48,6 +57,7 @@
           </li>
         </ul>
       </nav>
+      <div id="modeSwitcher" style="display: none;"></div>
       
       @include('layouts.sidebar')
 
@@ -97,6 +107,8 @@
     <script src="{{ asset('tinydash/js/tinycolor-min.js') }}"></script>
     <script src="{{ asset('tinydash/js/config.js') }}"></script>
     <script src="{{ asset('tinydash/js/apps.js') }}"></script>
+    @livewireScripts
     @stack('scripts')
   </body>
 </html>
+
