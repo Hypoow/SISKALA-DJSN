@@ -115,18 +115,26 @@ class ReportController extends Controller
             // Location/Media Line
             if ($activity->location_type === 'online') {
                 $text .= "Media : Zoom Meeting\n";
-                // Try parse link/ID
-                // Example: "Meeting ID : ... Passcode : ..."
                 if ($activity->meeting_link) {
-                    $text .= "{$activity->meeting_link}\n"; 
-                    // User might have put raw link or "ID: xxx Pass: yyy" in `meeting_link`.
-                    // We just dump it here.
+                    $text .= "Link : {$activity->meeting_link}\n"; 
+                }
+                if ($activity->meeting_id) {
+                    $text .= "Meeting ID : {$activity->meeting_id}\n"; 
+                }
+                if ($activity->passcode) {
+                    $text .= "Passcode : {$activity->passcode}\n"; 
                 }
             } elseif ($activity->location_type === 'hybrid') {
                  $text .= "Tempat : " . ($activity->location ?? '-') . "\n";
-                 $text .= "Media : Zoom Meeting\n";
+                 $text .= "Media : Zoom Meeting (Hybrid)\n";
                  if ($activity->meeting_link) {
-                    $text .= "{$activity->meeting_link}\n"; 
+                    $text .= "Link : {$activity->meeting_link}\n"; 
+                 }
+                 if ($activity->meeting_id) {
+                    $text .= "Meeting ID : {$activity->meeting_id}\n"; 
+                 }
+                 if ($activity->passcode) {
+                    $text .= "Passcode : {$activity->passcode}\n"; 
                  }
             } else {
                 // Offline

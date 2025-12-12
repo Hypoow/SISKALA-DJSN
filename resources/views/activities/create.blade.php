@@ -164,8 +164,19 @@
                             </div>
 
                             <div class="form-group mb-3" id="link_input_group" style="display: none;">
-                                <label for="meeting_link">Link Meeting / ID & Passcode</label>
-                                <input type="text" class="form-control" id="meeting_link" name="meeting_link" value="{{ old('meeting_link', $activity->meeting_link ?? '') }}" placeholder="Contoh: https://zoom.us/... atau ID: 123 Pass: abc">
+                                <label for="meeting_link">Link Meeting</label>
+                                <input type="text" class="form-control" id="meeting_link" name="meeting_link" value="{{ old('meeting_link', $activity->meeting_link ?? '') }}" placeholder="Contoh: https://zoom.us/...">
+                            </div>
+
+                            <div class="form-row" id="meeting_details_group" style="display: none;">
+                                <div class="col-md-6 mb-3">
+                                    <label for="meeting_id">Meeting ID</label>
+                                    <input type="text" class="form-control" id="meeting_id" name="meeting_id" value="{{ old('meeting_id', $activity->meeting_id ?? '') }}" placeholder="Contoh: 823 456 789">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="passcode">Passcode</label>
+                                    <input type="text" class="form-control" id="passcode" name="passcode" value="{{ old('passcode', $activity->passcode ?? '') }}" placeholder="Contoh: 123456">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -340,19 +351,23 @@
         const locInput = document.getElementById('location_input_group');
         const linkInput = document.getElementById('link_input_group');
         const mediaGroup = document.getElementById('media_online_group');
+        const meetingDetailsGroup = document.getElementById('meeting_details_group');
 
         if (type === 'online') {
             locInput.style.display = 'none';
             linkInput.style.display = 'block';
             mediaGroup.style.display = 'block';
+            meetingDetailsGroup.style.display = 'flex';
         } else if (type === 'offline') {
             locInput.style.display = 'block';
             linkInput.style.display = 'none';
             mediaGroup.style.display = 'none';
+            meetingDetailsGroup.style.display = 'none';
         } else if (type === 'hybrid') {
             locInput.style.display = 'block';
             linkInput.style.display = 'block';
             mediaGroup.style.display = 'block';
+            meetingDetailsGroup.style.display = 'flex';
         }
     }
 
@@ -657,31 +672,70 @@
             }
         }
 
-        // 3. Tipe Lokasi & Lokasi
-        const isOnline = /zoom|online|daring|meet/i.test(text);
-        const locationTypeSelect = $('#location_type');
+        // 3. Tipe Lokasi, Media, & Lokasi
+        const mediaMatch = text.match(/(?:Media|Tempat)\s*:\s*(.*)/i);
+        let detectedType = 'offline';
+        let mediaName = '';
+
+        if (mediaMatch && mediaMatch[1]) {
+            const content = mediaMatch[1].toLowerCase();
+            
+            if (content.includes('zoom')) {
+                detectedType = 'online';
+                mediaName = 'Zoom';
+            } else if (content.includes('meet') || content.includes('google')) {
+                detectedType = 'online';
+                mediaName = 'Google Meet';
+            } else if (content.includes('teams')) {
+                detectedType = 'online';
+                mediaName = 'Microsoft Teams';
+            } else if (content.includes('online') || content.includes('daring')) {
+                detectedType = 'online';
+                mediaName = 'Lainnya';
+            }
+        }
         
-        if (isOnline) {
-            locationTypeSelect.val('online').trigger('change');
-            
-            // Try to find Meeting ID / Link
-            const meetingIdMatch = text.match(/Meeting ID\s*:\s*([\d\s]+)/i);
-            const passcodeMatch = text.match(/Passcode\s*:\s*(\w+)/i);
-            
-            let linkVal = '';
-            if (meetingIdMatch) linkVal += `Meeting ID: ${meetingIdMatch[1].trim()} `;
-            if (passcodeMatch) linkVal += `Passcode: ${passcodeMatch[1].trim()}`;
-            
-            if (linkVal) {
-                $('#meeting_link').val(linkVal);
+        // Fallback: Check full text if not found in "Media:" line
+        if (detectedType === 'offline' && /zoom|google meet|microsoft teams|daring/i.test(text)) {
+             detectedType = 'online';
+             if (/zoom/i.test(text)) mediaName = 'Zoom';
+             else if (/google meet/i.test(text)) mediaName = 'Google Meet';
+             else if (/teams/i.test(text)) mediaName = 'Microsoft Teams';
+        }
+
+        const locationTypeSelect = $('#location_type');
+        locationTypeSelect.val(detectedType).trigger('change');
+
+        if (detectedType === 'online' || detectedType === 'hybrid') {
+            // Set Media Select
+            if (mediaName) {
+                $('#media_online').val(mediaName).trigger('change');
+            }
+
+            // Extract Meeting ID and Passcode
+            // Pattern: "Meeting ID: 850 0568 4521" or "Meeting ID : 850..."
+            const meetingIdMatch = text.match(/Meeting ID\s*[:.]?\s*([\d\s]+)/i);
+            const passcodeMatch = text.match(/Passcode\s*[:.]?\s*([\w]+)/i);
+            const linkMatch = text.match(/https?:\/\/[^\s]+/i);
+
+            if (meetingIdMatch) {
+                // Remove spaces for value if needed, or keep for readability. Usually better to strip extra spaces.
+                $('#meeting_id').val(meetingIdMatch[1].trim());
+            }
+            if (passcodeMatch) {
+                $('#passcode').val(passcodeMatch[1].trim());
+            }
+            if (linkMatch) {
+                 $('#meeting_link').val(linkMatch[0]);
             }
         } else {
-            locationTypeSelect.val('offline').trigger('change');
-            
-            // Try to find "Tempat : <place>"
+             // Offline: Try to find "Tempat : <place>"
             const placeMatch = text.match(/(?:Tempat|Lokasi)\s*:\s*(.*)/i);
             if (placeMatch) {
-                $('#location').val(placeMatch[1].trim());
+                // If the match contains "Zoom", ignore it (handled above).
+                if (!/zoom|meet|online/i.test(placeMatch[1])) {
+                     $('#location').val(placeMatch[1].trim());
+                }
             }
         }
 
@@ -871,16 +925,42 @@
         }
 
         // Format Location
+        // Format Location
         let locStr = '';
+        let meetingId = $('#meeting_id').val();
+        let passcode = $('#passcode').val();
+
         if (locationType === 'online') {
-            locStr = (mediaOnline ? 'Media: ' + mediaOnline : 'Online') + (meetingLink ? ' (' + meetingLink + ')' : '');
+            let mediaLabel = mediaOnline || 'Online';
+            if (mediaLabel === 'Zoom') mediaLabel = 'Zoom Meeting';
+
+            locStr = 'Online';
+            locStr += `<br><br>Media: ${mediaLabel}`;
+            
+            if (meetingLink) locStr += `<br><br>Link Meeting: ${meetingLink}`;
+
+            let idPassPart = '';
+            if (meetingId) idPassPart += `Meeting ID: ${meetingId}`;
+            if (passcode) {
+                if (idPassPart) idPassPart += ' ';
+                idPassPart += `Passcode: ${passcode}`;
+            }
+            if (idPassPart) locStr += `<br><br>${idPassPart}`;
+            
         } else if (locationType === 'offline') {
             locStr = location || '-';
         } else {
             // Hybrid
-            let onlinePart = (mediaOnline ? 'Media: ' + mediaOnline : 'Online') + (meetingLink ? ' (' + meetingLink + ')' : ' (Link Menyusul)');
             let offlinePart = location || '-';
-            locStr = offlinePart + ' & ' + onlinePart;
+            let onlinePart = (mediaOnline ? 'Media: ' + mediaOnline : 'Online');
+            
+            if (meetingLink) onlinePart += '<br>Link: ' + meetingLink;
+            else onlinePart += '<br>(Link Menyusul)';
+            
+            if (meetingId) onlinePart += '<br>Meeting ID: ' + meetingId;
+            if (passcode) onlinePart += '<br>Passcode: ' + passcode;
+
+            locStr = offlinePart + '<br><br>' + onlinePart;
         }
 
         // Helper to strip titles (Generic Regex Approach)
@@ -928,12 +1008,62 @@
         }
 
         // Opening Greeting
-        text += `<p>Bersama ini kami sampaikan informasi kegiatan dengah detail sebagai berikut:</p><br>`;
+        text += `<p>Bersama ini kami sampaikan informasi kegiatan dengan detail sebagai berikut:</p><br>`;
         
         text += `<p><strong>Nama Kegiatan:</strong> ${name}</p>`;
         if (letterNumber) text += `<p><strong>Nomor Surat:</strong> ${letterNumber}</p>`;
         text += `<p><strong>Waktu:</strong> ${dateStr}, Pukul ${timeStr}</p>`;
-        text += `<p><strong>Lokasi:</strong> ${locStr}</p>`;
+        
+        if (locationType === 'online') {
+             text += `<p><strong>Lokasi:</strong> Online</p>`;
+             
+             let mediaLabel = mediaOnline || 'Online';
+             if (mediaLabel === 'Zoom') mediaLabel = 'Zoom Meeting';
+             text += `<p><strong>Media:</strong> ${mediaLabel}</p>`;
+             
+             if (meetingLink) {
+                 text += `<p><strong>Link Meeting:</strong> ${meetingLink}</p>`;
+             }
+             
+             let idPassPart = '';
+             if (meetingId) idPassPart += `Meeting ID: ${meetingId}`;
+             if (passcode) {
+                 if (idPassPart) idPassPart += ' ';
+                 idPassPart += `Passcode: ${passcode}`;
+             }
+             
+             if (idPassPart) {
+                 text += `<p>${idPassPart}</p>`;
+             }
+        } else if (locationType === 'hybrid') {
+             text += `<p><strong>Tipe Lokasi:</strong> Hybrid (Offline & Online)</p>`;
+             
+             text += `<p><strong>Lokasi Kegiatan:</strong> ${location || '-'}</p>`;
+             
+             let mediaLabel = mediaOnline || 'Online';
+             if (mediaLabel === 'Zoom') mediaLabel = 'Zoom Meeting';
+             text += `<p><strong>Media:</strong> ${mediaLabel}</p>`;
+
+             if (meetingLink) {
+                 text += `<p><strong>Link Meeting:</strong> ${meetingLink}</p>`;
+             } else {
+                 text += `<p><strong>Link Meeting:</strong> (Menyusul)</p>`;
+             }
+
+             let idPassPart = '';
+             if (meetingId) idPassPart += `Meeting ID: ${meetingId}`;
+             if (passcode) {
+                 if (idPassPart) idPassPart += ' ';
+                 idPassPart += `Passcode: ${passcode}`;
+             }
+             
+             if (idPassPart) {
+                 text += `<p>${idPassPart}</p>`;
+             }
+        } else {
+             // Offline
+             text += `<p><strong>Lokasi:</strong> ${location || '-'}</p>`;
+        }
         
         // Dresscode Logic
         let dresscodeStr = dresscode ? dresscode : '-';

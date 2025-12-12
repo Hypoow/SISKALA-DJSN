@@ -41,15 +41,58 @@
                                     {{ \Carbon\Carbon::parse($activity->start_date)->isoFormat('dddd, D MMMM Y') }}
                                 </p>
                                 
-                                <p class="mb-1">
-                                    @if($activity->location_type === 'online')
-                                        <i class="fe fe-video fe-12 mr-1"></i> Online (Zoom/Meet)
-                                    @elseif($activity->location_type === 'hybrid')
-                                        <i class="fe fe-map-pin fe-12 mr-1"></i> {{ $activity->location }} <span class="badge badge-info ml-1">Hybrid</span>
-                                    @else
-                                        <i class="fe fe-map-pin fe-12 mr-1"></i> {{ $activity->location }}
+                                {{-- Location Details Block --}}
+                                <div class="bg-light p-3 rounded border mb-3" style="font-size: 0.9rem;">
+                                    {{-- 1. Tipe Lokasi --}}
+                                    <div class="mb-2">
+                                        <span class="text-muted d-block" style="font-size: 0.8rem;">Tipe Lokasi:</span>
+                                        @if($activity->location_type === 'online')
+                                            <span class="badge badge-success">Online</span>
+                                        @elseif($activity->location_type === 'hybrid')
+                                            <span class="badge badge-info">Hybrid (Offline & Online)</span>
+                                        @else
+                                            <span class="badge badge-secondary">Offline</span>
+                                        @endif
+                                    </div>
+
+                                    {{-- 2. Lokasi Kegiatan (Offline/Hybrid) --}}
+                                    @if($activity->location_type !== 'online')
+                                        <div class="mb-2">
+                                            <span class="text-muted d-block" style="font-size: 0.8rem;">Lokasi Kegiatan:</span>
+                                            <strong class="text-dark"><i class="fe fe-map-pin mr-1 text-danger"></i> {{ $activity->location ?? '-' }}</strong>
+                                        </div>
                                     @endif
-                                </p>
+
+                                    {{-- 3. Media (Online/Hybrid) --}}
+                                    @if($activity->location_type === 'online' || $activity->location_type === 'hybrid')
+                                        <div class="mb-2">
+                                            <span class="text-muted d-block" style="font-size: 0.8rem;">Media:</span>
+                                            <strong class="text-primary"><i class="fe fe-video mr-1"></i> {{ $activity->media_online ?? 'Online' }}</strong>
+                                        </div>
+
+                                        {{-- 4. Link (Online/Hybrid) --}}
+                                        @if($activity->meeting_link)
+                                            <div class="mb-2">
+                                                <span class="text-muted d-block" style="font-size: 0.8rem;">Link Meeting:</span>
+                                                <a href="{{ $activity->meeting_link }}" target="_blank" class="text-break"><i class="fe fe-link mr-1"></i> Klik untuk Bergabung</a>
+                                            </div>
+                                        @endif
+
+                                        {{-- 5. ID & Passcode (Online/Hybrid) --}}
+                                        @if($activity->meeting_id || $activity->passcode)
+                                            <div class="mb-2">
+                                                <div style="font-family: monospace; font-size: 0.9rem;" class="bg-white p-2 border rounded text-dark">
+                                                    @if($activity->meeting_id)
+                                                        <div>Meeting ID: <strong>{{ $activity->meeting_id }}</strong></div>
+                                                    @endif
+                                                    @if($activity->passcode)
+                                                        <div>Passcode: <strong>{{ $activity->passcode }}</strong></div>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        @endif
+                                    @endif
+                                </div>
 
                                 @php
                                     $dispositions = $activity->disposition_to ?? [];

@@ -25,6 +25,8 @@ class Activity extends Model
         'location',
         'media_online',
         'meeting_link',
+        'meeting_id',
+        'passcode',
         'dispo_note',
         'disposition_to',
         'dresscode',

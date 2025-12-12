@@ -209,6 +209,8 @@ class ActivityController extends Controller
             'location' => 'nullable|required_if:location_type,offline,hybrid|string',
             'media_online' => 'nullable|string',
             'meeting_link' => 'nullable|required_if:location_type,online,hybrid|string',
+            'meeting_id' => 'nullable|string',
+            'passcode' => 'nullable|string',
             'pic' => 'nullable|array',
             'pic_external' => 'nullable|string',
             'dispo_note' => 'nullable|string',
