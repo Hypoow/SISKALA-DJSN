@@ -1,5 +1,5 @@
-<aside class="sidebar-left border-right bg-white shadow" id="leftSidebar" data-simplebar>
-    <a href="#" class="btn collapseSidebar toggle-btn d-lg-none text-muted ml-2 mt-3" data-toggle="toggle">
+<aside class="sidebar-left border-right shadow" id="leftSidebar" data-simplebar>
+    <a href="#" class="btn collapseSidebar toggle-btn d-lg-none text-white ml-2 mt-3" data-toggle="toggle">
       <i class="fe fe-x"><span class="sr-only"></span></i>
     </a>
     <nav class="vertnav navbar navbar-light">
@@ -57,7 +57,7 @@
         <li class="nav-item w-100 {{ request()->routeIs('activities.past') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('activities.past') }}">
               <i class="fe fe-clock fe-15"></i>
-              <span class="ml-3 item-text">Kegiatan Lampau</span>
+              <span class="ml-3 item-text">Kegiatan Selesai</span>
             </a>
         </li>
         @if(auth()->check() && auth()->user()->isAdmin())
@@ -83,5 +83,26 @@
         </li>
       </ul>
       @endif
+
+      <p class="text-muted nav-heading mt-2 mb-1 px-3">
+        <span>Akun</span>
+      </p>
+      <ul class="navbar-nav flex-fill w-100 mb-2">
+        <li class="nav-item w-100 {{ request()->routeIs('profile.edit') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('profile.edit') }}">
+              <i class="fe fe-user fe-16"></i>
+              <span class="ml-3 item-text">Profil Saya</span>
+            </a>
+        </li>
+        <li class="nav-item w-100">
+            <a class="nav-link" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+              <i class="fe fe-log-out fe-16"></i>
+              <span class="ml-3 item-text">Keluar</span>
+            </a>
+        </li>
+      </ul>
+      <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+          @csrf
+      </form>
     </nav>
   </aside>

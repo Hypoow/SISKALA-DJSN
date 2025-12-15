@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="Aplikasi Penjadwalan DJSN">
     <link rel="icon" href="{{ asset('images/logo-new.png') }}">
-    <title>Masuk - Schedulo DJSN</title>
+    <title>Lupa Password - Schedulo DJSN</title>
     <!-- Fonts - Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Icons -->
@@ -28,7 +28,7 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            /* Mesh Gradient Background */
+            /* Mesh Gradient Background - Same as Login */
             background-color: #f3f4f6;
             background-image: 
                 radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
@@ -38,14 +38,12 @@
             animation: gradient-animation 15s ease infinite;
         }
 
-        /* Dynamic Mesh Animation */
         @keyframes gradient-animation {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
 
-        /* Overlay to lighten/soften for glass effect base */
         body::before {
             content: "";
             position: absolute;
@@ -81,16 +79,16 @@
         /* Logo Area */
         .brand-section {
             text-align: center;
-            margin-bottom: 2.5rem;
+            margin-bottom: 2rem;
         }
         
         .brand-logo {
-            height: 60px; /* Slightly larger for emphasis */
+            height: 60px;
             margin-bottom: 1.25rem;
             filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
         }
 
-        .app-name {
+        .page-title {
             font-size: 1.5rem;
             font-weight: 800;
             color: var(--text-dark);
@@ -98,11 +96,12 @@
             margin: 0;
         }
         
-        .app-tagline {
+        .page-subtitle {
             font-size: 0.9rem;
             color: var(--text-muted);
             margin-top: 0.5rem;
             font-weight: 500;
+            line-height: 1.5;
         }
 
         /* Form Styling */
@@ -125,11 +124,11 @@
 
         .form-control {
             width: 100%;
-            padding: 1rem 1rem 1rem 2.8rem; /* Space for icon */
+            padding: 1rem 1rem 1rem 2.8rem;
             font-size: 0.95rem;
             border: 1px solid #e2e8f0;
             border-radius: 12px;
-            background-color: #ffffff; /* Pure white input */
+            background-color: #ffffff;
             color: var(--text-dark);
             transition: all 0.2s;
             box-sizing: border-box;
@@ -149,30 +148,6 @@
             transform: translateY(-50%);
             color: #94a3b8;
             pointer-events: none;
-        }
-
-        /* Checkbox */
-        .checkbox-wrapper {
-            display: flex;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-
-        .custom-checkbox {
-            width: 1rem;
-            height: 1rem;
-            border-radius: 4px;
-            border: 1px solid #cbd5e1;
-            margin-right: 0.75rem;
-            cursor: pointer;
-            position: relative;
-        }
-        
-        .checkbox-label {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            cursor: pointer;
-            user-select: none;
         }
 
         /* Button */
@@ -212,25 +187,42 @@
         /* Alert Styling */
         .alert {
             padding: 1rem;
-            background: #fee2e2;
-            border-left: 4px solid #ef4444;
             border-radius: 8px;
             margin-bottom: 1.5rem;
             display: flex;
             align-items: flex-start;
         }
+        .alert-success {
+            background: #dcfce7;
+            border-left: 4px solid #22c55e;
+            color: #15803d;
+        }
+        .alert-danger {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            color: #991b1b;
+        }
         .alert-icon {
-             color: #ef4444;
              margin-right: 0.75rem;
              margin-top: 2px;
         }
         .alert-content {
-            color: #991b1b;
             font-size: 0.9rem;
         }
-        .alert ul {
-            margin: 0;
-            padding-left: 1rem;
+        
+        /* Links */
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 1.5rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .back-link:hover {
+            color: var(--primary-color);
         }
     </style>
   </head>
@@ -243,80 +235,46 @@
     <div class="login-card">
         <div class="brand-section">
             <img src="{{ asset('images/logo-new.png') }}" alt="Logo" class="brand-logo">
-            <h1 class="app-name">Schedulo DJSN</h1>
-            <p class="app-tagline">Silakan masuk ke akun Anda</p>
+            <h1 class="page-title">Lupa Password?</h1>
+            <p class="page-subtitle">Masukkan email Anda untuk menerima link reset password.</p>
         </div>
 
-        <form method="POST" action="{{ route('login') }}">
+        @if (session('status'))
+            <div class="alert alert-success">
+                <div class="alert-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <div class="alert-content">
+                    {{ session('status') }}
+                </div>
+            </div>
+        @endif
+
+        <form method="POST" action="{{ route('password.email') }}">
             @csrf
             
-            @if($errors->any())
-                <div class="alert">
-                    <div class="alert-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-alert-circle"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                    </div>
-                    <div class="alert-content">
-                        <strong>Login Gagal</strong>
-                        <ul style="list-style: none; padding: 0; margin-top: 4px;">
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                </div>
-            @endif
-
             <div class="form-group">
-                <label for="email" class="form-label">Email</label>
+                <label for="email" class="form-label">Email Address</label>
                 <div class="input-wrapper">
                     <span class="input-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
                     </span>
-                    <input type="email" id="email" name="email" class="form-control" placeholder="example@gmail.com" required autofocus value="{{ old('email') }}">
+                    <input type="email" id="email" name="email" class="form-control" placeholder="example@djsn.go.id" required autofocus value="{{ old('email') }}">
                 </div>
-            </div>
-
-            <div class="form-group">
-                <label for="password" class="form-label">Password</label>
-                <div class="input-wrapper">
-                    <span class="input-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                    </span>
-                    <input type="password" id="password" name="password" class="form-control" placeholder="Masukkan Password" required>
-                </div>
-            </div>
-
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div class="checkbox-wrapper mb-0">
-                    <input type="checkbox" id="showPassword" class="custom-checkbox_input" style="margin-right: 8px;">
-                    <label for="showPassword" class="checkbox-label">Tampilkan Password</label>
-                </div>
-                <a href="{{ route('password.request') }}" class="text-primary small font-weight-bold" style="text-decoration: none;">Lupa Password?</a>
-                <br></br>
+                @error('email')
+                    <span class="text-danger small mt-1 d-block" style="color: #ef4444;">{{ $message }}</span>
+                @enderror
             </div>
 
             <button type="submit" class="btn-submit">
-                Masuk
+                Kirim Link Reset
             </button>
         </form>
 
-        <div class="footer-text">
-            &copy; {{ date('Y') }} Dewan Jaminan Sosial Nasional
-        </div>
+        <a href="{{ route('login') }}" class="back-link">
+            ← Kembali ke Login
+        </a>
     </div>
 
-    <script src="{{ asset('js/jquery.min.js') }}"></script>
-    <script>
-        $(document).ready(function() {
-            $('#showPassword').change(function() {
-                var input = $('#password');
-                if (this.checked) {
-                    input.attr('type', 'text');
-                } else {
-                    input.attr('type', 'password');
-                }
-            });
-        });
-    </script>
   </body>
 </html>

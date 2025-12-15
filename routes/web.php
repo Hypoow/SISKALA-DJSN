@@ -22,6 +22,12 @@ Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// Password Reset Routes
+Route::get('password/reset', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
+Route::post('password/email', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+Route::get('password/reset/{token}', [App\Http\Controllers\Auth\ResetPasswordController::class, 'showResetForm'])->name('password.reset');
+Route::post('password/reset', [App\Http\Controllers\Auth\ResetPasswordController::class, 'reset'])->name('password.update');
+
 // Dashboard Routes
 Route::middleware('auth')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
@@ -37,7 +43,12 @@ Route::middleware('auth')->group(function () {
     Route::delete('/activities/{activity}/minutes', [ActivityController::class, 'deleteMinutes'])->name('activities.delete-minutes');
     Route::post('/activities/{activity}/upload-assignment', [ActivityController::class, 'uploadAssignmentLetter'])->name('activities.upload-assignment');
     Route::delete('/activities/{activity}/assignment', [ActivityController::class, 'deleteAssignment'])->name('activities.delete-assignment');
+    Route::put('/activities/{activity}/summary', [ActivityController::class, 'updateSummary'])->name('activities.update-summary');
     Route::resource('activities', ActivityController::class);
+
+    // Profile Management
+    Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
 
     // Reporting
     Route::get('/report/h1', [\App\Http\Controllers\ReportController::class, 'index'])->name('report.h1');

@@ -117,7 +117,9 @@ class ActivityController extends Controller
             'location_type' => 'required|in:offline,online,hybrid',
             'location' => 'nullable|required_if:location_type,offline,hybrid|string',
             'media_online' => 'nullable|string',
-            'meeting_link' => 'nullable|required_if:location_type,online,hybrid|string',
+            'meeting_link' => 'nullable|string',
+            'meeting_id' => 'nullable|string',
+            'passcode' => 'nullable|string',
             'pic' => 'nullable|array',
             'pic_external' => 'nullable|string',
             'dispo_note' => 'nullable|string',
@@ -125,6 +127,7 @@ class ActivityController extends Controller
             'dresscode' => 'nullable|string',
             'attachment_path' => 'nullable|file|mimes:pdf|max:10240',
             'minutes_path' => 'nullable|file|mimes:pdf|max:10240',
+            'summary_content' => 'nullable|string',
         ]);
 
         // Map activity_type to type
@@ -138,7 +141,9 @@ class ActivityController extends Controller
         unset($validated['pic_external']);
 
         if ($request->hasFile('attachment_path')) {
-            $path = $request->file('attachment_path')->store('attachments', 'public');
+            $file = $request->file('attachment_path');
+            $filename = $file->getClientOriginalName();
+            $path = $file->storeAs('attachments', $filename, 'public');
             $validated['attachment_path'] = $path;
         }
 
@@ -165,7 +170,8 @@ class ActivityController extends Controller
         if ($isIntegrated) {
             $message .= ' dan terintegrasi ke Google Calendar.';
         } else {
-            $message .= ', namun gagal terintegrasi ke Google Calendar (Cek Log).';
+            $error = GoogleCalendarService::getLastError();
+            $message .= ", namun gagal terintegrasi ke Google Calendar. Error: {$error}";
         }
 
         return redirect()->route('activities.index')->with('success', $message);
@@ -208,7 +214,7 @@ class ActivityController extends Controller
             'location_type' => 'required|in:offline,online,hybrid',
             'location' => 'nullable|required_if:location_type,offline,hybrid|string',
             'media_online' => 'nullable|string',
-            'meeting_link' => 'nullable|required_if:location_type,online,hybrid|string',
+            'meeting_link' => 'nullable|string',
             'meeting_id' => 'nullable|string',
             'passcode' => 'nullable|string',
             'pic' => 'nullable|array',
@@ -218,10 +224,13 @@ class ActivityController extends Controller
             'dresscode' => 'nullable|string',
             'attachment_path' => 'nullable|file|mimes:pdf|max:10240',
             'minutes_path' => 'nullable|file|mimes:pdf|max:10240',
+            'summary_content' => 'nullable|string',
         ]);
 
         if ($request->hasFile('attachment_path')) {
-            $path = $request->file('attachment_path')->store('attachments', 'public');
+            $file = $request->file('attachment_path');
+            $filename = $file->getClientOriginalName();
+            $path = $file->storeAs('attachments', $filename, 'public');
             $validated['attachment_path'] = $path;
         }
 
@@ -267,5 +276,18 @@ class ActivityController extends Controller
 
         $activity->delete();
         return redirect()->route('activities.index')->with('success', 'Kegiatan berhasil dihapus');
+    }
+
+    public function updateSummary(Request $request, Activity $activity)
+    {
+        $request->validate([
+            'summary_content' => 'required|string',
+        ]);
+
+        $activity->update([
+            'summary_content' => $request->summary_content
+        ]);
+
+        return redirect()->route('activities.show', $activity->id)->with('success', 'Berhasil menginput Hasil Rapat Secara Singkat');
     }
 }

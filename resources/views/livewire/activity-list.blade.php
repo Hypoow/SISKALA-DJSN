@@ -3,6 +3,21 @@
         <div class="row my-4">
             <div class="col-md-12">
                 <div class="card shadow">
+                    @if($this->urgentActivities->isNotEmpty() && auth()->check() && auth()->user()->isAdmin())
+                        <div class="alert alert-danger mx-4 mt-4 mb-0" role="alert">
+                            <h4 class="alert-heading"><i class="fe fe-alert-triangle mr-2"></i>Perhatian: Kegiatan H-3 Belum Didisposisi</h4>
+                            <p>Terdapat <strong>{{ $this->urgentActivities->count() }}</strong> kegiatan yang akan dilaksanakan dalam 3 hari ke depan namun belum memiliki disposisi.</p>
+                            <hr>
+                            <ul class="mb-0 pl-3">
+                                @foreach($this->urgentActivities as $urgent)
+                                    <li>
+                                        <strong>{{ $urgent->start_date->isoFormat('D MMM Y') }}</strong> - {{ $urgent->name }}
+                                        <a href="{{ route('activities.edit', $urgent->id) }}" class="alert-link ml-2"><i class="fe fe-edit"></i> Disposisi Sekarang</a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
                     <div class="card-body">
                         <div class="toolbar row mb-3">
                             <div class="col-md-6">
@@ -40,8 +55,8 @@
                                         <span class="d-none d-md-inline">Keterangan:</span>
                                         <span class="d-inline d-md-none">Ket:</span>
                                     </span>
-                                    <span class="mr-2"><span class="status-dot" style="background-color: #e3f2fd; border: 1px solid #ccc;"></span> Internal</span>
-                                    <span><span class="status-dot" style="background-color: #fff3cd; border: 1px solid #ccc;"></span> Eksternal</span>
+                                    <span class="mr-2"><span class="status-dot" style="background-color: var(--primary-color);"></span> Internal</span>
+                                    <span><span class="status-dot" style="background-color: var(--accent-color);"></span> Eksternal</span>
                                 </div>
 
                                 {{-- Admin Only --}}
@@ -108,9 +123,7 @@
                                                 <th>Status Pelaksanaan</th>
                                                 <th>Status Undangan</th>
                                                 <th>Lokasi</th>
-                                                @if(auth()->check() && auth()->user()->isAdmin())
                                                 <th>Aksi</th>
-                                                @endif
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -180,22 +193,22 @@
                                                     <span class="badge badge-info">Online</span>
                                                 @endif
                                             </td>
-                                            @if(auth()->check() && auth()->user()->isAdmin())
                                             <td>
                                                 <button class="btn btn-sm dropdown-toggle more-horizontal" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                     <span class="text-muted sr-only">Action</span>
                                                 </button>
                                                 <div class="dropdown-menu dropdown-menu-right">
                                                     <a class="dropdown-item" href="{{ route('activities.show', $activity->id) }}">Detail</a>
+                                                    @if(auth()->check() && auth()->user()->isAdmin())
                                                     <a class="dropdown-item" href="{{ route('activities.edit', $activity->id) }}">Edit</a>
                                                     <form id="delete-form-{{ $activity->id }}" action="{{ route('activities.destroy', $activity->id) }}" method="POST">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="button" class="dropdown-item text-danger" onclick="confirmDelete({{ $activity->id }})">Hapus</button>
                                                     </form>
+                                                    @endif
                                                 </div>
                                             </td>
-                                            @endif
                                         </tr>
                                         @endforeach
                                     @empty

@@ -34,6 +34,9 @@ class Activity extends Model
         'minutes_path',
         'assignment_letter_path',
         'google_event_id',
+        'summary_content',
+        'google_event_id_dewan',
+        'google_event_id_sekretariat',
     ];
 
     protected $casts = [
@@ -99,6 +102,36 @@ class Activity extends Model
 
     // Constants for Invitation Status (Internal)
     public const INV_INT_SENT = 0;
-    public const INV_INT_SIGN = 1;
+    public const INV_INT_SIGNED = 1;
     public const INV_INT_DRAFT = 2;
+
+    /**
+     * Scope a query to only include activities visible to the given user.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  \App\Models\User  $user
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeVisibleToUser($query, $user)
+    {
+        if ($user->isAdmin()) {
+            return $query; // Admin sees all
+        }
+
+        if (in_array($user->role, ['Dewan', 'DJSN'])) {
+            // Dewan/DJSN only see if they are in disposition_to OR are the PIC
+            return $query->where(function($q) use ($user) {
+                // Check JSON disposition_to for User Name
+                $q->whereJsonContains('disposition_to', $user->name)
+                  // Or checks if they are in PIC array (internal users might be listed there too)
+                  ->orWhereJsonContains('pic', $user->name)
+                  // Also check 'Komisi' mapping if needed? User mainly said "targeted for dispo". 
+                  // Let's stick to explicit name match for now as per "disposisi pada kegiatan".
+                  ;
+            });
+        }
+
+        return $query;
+    }
 }
+

@@ -15,6 +15,17 @@ class ActivityList extends Component
 
     public $sortDirection = 'asc';
 
+    public function getUrgentActivitiesProperty()
+    {
+        return Activity::whereBetween('start_date', [now()->startOfDay(), now()->addDays(3)->endOfDay()])
+                       ->where('status', '!=', Activity::STATUS_CANCELLED) // Assuming 3 is cancelled, but let's check constants or use logic
+                       ->where(function($q) {
+                           $q->whereNull('disposition_to')
+                             ->orWhere('disposition_to', '[]'); // For JSON/Array columns
+                       })
+                       ->get();
+    }
+
     protected $queryString = [
         'search' => ['except' => ''],
         'type' => ['except' => ''],
@@ -85,9 +96,16 @@ class ActivityList extends Component
 
     public function render()
     {
-        $query = Activity::where('start_date', '>=', now()->startOfDay())
-                         ->orderBy('start_date', $this->sortDirection)
-                         ->orderBy('start_time', 'asc');
+        $query = Activity::query();
+        
+        // Apply Visibility Scope
+        if (auth()->check()) {
+            $query->visibleToUser(auth()->user());
+        }
+
+        $query->where('start_date', '>=', now()->startOfDay())
+              ->orderBy('start_date', $this->sortDirection)
+              ->orderBy('start_time', 'asc');
 
         if ($this->type && in_array($this->type, ['external', 'internal'])) {
             $query->where('type', $this->type);

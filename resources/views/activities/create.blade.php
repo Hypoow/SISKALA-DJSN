@@ -38,7 +38,7 @@
                     @endif
                     
                     <div class="form-group mb-3">
-                        <label for="activity_type">Jenis Kegiatan</label>
+                        <label for="activity_type">Jenis Kegiatan <span class="text-danger">*</span></label>
                         <select class="form-control select2" id="activity_type" name="activity_type" onchange="updateFormType()" {{ isset($activity) ? 'disabled' : '' }}>
                             <option value="" disabled {{ !isset($activity) ? 'selected' : '' }}>-- Pilih Jenis Kegiatan --</option>
                             <option value="external" {{ (old('activity_type', $activity->type ?? '') == 'external') ? 'selected' : '' }}>Kegiatan Eksternal</option>
@@ -74,7 +74,7 @@
 
                     <div class="form-row">
                         <div class="col-md-6 mb-3">
-                            <label for="name">Nama Kegiatan</label>
+                            <label for="name">Nama Kegiatan <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="name" name="name" value="{{ old('name', $activity->name ?? '') }}" required>
                         </div>
                         <div class="col-md-6 mb-3">
@@ -85,7 +85,7 @@
                     
                     <div class="form-row">
                         <div class="col-md-6 mb-3">
-                            <label for="start_date">Tanggal Mulai</label>
+                            <label for="start_date">Tanggal Mulai <span class="text-danger">*</span></label>
                             <input type="date" class="form-control" id="start_date" name="start_date" value="{{ old('start_date', isset($activity) ? $activity->start_date->format('Y-m-d') : (isset($date) ? $date : now()->format('Y-m-d'))) }}" required onchange="syncDates()">
                         </div>
                         <div class="col-md-6 mb-3">
@@ -97,7 +97,7 @@
 
                     <div class="form-row">
                         <div class="col-md-6 mb-3">
-                            <label for="start_time">Jam Mulai</label>
+                            <label for="start_time">Jam Mulai <span class="text-danger">*</span></label>
                             <input type="time" class="form-control" id="start_time" name="start_time" value="{{ old('start_time', isset($activity) ? \Carbon\Carbon::parse($activity->start_time)->format('H:i') : '09:00') }}" required>
                         </div>
                         <div class="col-md-6 mb-3">
@@ -113,7 +113,7 @@
 
                     <div class="form-row">
                         <div class="col-md-6 mb-3">
-                            <label for="status">Status Pelaksanaan Kegiatan</label>
+                            <label for="status">Status Pelaksanaan Kegiatan <span class="text-danger">*</span></label>
                             <select class="form-control select2" id="status" name="status" required>
                                 <option value="0" data-color="#28a745" {{ (old('status', $activity->status ?? '') == 0) ? 'selected' : '' }}>On Schedule</option>
                                 <option value="1" data-color="#ffc107" {{ (old('status', $activity->status ?? '') == 1) ? 'selected' : '' }}>Reschedule</option>
@@ -122,7 +122,7 @@
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="invitation_status">Status Undangan Kegiatan</label>
+                            <label for="invitation_status">Status Undangan Kegiatan <span class="text-danger">*</span></label>
                             <select class="form-control select2" id="invitation_status" name="invitation_status" required>
                                 <!-- Options populated by JS -->
                             </select>
@@ -130,7 +130,7 @@
                     </div>
                     
                     <div class="form-group mb-3">
-                        <label for="invitation_type">Tipe Undangan</label>
+                        <label for="invitation_type">Tipe Undangan <span class="text-danger">*</span></label>
                         <select class="form-control select2" id="invitation_type" name="invitation_type" required>
                             <option value="inbound" {{ (old('invitation_type', $activity->invitation_type ?? '') == 'inbound') ? 'selected' : '' }}>Surat Masuk</option>
                             <option value="outbound" {{ (old('invitation_type', $activity->invitation_type ?? '') == 'outbound') ? 'selected' : '' }}>Surat Keluar</option>
@@ -139,7 +139,7 @@
 
                     <div class="form-row">
                         <div class="col-md-4 mb-3">
-                            <label for="location_type">Tipe Lokasi</label>
+                            <label for="location_type">Tipe Lokasi <span class="text-danger">*</span></label>
                             <select class="form-control select2" id="location_type" name="location_type" onchange="updateLocationInput()" required>
                                 <option value="offline" {{ (old('location_type', $activity->location_type ?? '') == 'offline') ? 'selected' : '' }}>Offline</option>
                                 <option value="online" {{ (old('location_type', $activity->location_type ?? '') == 'online') ? 'selected' : '' }}>Online</option>
@@ -148,7 +148,7 @@
                         </div>
                         <div class="col-md-8">
                             <div class="form-group mb-3" id="media_online_group" style="display: none;">
-                                <label for="media_online">Media Online</label>
+                                <label for="media_online">Media Online <span class="text-danger">*</span></label>
                                 <select class="form-control select2" id="media_online" name="media_online">
                                     <option value="" disabled selected>-- Pilih Media Online --</option>
                                     <option value="Zoom" {{ (old('media_online', $activity->media_online ?? '') == 'Zoom') ? 'selected' : '' }}>Zoom</option>
@@ -159,13 +159,14 @@
                             </div>
 
                             <div class="form-group mb-3" id="location_input_group">
-                                <label for="location">Lokasi Kegiatan</label>
+                                <label for="location">Lokasi Kegiatan <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="location" name="location" value="{{ old('location', $activity->location ?? '') }}">
                             </div>
 
                             <div class="form-group mb-3" id="link_input_group" style="display: none;">
                                 <label for="meeting_link">Link Meeting</label>
                                 <input type="text" class="form-control" id="meeting_link" name="meeting_link" value="{{ old('meeting_link', $activity->meeting_link ?? '') }}" placeholder="Contoh: https://zoom.us/...">
+                                <small class="form-text text-muted">Isi Link Meeting <strong>atau</strong> Meeting ID & Passcode di bawah.</small>
                             </div>
 
                             <div class="form-row" id="meeting_details_group" style="display: none;">
@@ -190,7 +191,7 @@
 
                     {{-- PIC Section --}}
                     <div class="form-group mb-3" id="pic_group">
-                        <label>PIC Kegiatan</label>
+                        <label>PIC Kegiatan <span class="text-danger" id="pic_asterisk">*</span></label>
                         
                         {{-- Internal PIC (Checkboxes) --}}
                         <div id="pic_internal_wrapper">
@@ -282,6 +283,8 @@
                         <div id="quill-editor" style="height: 150px;">{!! old('dispo_note', $activity->dispo_note ?? '') !!}</div>
                         <input type="hidden" name="dispo_note" id="dispo_note">
                     </div>
+
+
 
                     <button class="btn btn-primary" type="submit" id="submitBtn">Simpan Kegiatan</button>
                     <a href="{{ route('activities.index') }}" class="btn btn-secondary">Batal</a>
@@ -394,10 +397,13 @@
             }
         }
 
+        const picAsterisk = document.getElementById('pic_asterisk');
+
         if (type === 'external') {
             picGroup.style.display = 'block';
             picInternalWrapper.style.display = 'none';
             picExternalWrapper.style.display = 'block';
+            if(picAsterisk) picAsterisk.style.display = 'none'; // Optional for External
             
             // Auto-set Invitation Type to "Surat Masuk" (inbound)
             invTypeSelect.val('inbound').trigger('change');
@@ -419,6 +425,7 @@
             picGroup.style.display = 'block';
             picInternalWrapper.style.display = 'block';
             picExternalWrapper.style.display = 'none';
+            if(picAsterisk) picAsterisk.style.display = 'inline'; // Required for Internal
             
             // Show OCR Hints for Internal
             if(ocrLabelHint) ocrLabelHint.style.display = 'inline';
@@ -713,7 +720,6 @@
             }
 
             // Extract Meeting ID and Passcode
-            // Pattern: "Meeting ID: 850 0568 4521" or "Meeting ID : 850..."
             const meetingIdMatch = text.match(/Meeting ID\s*[:.]?\s*([\d\s]+)/i);
             const passcodeMatch = text.match(/Passcode\s*[:.]?\s*([\w]+)/i);
             const linkMatch = text.match(/https?:\/\/[^\s]+/i);
@@ -755,27 +761,27 @@
         // Map Full Name (Checkbox Value) -> [Keywords to Search]
         // Keywords should be unique enough to identify the person but simple enough to survive OCR.
         const councilKeywords = {
-            'Nunung Nuryartono': ['Nunung', 'Nuryartono'],
+            'Nunung Nuryartono': ['Nuryartono', 'Nunung Nuryartono'],
             'Muttaqien': ['Muttaqien'],
-            'Nikodemus Beriman Purba': ['Nikodemus', 'Beriman'],
+            'Nikodemus Beriman Purba': ['Nikodemus', 'Beriman Purba'],
             'Sudarto': ['Sudarto'],
-            'Robben Rico': ['Robben', 'Rico'],
-            'Mahesa Paranadipa Maykel': ['Mahesa', 'Paranadipa'],
-            'Syamsul Hidayat Pasaribu': ['Syamsul', 'Hidayat'],
+            'Robben Rico': ['Robben Rico', 'Robben'],
+            'Mahesa Paranadipa Maykel': ['Mahesa Paranadipa', 'Paranadipa'],
+            'Syamsul Hidayat Pasaribu': ['Syamsul Hidayat', 'Pasaribu'],
             'Hermansyah': ['Hermansyah'],
-            'Paulus Agung Pambudhi': ['Paulus', 'Agung'],
-            'Agus Taufiqurrohman': ['Agus', 'Taufiqurrohman'],
-            'Kunta Wibawa Dasa Nugraha': ['Kunta', 'Wibawa'],
-            'Indah Anggoro Putri': ['Indah', 'Anggoro'],
-            'Rudi Purwono': ['Rudi', 'Purwono'],
-            'Mickael Bobby Hoelman': ['Mickael', 'Bobby'],
-            'Royanto Purba': ['Royanto', 'Purba'],
+            'Paulus Agung Pambudhi': ['Paulus Agung', 'Pambudhi'], // Removed 'Agung' to avoid match with Agung Nugroho
+            'Agus Taufiqurrohman': ['Taufiqurrohman', 'Agus Taufiqurrohman'], // Removed 'Agus'
+            'Kunta Wibawa Dasa Nugraha': ['Kunta Wibawa', 'Dasa Nugraha'],
+            'Indah Anggoro Putri': ['Indah Anggoro', 'Anggoro Putri'],
+            'Rudi Purwono': ['Rudi Purwono'], // Removed 'Rudi'
+            'Mickael Bobby Hoelman': ['Mickael Bobby', 'Bobby Hoelman'],
+            'Royanto Purba': ['Royanto Purba', 'Royanto'],
             // Sekretariat
-            'Imron Rosadi': ['Imron', 'Rosadi'],
-            'Dwi Janatun Rahayu': ['Dwi', 'Janatun', 'Rahayu'],
-            'Wenny Kartika Ayunungtyas': ['Wenny', 'Kartika', 'Ayunungtyas'],
+            'Imron Rosadi': ['Imron Rosadi'],
+            'Dwi Janatun Rahayu': ['Dwi Janatun', 'Janatun Rahayu'],
+            'Wenny Kartika Ayunungtyas': ['Wenny Kartika', 'Ayunungtyas'],
             'Annisa': ['Annisa'],
-            'Eko Sudarmawan': ['Eko', 'Sudarmawan']
+            'Eko Sudarmawan': ['Eko Sudarmawan', 'Sudarmawan']
         };
 
         // Map Person -> Commission (Internal PIC)
@@ -826,6 +832,20 @@
                     // Triggering 'change' on .pic-checkbox fires a listener that Auto-Selects ALL members of that group.
                     // We only want to check the Commission box itself.
                     checkbox.prop('checked', true);
+
+                    // SPECIAL RULE: If "Sekretariat DJSN", Auto-Select ALL members in Disposition List
+                    if (targetValue === 'Sekretariat DJSN') {
+                         $('.card-header button').each(function() {
+                            if ($(this).text().trim() === 'Sekretariat DJSN') {
+                                let selectAllBtn = $(this).closest('.card-header').find('.group-check-all');
+                                if (!selectAllBtn.prop('checked')) {
+                                    selectAllBtn.prop('checked', true).trigger('change');
+                                    // Expand accordion
+                                    $(this).closest('.card').find('.collapse').collapse('show');
+                                }
+                            }
+                         });
+                    }
                 }
             }
         });
@@ -881,7 +901,7 @@
         
         Swal.fire({
             title: 'Berhasil!',
-            text: 'Form otomatis terisi! Mohon periksa kembali data yang diisi.',
+            html: 'Form otomatis terisi! <br>Mohon periksa kembali data yang diisi.',
             icon: 'success',
             confirmButtonText: 'OK',
             confirmButtonColor: '#3085d6'

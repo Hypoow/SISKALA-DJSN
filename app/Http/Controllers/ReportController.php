@@ -21,6 +21,7 @@ class ReportController extends Controller
         
         $activities = Activity::whereDate('start_date', '<=', $date)
                               ->whereDate('end_date', '>=', $date)
+                              ->visibleToUser(auth()->user()) // Apply Visibility Scope
                               ->orderBy('start_date', 'asc')
                               ->orderBy('start_time', 'asc')
                               ->get();
@@ -39,6 +40,7 @@ class ReportController extends Controller
         
         $activities = Activity::whereDate('start_date', '<=', $date)
                               ->whereDate('end_date', '>=', $date)
+                              ->visibleToUser(auth()->user()) // Apply Visibility Scope
                               ->orderBy('start_date', 'asc')
                               ->orderBy('start_time', 'asc')
                               ->get();

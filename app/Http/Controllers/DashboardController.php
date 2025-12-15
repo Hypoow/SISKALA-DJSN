@@ -34,31 +34,12 @@ class DashboardController extends Controller
     public function getEvents(Request $request)
     {
         $events = [];
-        $activities = Activity::all();
+        $activities = Activity::query()
+                                ->visibleToUser(auth()->user())
+                                ->get();
 
         foreach ($activities as $activity) {
             $color = $activity->type == 'external' ? '#fd7e14' : '#007bff'; // Default: Orange vs Blue
-
-            // Dewan Role Logic
-            if (auth()->check() && auth()->user()->role === 'Dewan') {
-                $dispositionTo = $activity->disposition_to ?? [];
-                // Ensure disposition_to is an array
-                if (!is_array($dispositionTo)) {
-                    $dispositionTo = [];
-                }
-
-                if (in_array(auth()->user()->name, $dispositionTo)) {
-                    // Must Attend (Targeted)
-                    // Differentiate by Type
-                    if ($activity->type == 'internal') {
-                        $color = '#007bff'; // Blue for Internal
-                    } else {
-                        $color = '#fd7e14'; // Orange for External
-                    }
-                } else {
-                    $color = '#6c757d'; // Gray for "Info Only" activity (Not targeted)
-                }
-            }
             
             $events[] = [
                 'id' => $activity->id,

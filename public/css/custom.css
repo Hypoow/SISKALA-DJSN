@@ -1,43 +1,78 @@
-/* ===== GLOBAL STYLES ===== */
+/* ===== GLOBAL STYLES (DJSN THEME) ===== */
 :root {
-    --primary-color: #004a99;
-    --primary-dark: #003366;
-    --primary-light: #e3f2fd;
+    /* DJSN Palette */
+    --primary-color: #0F2C59;
+    /* deep royal blue */
+    --primary-dark: #091a35;
+    /* darker blue */
+    --primary-light: #e8ecf7;
+    /* soft blue tint */
+    --accent-color: #C69749;
+    /* prestige gold */
+    --accent-hover: #b08640;
+
+    /* Functional */
     --secondary-color: #6c757d;
     --success-color: #28a745;
     --warning-color: #ffc107;
     --danger-color: #dc3545;
     --info-color: #17a2b8;
-    --bg-color: #f7f9fc;
-    --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-    --hover-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-    --border-radius: 12px;
+
+    /* Layout */
+    --bg-color: #F4F7FE;
+    /* soft blue-gray background */
+    --card-bg: #ffffff;
+    --text-main: #343a40;
+    --text-muted: #868e96;
+
+    /* Effects */
+    --card-shadow: 0 10px 30px rgba(15, 44, 89, 0.05);
+    /* Soft blue shadow */
+    --hover-shadow: 0 15px 35px rgba(15, 44, 89, 0.1);
+    --border-radius: 16px;
+    /* More rounded/modern */
 }
 
 body {
     background-color: var(--bg-color);
     font-family: 'Inter', sans-serif;
-    color: #495057;
+    color: var(--text-main);
     -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.01em;
+    /* slightly tighter for modern look */
 }
 
-/* ===== SIDEBAR STYLES ===== */
+/* ===== SIDEBAR STYLES (Dark Premium) ===== */
 .sidebar-left {
-    background: #ffffff;
-    border-right: 1px solid #e9ecef;
-    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.02);
+    background: linear-gradient(180deg, var(--primary-color) 0%, #1e3a8a 100%);
+    border-right: none;
+    box-shadow: 4px 0 24px rgba(15, 44, 89, 0.15);
 }
 
 .sidebar-left .navbar-brand-img {
-    filter: none;
-    /* Keep original logo colors if needed, or adjust */
+    filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.sidebar-left .navbar-brand-img polygon,
+.sidebar-left .navbar-brand-img path,
+.sidebar-left .navbar-brand-img g {
+    fill: var(--accent-color) !important;
 }
 
 /* Sidebar Links */
+.vertnav .nav-heading {
+    color: rgba(255, 255, 255, 0.4) !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.7rem;
+    padding-left: 24px;
+    margin-top: 20px;
+}
+
 .vertnav .nav-link {
-    color: #6c757d !important;
+    color: rgba(255, 255, 255, 0.7) !important;
     margin: 4px 12px;
-    padding: 8px 12px;
+    padding: 10px 16px;
     border-radius: 8px;
     transition: all 0.2s ease;
     font-weight: 500;
@@ -47,21 +82,23 @@ body {
 }
 
 .vertnav .nav-link:hover {
-    color: var(--primary-color) !important;
-    background-color: var(--primary-light);
-    transform: translateX(5px);
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: translateX(3px);
 }
 
 .vertnav .nav-item.active .nav-link {
-    color: var(--primary-color) !important;
-    background-color: var(--primary-light);
+    color: var(--accent-color) !important;
+    background-color: rgba(15, 44, 89, 0.3);
+    border-left: 3px solid var(--accent-color);
     font-weight: 600;
-    box-shadow: none;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .vertnav .nav-link i {
     color: inherit !important;
     margin-right: 12px;
+    opacity: 0.9;
 }
 
 /* ===== NAVBAR STYLES ===== */
@@ -72,14 +109,21 @@ body {
     padding: 1rem 2rem;
 }
 
-/* ===== CARD STYLES ===== */
+/* ===== CARD STYLES (Glass/Modern) ===== */
 .card {
     border: none;
     border-radius: var(--border-radius);
     box-shadow: var(--card-shadow);
     background-color: #ffffff;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
     margin-bottom: 24px;
+    overflow: hidden;
+    /* For border-top effect */
+}
+
+/* Optional Top Accent for important cards */
+.card.card-accent-gold {
+    border-top: 4px solid var(--accent-color);
 }
 
 .card:hover {
@@ -88,72 +132,79 @@ body {
 }
 
 .card-header {
-    background-color: transparent;
-    border-bottom: 1px solid #f0f0f0;
+    background-color: #ffffff;
+    border-bottom: 1px solid #f0f2f5;
     padding: 1.5rem;
 }
 
 .card-title {
-    color: var(--primary-dark);
+    color: var(--primary-color);
     font-weight: 700;
     margin-bottom: 0;
-    font-size: 1.1rem;
+    font-size: 1.15rem;
+    letter-spacing: -0.5px;
 }
 
 /* ===== BUTTON STYLES ===== */
 .btn {
-    border-radius: 8px;
-    padding: 0.6rem 1.2rem;
-    font-weight: 500;
+    border-radius: 50px;
+    /* Pill shape */
+    padding: 0.6rem 1.5rem;
+    font-weight: 600;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    letter-spacing: 0.3px;
 }
 
 .btn-primary {
     background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
     border: none;
+    color: #ffffff;
 }
 
 .btn-primary:hover {
-    background: linear-gradient(135deg, var(--primary-dark) 0%, #002244 100%);
-    transform: translateY(-1px);
-    box-shadow: 0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
-}
-
-.btn-success {
-    background: linear-gradient(135deg, #28a745 0%, #218838 100%);
-    border: none;
+    background: linear-gradient(135deg, var(--primary-dark) 0%, #001f3f 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(15, 44, 89, 0.3);
 }
 
 /* ===== TABLE STYLES ===== */
 .table thead th {
-    background-color: #f8f9fa;
-    color: #6c757d;
+    background-color: #F8F9FA;
+    color: var(--primary-color);
+    /* Blue Headers */
     border-bottom: 2px solid #e9ecef;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
     font-size: 0.75rem;
-    letter-spacing: 0.8px;
-    padding: 1rem;
+    letter-spacing: 1px;
+    padding: 1.1rem;
 }
 
 .table td {
-    padding: 1rem;
+    padding: 1.1rem;
     vertical-align: middle;
-    color: #495057;
+    color: var(--text-main);
+    border-top: 1px solid #f0f2f5;
 }
 
 .table-hover tbody tr:hover {
-    background-color: #f1f3f5;
+    background-color: #f8faff !important;
+    /* Very subtle blue tint */
 }
 
 /* Row Highlights */
+/* Row Highlights (Distinct & User Friendly) */
 .row-internal {
-    background-color: rgba(0, 123, 255, 0.05) !important;
+    background-color: rgba(15, 44, 89, 0.03) !important;
+    /* Very soft blue */
+    border-left: 4px solid var(--primary-color) !important;
 }
 
 .row-external {
-    background-color: rgba(253, 126, 20, 0.05) !important;
+    background-color: rgba(198, 151, 73, 0.08) !important;
+    /* Soft gold/orange */
+    border-left: 4px solid var(--accent-color) !important;
 }
 
 /* ===== BADGE STYLES ===== */

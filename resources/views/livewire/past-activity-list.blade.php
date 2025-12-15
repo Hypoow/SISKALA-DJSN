@@ -33,6 +33,15 @@
                     </form>
                 </div>
                 <div class="col-md-6 text-right d-flex align-items-center justify-content-end">
+                    {{-- Legend --}}
+                    <div class="d-flex align-items-center">
+                        <span class="mr-2 font-weight-bold">
+                            <span class="d-none d-md-inline">Keterangan:</span>
+                            <span class="d-inline d-md-none">Ket:</span>
+                        </span>
+                        <span class="mr-2"><span class="status-dot" style="background-color: var(--primary-color);"></span> Internal</span>
+                        <span><span class="status-dot" style="background-color: var(--accent-color);"></span> Eksternal</span>
+                    </div>
                 </div>
             </div>
 
@@ -100,15 +109,13 @@
                             <th>Status Pelaksanaan</th>
                             <th>Notulensi</th>
                             <th>Surat Tugas</th>
-                            @if(auth()->check() && auth()->user()->isAdmin())
                             <th>Aksi</th>
-                            @endif
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($groupedActivities as $month => $activities)
                             <tr role="group" class="bg-light">
-                                <td colspan="{{ auth()->check() && auth()->user()->isAdmin() ? 7 : 5 }}" class="font-weight-bold text-uppercase text-primary pl-4" style="letter-spacing: 1px; border-bottom: 2px solid #007bff;">{{ $month }}</td>
+                                <td colspan="{{ auth()->check() && auth()->user()->isAdmin() ? 7 : 6 }}" class="font-weight-bold text-uppercase text-primary pl-4" style="letter-spacing: 1px; border-bottom: 2px solid #007bff;">{{ $month }}</td>
                             </tr>
                             @foreach($activities as $activity)
                                 <tr class="{{ $activity->type == 'internal' ? 'row-internal' : 'row-external' }}" wire:key="row-{{ $activity->id }}">
@@ -152,30 +159,33 @@
                                     <td>
                                         {{-- Minutes Upload --}}
                                         @if($activity->minutes_path)
-                                            <div class="mb-2">
-                                                <a href="{{ Storage::url($activity->minutes_path) }}" target="_blank" class="btn btn-sm btn-outline-primary btn-block">
+                                            <div class="btn-group btn-block">
+                                                <a href="{{ Storage::url($activity->minutes_path) }}" target="_blank" class="btn btn-sm btn-outline-primary text-truncate" title="Lihat Notulensi">
                                                     <i class="fe fe-eye"></i> Lihat
                                                 </a>
+                                                @if(auth()->check() && auth()->user()->isAdmin())
+                                                <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                    <span class="sr-only">Toggle Dropdown</span>
+                                                </button>
+                                                <div class="dropdown-menu dropdown-menu-right">
+                                                    <a class="dropdown-item" href="javascript:void(0)" onclick="document.getElementById('minutes_{{ $activity->id }}').click()">
+                                                        <i class="fe fe-upload mr-2"></i> Ganti File
+                                                    </a>
+                                                    <div class="dropdown-divider"></div>
+                                                    <a class="dropdown-item text-danger" href="javascript:void(0)" onclick="confirmDeleteFile('minutes', {{ $activity->id }})">
+                                                        <i class="fe fe-trash-2 mr-2"></i> Hapus File
+                                                    </a>
+                                                </div>
+                                                @endif
                                             </div>
                                             @if(auth()->check() && auth()->user()->isAdmin())
-                                            <div class="row no-gutters">
-                                                <div class="col-6 pr-1">
-                                                    <input type="file" id="minutes_{{ $activity->id }}" wire:model.live="minutesFiles.{{ $activity->id }}" class="d-none" accept="application/pdf">
-                                                    <button type="button" class="btn btn-sm btn-outline-secondary btn-block" onclick="document.getElementById('minutes_{{ $activity->id }}').click()">
-                                                        <span wire:loading.remove wire:target="minutesFiles.{{ $activity->id }}">Ganti</span>
-                                                        <span wire:loading wire:target="minutesFiles.{{ $activity->id }}" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                                    </button>
+                                                <input type="file" id="minutes_{{ $activity->id }}" wire:model.live="minutesFiles.{{ $activity->id }}" class="d-none" accept="application/pdf">
+                                                <div wire:loading wire:target="minutesFiles.{{ $activity->id }}" class="text-center mt-1">
+                                                     <small class="text-muted"><span class="spinner-border spinner-border-sm"></span> Uploading...</small>
                                                 </div>
-                                                <div class="col-6 pl-1">
-                                                    <button type="button" class="btn btn-sm btn-danger btn-block" onclick="confirmDeleteFile('minutes', {{ $activity->id }})">
-                                                        Hapus
-                                                    </button>
-                                                </div>
-                                            </div>
                                             @endif
                                         @else
                                             @if(auth()->check() && auth()->user()->isAdmin())
-                                            <span class="text-muted small font-italic d-block mb-2">Belum ada</span>
                                             <input type="file" id="minutes_{{ $activity->id }}" wire:model.live="minutesFiles.{{ $activity->id }}" class="d-none" accept="application/pdf">
                                             <button type="button" class="btn btn-sm btn-primary btn-block" onclick="document.getElementById('minutes_{{ $activity->id }}').click()">
                                                 <span wire:loading.remove wire:target="minutesFiles.{{ $activity->id }}"><i class="fe fe-upload"></i> Upload</span>
@@ -190,30 +200,33 @@
                                     <td>
                                         {{-- Assignment Upload --}}
                                         @if($activity->assignment_letter_path)
-                                            <div class="mb-2">
-                                                <a href="{{ Storage::url($activity->assignment_letter_path) }}" target="_blank" class="btn btn-sm btn-outline-primary btn-block">
+                                            <div class="btn-group btn-block">
+                                                <a href="{{ Storage::url($activity->assignment_letter_path) }}" target="_blank" class="btn btn-sm btn-outline-primary text-truncate" title="Lihat Surat Tugas">
                                                     <i class="fe fe-eye"></i> Lihat
                                                 </a>
+                                                @if(auth()->check() && auth()->user()->isAdmin())
+                                                <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                    <span class="sr-only">Toggle Dropdown</span>
+                                                </button>
+                                                <div class="dropdown-menu dropdown-menu-right">
+                                                    <a class="dropdown-item" href="javascript:void(0)" onclick="document.getElementById('assignment_{{ $activity->id }}').click()">
+                                                        <i class="fe fe-upload mr-2"></i> Ganti File
+                                                    </a>
+                                                    <div class="dropdown-divider"></div>
+                                                    <a class="dropdown-item text-danger" href="javascript:void(0)" onclick="confirmDeleteFile('assignment', {{ $activity->id }})">
+                                                        <i class="fe fe-trash-2 mr-2"></i> Hapus File
+                                                    </a>
+                                                </div>
+                                                @endif
                                             </div>
                                             @if(auth()->check() && auth()->user()->isAdmin())
-                                            <div class="row no-gutters">
-                                                <div class="col-6 pr-1">
-                                                    <input type="file" id="assignment_{{ $activity->id }}" wire:model.live="assignmentFiles.{{ $activity->id }}" class="d-none" accept="application/pdf">
-                                                    <button type="button" class="btn btn-sm btn-outline-secondary btn-block" onclick="document.getElementById('assignment_{{ $activity->id }}').click()">
-                                                        <span wire:loading.remove wire:target="assignmentFiles.{{ $activity->id }}">Ganti</span>
-                                                        <span wire:loading wire:target="assignmentFiles.{{ $activity->id }}" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                                    </button>
+                                                <input type="file" id="assignment_{{ $activity->id }}" wire:model.live="assignmentFiles.{{ $activity->id }}" class="d-none" accept="application/pdf">
+                                                <div wire:loading wire:target="assignmentFiles.{{ $activity->id }}" class="text-center mt-1">
+                                                     <small class="text-muted"><span class="spinner-border spinner-border-sm"></span> Uploading...</small>
                                                 </div>
-                                                <div class="col-6 pl-1">
-                                                    <button type="button" class="btn btn-sm btn-danger btn-block" onclick="confirmDeleteFile('assignment', {{ $activity->id }})">
-                                                        Hapus
-                                                    </button>
-                                                </div>
-                                            </div>
                                             @endif
                                         @else
                                             @if(auth()->check() && auth()->user()->isAdmin())
-                                            <span class="text-muted small font-italic d-block mb-2">Belum ada</span>
                                             <input type="file" id="assignment_{{ $activity->id }}" wire:model.live="assignmentFiles.{{ $activity->id }}" class="d-none" accept="application/pdf">
                                             <button type="button" class="btn btn-sm btn-primary btn-block" onclick="document.getElementById('assignment_{{ $activity->id }}').click()">
                                                 <span wire:loading.remove wire:target="assignmentFiles.{{ $activity->id }}"><i class="fe fe-upload"></i> Upload</span>
@@ -225,16 +238,28 @@
                                         @endif
                                         @error("assignmentFiles.{$activity->id}") <span class="text-danger small">{{ $message }}</span> @enderror
                                     </td>
-                                    @if(auth()->check() && auth()->user()->isAdmin())
                                     <td>
-                                        <a href="{{ route('activities.edit', $activity->id) }}" class="btn btn-sm btn-primary">Edit</a>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-secondary" type="button" id="dropdownMenuButton-{{ $activity->id }}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                <i class="fe fe-more-horizontal"></i>
+                                            </button>
+                                            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton-{{ $activity->id }}">
+                                                <a class="dropdown-item" href="{{ route('activities.show', $activity->id) }}">
+                                                    <i class="fe fe-eye mr-2"></i> Detail
+                                                </a>
+                                                @if(auth()->check() && auth()->user()->isAdmin())
+                                                <a class="dropdown-item" href="{{ route('activities.edit', $activity->id) }}">
+                                                    <i class="fe fe-edit mr-2"></i> Edit
+                                                </a>
+                                                @endif
+                                            </div>
+                                        </div>
                                     </td>
-                                    @endif
                                 </tr>
                             @endforeach
                         @empty
                             <tr>
-                                <td colspan="{{ auth()->check() && auth()->user()->isAdmin() ? 7 : 5 }}" class="text-center">Belum ada kegiatan lampau.</td>
+                                <td colspan="{{ auth()->check() && auth()->user()->isAdmin() ? 7 : 6 }}" class="text-center">Belum ada kegiatan selesai.</td>
                             </tr>
                         @endforelse
                     </tbody>

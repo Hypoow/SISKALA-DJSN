@@ -124,8 +124,206 @@
                         @endif
 
                     </div>
+            </div>
+
+            <!-- Hasil Rapat Card -->
+             <div class="card shadow mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <strong class="card-title mb-0"><span class="fe fe-file-text mr-2"></span>Hasil Rapat Secara Singkat</strong>
+                    @if(auth()->check() && (auth()->user()->isAdmin() || auth()->user()->role === 'Sekretariat DJSN'))
+                        @if($activity->summary_content)
+                            <button type="button" class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#summaryModal">
+                                <span class="fe fe-edit"></span> Edit
+                            </button>
+                        @endif
+                    @endif
+                </div>
+                <div class="card-body">
+                    @if($activity->summary_content)
+                        <div class="markdown-content text-justify">{!! $activity->summary_content !!}</div>
+                    @else
+                        <div class="text-center py-4">
+                            <p class="text-muted mb-3">Belum ada hasil rapat singkat.</p>
+                            @if(auth()->check() && (auth()->user()->isAdmin() || auth()->user()->role === 'Sekretariat DJSN'))
+                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#summaryModal">
+                                    <span class="fe fe-plus"></span> Tambahkan Hasil Rapat
+                                </button>
+                            @endif
+                        </div>
+                    @endif
                 </div>
             </div>
+            
+        </div>
+
+        <!-- Summary Modal -->
+        <div class="modal fade" id="summaryModal" tabindex="-1" role="dialog" aria-labelledby="summaryModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="summaryModalLabel">Hasil Rapat Secara Singkat</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form action="{{ route('activities.update-summary', $activity->id) }}" method="POST" id="summaryForm">
+                        @csrf
+                        @method('PUT')
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label>Masukkan rangkuman hasil rapat:</label>
+                                <div id="summary-editor" style="height: 300px;">{!! $activity->summary_content !!}</div>
+                                <input type="hidden" name="summary_content" id="summary_content_input">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-primary">Simpan</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        @push('styles')
+        <link rel="stylesheet" href="{{ asset('tinydash/css/quill.snow.css') }}">
+        <style>
+            .markdown-content ul, .markdown-content ol {
+                padding-left: 20px;
+                margin-bottom: 1rem;
+            }
+            .markdown-content ul {
+                list-style-type: disc;
+            }
+            .markdown-content ol {
+                list-style-type: decimal;
+            }
+            .markdown-content ol ol {
+                list-style-type: lower-alpha;
+            }
+            .markdown-content ol ol ol {
+                list-style-type: decimal;
+            }
+        </style>
+        @endpush
+
+        @push('scripts')
+        <script src="{{ asset('tinydash/js/quill.min.js') }}"></script>
+        <script>
+            // Initialize Quill for Summary
+            var summaryQuill = new Quill('#summary-editor', {
+                theme: 'snow',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['clean']
+                    ]
+                }
+            });
+
+            // Update hidden input on submit
+            $('#summaryForm').on('submit', function() {
+                $('#summary_content_input').val(summaryQuill.root.innerHTML);
+            });
+
+            function autoFormatSummary() {
+                let text = summaryQuill.getText();
+                
+                // Pre-process: Force newlines for list patterns that might be inline
+                // Case: "end text 2. New Item" -> "end text\n2. New Item"
+                
+                // 1. Handle "1. ", "2. " but AVOID "No. 1"
+                text = text.replace(/([\w\W])\s+(\d+\.)\s/g, function(match, prevChar, numDot) {
+                    // Check context: prevChar is the character before the space.
+                    // match is the full string "o. 1. " or "t 2. ".
+                    
+                    // If proper numbering, it usually follows a sentence end or is distinct.
+                    // Explicit check for "No."
+                    let fullContext = text.substring(text.indexOf(match) - 5, text.indexOf(match)); // Peek behind
+                    if (fullContext.includes("No.") || fullContext.includes("no.")) {
+                         return match; // Don't split
+                    }
+                    
+                    return prevChar + '\n' + numDot + ' ';
+                });
+
+                // 2. Handle "a) ", "b) "
+                text = text.replace(/([^\n])\s+([a-z]\))\s/g, '$1\n$2 ');
+                
+                // 3. Handle "1) ", "2) " (Level 3)
+                text = text.replace(/([^\n])\s+(\d+\))\s/g, '$1\n$2 ');
+
+                let lines = text.split('\n');
+                let html = '';
+                
+                // Regex patterns
+                const patterns = {
+                    level1: /^(\d+)\.\s+(.*)/, // 1. Text
+                    level2: /^([a-z])\)\s+(.*)/, // a) Text
+                    level3: /^(\d+)\)\s+(.*)/  // 1) Text
+                };
+
+                let currentLevel = 0; // 0 = root, 1 = ol, 2 = ol > ol (a), 3 = ol > ol > ol (i)
+
+                function ensureLevel(targetLevel, type = '') {
+                    // Close deeper levels
+                    while (currentLevel > targetLevel) {
+                        html += '</ol>';
+                        currentLevel--;
+                    }
+                    
+                    // Open new levels if needed
+                    while (currentLevel < targetLevel) {
+                        let listType = '';
+                        if (currentLevel === 0) listType = ''; // 1, 2, 3
+                        if (currentLevel === 1) listType = ' type="a"'; // a, b, c
+                        if (currentLevel === 2) listType = ' type="1"'; // 1, 2, 3
+                        
+                        // Override/Set based on target (simplified for standard 1 -> a -> i hierarchy)
+                        html += `<ol${listType}>`;
+                        currentLevel++;
+                    }
+                }
+
+                lines.forEach((line, index) => {
+                    line = line.trim();
+                    if (!line) return;
+
+                    let match1 = line.match(patterns.level1);
+                    let match2 = line.match(patterns.level2);
+                    let match3 = line.match(patterns.level3);
+
+                    if (match1) {
+                        ensureLevel(1);
+                        html += `<li>${match1[2]}`;
+                    } else if (match2) {
+                        ensureLevel(2);
+                        html += `<li>${match2[2]}`;
+                    } else if (match3) {
+                        ensureLevel(3);
+                        html += `<li>${match3[2]}`;
+                    } else {
+                        // Continuation of previous item
+                        if (currentLevel > 0) {
+                            html += ` ${line}`;
+                        } else {
+                            html += `<p>${line}</p>`;
+                        }
+                    }
+                });
+
+                // Close all remaining lists
+                while (currentLevel > 0) {
+                    html += '</ol>';
+                    currentLevel--;
+                }
+                
+                summaryQuill.clipboard.dangerouslyPasteHTML(html);
+            }
+        </script>
+        @endpush
 
             <!-- Right Column: Details & Disposition -->
             <div class="col-md-5">
@@ -184,8 +382,7 @@
                     </div>
                 </div>
                 
-                 <!-- Keterangan / Note -->
-                 @if($activity->dispo_note || $activity->dresscode)
+                @if($activity->dispo_note || $activity->dresscode)
                  <div class="card shadow mb-4">
                     <div class="card-header">
                          <strong class="card-title"><span class="fe fe-align-left mr-2"></span>Catatan Tambahan</strong>
@@ -209,6 +406,8 @@
                     </div>
                  </div>
                  @endif
+
+
 
             </div>
         </div>

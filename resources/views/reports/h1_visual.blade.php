@@ -15,7 +15,6 @@
                     <label class="my-1 mr-2" for="date">Tanggal Kegiatan</label>
                     <input type="date" class="form-control mr-sm-2" id="date" name="date" value="{{ $dateStr }}">
                     <button type="submit" class="btn btn-primary my-1">Tampilkan</button>
-                    <a href="{{ route('report.h1') }}" class="btn btn-secondary ml-2 my-1">Kembali ke Generator Teks</a>
                 </form>
             </div>
         </div>
@@ -23,10 +22,20 @@
         @if($activities->count() > 0)
             <div class="row">
                 @foreach($activities as $activity)
-                    <div class="col-md-6 col-lg-4 mb-4">
+                    @php
+                        $isGrayedOut = false;
+                        if (auth()->check() && in_array(auth()->user()->role, ['Dewan', 'DJSN'])) {
+                            // Normalize disposition_to if null
+                            $userDispos = $activity->disposition_to ?? [];
+                            if (!in_array(auth()->user()->name, $userDispos)) {
+                                $isGrayedOut = true;
+                            }
+                        }
+                    @endphp
+                    <div class="col-md-6 col-lg-4 mb-4" style="{{ $isGrayedOut ? 'opacity: 0.6;' : '' }}">
                         <div class="card shadow h-100">
-                            <div class="card-header {{ $activity->type === 'external' ? 'bg-warning text-dark' : 'bg-primary text-white' }} d-flex justify-content-between align-items-center">
-                                <h5 class="card-title mb-0 {{ $activity->type === 'external' ? 'text-dark' : 'text-white' }}" style="font-size: 1rem;">
+                            <div class="card-header {{ $isGrayedOut ? 'bg-secondary text-white' : ($activity->type === 'external' ? 'bg-warning text-dark' : 'bg-primary text-white') }} d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0 {{ $isGrayedOut ? 'text-white' : ($activity->type === 'external' ? 'text-dark' : 'text-white') }}" style="font-size: 1rem;">
                                     {{ \Carbon\Carbon::parse($activity->start_time)->format('H:i') }}
                                 </h5>
                                 <span class="badge {{ $activity->type === 'external' ? 'badge-dark text-white' : 'badge-light text-primary' }}">

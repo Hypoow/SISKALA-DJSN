@@ -62,7 +62,17 @@
                                         <td colspan="8"><strong>{{ $month }}</strong></td>
                                     </tr>
                                     @foreach($activities as $activity)
-                                    <tr>
+                                    @php
+                                        // Logic to gray out if user is Dewan/DJSN and NOT in disposition_to
+                                        $isGrayedOut = false;
+                                        if (auth()->check() && in_array(auth()->user()->role, ['Dewan', 'DJSN'])) {
+                                            $userDispos = $activity->disposition_to ?? [];
+                                            if (!in_array(auth()->user()->name, $userDispos)) {
+                                                $isGrayedOut = true;
+                                            }
+                                        }
+                                    @endphp
+                                    <tr class="{{ $isGrayedOut ? 'text-muted bg-light' : '' }}" style="{{ $isGrayedOut ? 'opacity: 0.6;' : '' }}">
                                         <td>{{ $activity->name }}</td>
                                         <td>
                                             @if($activity->pic)

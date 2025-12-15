@@ -55,7 +55,95 @@ class PastActivityList extends Component
         }
     }
 
-    // ... (rest of the file until render)
+    // Livewire Hooks for File Uploads
+    public function updatedMinutesFiles($value, $id)
+    {
+        $this->validate([
+            "minutesFiles.{$id}" => 'file|mimes:pdf|max:10240', // 10MB
+        ]);
+
+        $activity = Activity::find($id);
+        if ($activity && isset($this->minutesFiles[$id])) {
+            // Delete old file if exists
+            if ($activity->minutes_path) {
+                Storage::disk('public')->delete($activity->minutes_path);
+            }
+
+            $path = $this->minutesFiles[$id]->store('minutes', 'public');
+            $activity->update(['minutes_path' => $path]);
+
+            session()->flash('success_upload', 'Notulensi berhasil diupload.');
+            // Clear the file input from state to save memory
+            unset($this->minutesFiles[$id]);
+        }
+    }
+
+    public function updatedAssignmentFiles($value, $id)
+    {
+        $this->validate([
+            "assignmentFiles.{$id}" => 'file|mimes:pdf|max:10240', // 10MB
+        ]);
+
+        $activity = Activity::find($id);
+        if ($activity && isset($this->assignmentFiles[$id])) {
+            // Delete old file if exists
+            if ($activity->assignment_letter_path) {
+                Storage::disk('public')->delete($activity->assignment_letter_path);
+            }
+
+            $path = $this->assignmentFiles[$id]->store('assignment_letters', 'public');
+            $activity->update(['assignment_letter_path' => $path]);
+
+            session()->flash('success_upload', 'Surat Tugas berhasil diupload.');
+            unset($this->assignmentFiles[$id]);
+        }
+    }
+
+    public function deleteSelected()
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $activities = Activity::whereIn('id', $this->selected)->get();
+        foreach ($activities as $activity) {
+            if ($activity->minutes_path) {
+                Storage::disk('public')->delete($activity->minutes_path);
+            }
+            if ($activity->assignment_letter_path) {
+                Storage::disk('public')->delete($activity->assignment_letter_path);
+            }
+            if ($activity->attachment_path) {
+                Storage::disk('public')->delete($activity->attachment_path);
+            }
+            $activity->delete();
+        }
+
+        $this->selected = [];
+        $this->selectAll = false;
+        
+        session()->flash('success', 'Kegiatan terpilih berhasil dihapus.');
+    }
+
+    public function deleteMinutes($id)
+    {
+        $activity = Activity::find($id);
+        if ($activity && $activity->minutes_path) {
+            Storage::disk('public')->delete($activity->minutes_path);
+            $activity->update(['minutes_path' => null]);
+            session()->flash('success_upload', 'Notulensi berhasil dihapus.');
+        }
+    }
+
+    public function deleteAssignment($id)
+    {
+        $activity = Activity::find($id);
+        if ($activity && $activity->assignment_letter_path) {
+            Storage::disk('public')->delete($activity->assignment_letter_path);
+            $activity->update(['assignment_letter_path' => null]);
+            session()->flash('success_upload', 'Surat Tugas berhasil dihapus.');
+        }
+    }
 
     public function render()
     {

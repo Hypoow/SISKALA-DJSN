@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Kegiatan Lampau')
+@section('title', 'Kegiatan Selesai')
 
 @section('content')
 <div class="row justify-content-center">
     <div class="col-12">
-        <h2 class="mb-2 page-title">Kegiatan Lampau</h2>
+        <h2 class="mb-2 page-title">Kegiatan Selesai</h2>
         <p class="card-text">Daftar kegiatan yang sudah lewat.</p>
         
         <div class="row my-4">
