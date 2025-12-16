@@ -187,24 +187,7 @@
 
         @push('styles')
         <link rel="stylesheet" href="{{ asset('tinydash/css/quill.snow.css') }}">
-        <style>
-            .markdown-content ul, .markdown-content ol {
-                padding-left: 20px;
-                margin-bottom: 1rem;
-            }
-            .markdown-content ul {
-                list-style-type: disc;
-            }
-            .markdown-content ol {
-                list-style-type: decimal;
-            }
-            .markdown-content ol ol {
-                list-style-type: lower-alpha;
-            }
-            .markdown-content ol ol ol {
-                list-style-type: decimal;
-            }
-        </style>
+
         @endpush
 
         @push('scripts')

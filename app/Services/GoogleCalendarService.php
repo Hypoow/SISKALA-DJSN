@@ -310,7 +310,7 @@ class GoogleCalendarService
     {
         // Standard Title for Sekretariat Event
         $desc = "Yth.\n";
-        $desc .= "Seluruh Anggota DJSN\n\n";
+        $desc .= "Seluruh Sekretariat DJSN\n\n";
         
         // Opening Logic
         if ($activity->invitation_type == 'inbound') {

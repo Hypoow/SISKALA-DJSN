@@ -58,7 +58,7 @@
                         <div class="d-flex align-items-center justify-content-between mb-3">
                             <div>
                                 <p class="text-uppercase text-xs text-secondary mb-1">{{ __('Supported by') }}</p>
-                                <img src="{{ asset('assets/img/djsn.png') }}" alt="DJSN" height="56" class="rounded-logo">
+                                <img src="{{ asset('assets/img/logo.svg') }}" alt="DJSN" height="56" class="rounded-logo">
                             </div>
                             <span class="badge bg-gradient-info text-white rounded-pill px-3 py-2">Schedulo DJSN</span>
                         </div>

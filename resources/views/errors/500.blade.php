@@ -1,12 +1,14 @@
 @extends('layouts.plain')
 
-@section('title', 'Terjadi Kesalahan Server')
+@section('title', 'Terjadi kesalahan')
 
 @section('content')
-<div class="text-center mt-5 pt-5">
-    <h1 class="display-1 font-weight-bold text-danger">500</h1>
-    <h2 class="h4 mb-4">Terjadi Kesalahan Server</h2>
-    <p class="text-muted mb-5">Maaf, terjadi kesalahan internal pada server kami. <br> Silakan coba beberapa saat lagi atau hubungi administrator.</p>
-    <a href="{{ url('/') }}" class="btn btn-primary rounded-pill px-4">Kembali ke Dashboard</a>
+<div class="row align-items-center justify-content-center h-100">
+    <div class="col-md-6 text-center">
+        <h1 class="display-1 fw-bold text-primary">500</h1>
+        <h3 class="mb-4">Terjadi kesalahan</h3>
+        <p class="text-muted mb-4">Maaf, terjadi kesalahan pada server.</p>
+        <a href="{{ route('dashboard') }}" class="btn btn-primary rounded-pill px-4">Kembali ke Dashboard</a>
+    </div>
 </div>
 @endsection

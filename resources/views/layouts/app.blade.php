@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="Schedulo DJSN">
     <meta name="author" content="">
-    <link rel="icon" href="{{ asset('assets/images/djsn.png') }}">
+    <link rel="icon" href="{{ asset('assets/images/logo.svg') }}">
     <title>@yield('title', 'Schedulo DJSN')</title>
     <!-- Simple bar CSS -->
     <link rel="stylesheet" href="{{ asset('tinydash/css/simplebar.css') }}">
@@ -67,23 +67,7 @@
 
       <main role="main" class="main-content">
         <div class="container-fluid">
-          @if (session('success'))
-              <div class="alert alert-success alert-dismissible fade show" role="alert">
-                  {{ session('success') }}
-                  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                      <span aria-hidden="true">&times;</span>
-                  </button>
-              </div>
-          @endif
 
-          @if (session('error'))
-              <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                  {{ session('error') }}
-                  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                      <span aria-hidden="true">&times;</span>
-                  </button>
-              </div>
-          @endif
 
           @if ($errors->any())
               <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -111,6 +95,27 @@
     <script src="{{ asset('tinydash/js/tinycolor-min.js') }}"></script>
     <script src="{{ asset('tinydash/js/config.js') }}"></script>
     <script src="{{ asset('tinydash/js/apps.js') }}"></script>
+    <script>
+      $(function() {
+        @if (session('success'))
+          Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: "{{ session('success') }}",
+            showConfirmButton: false,
+            timer: 3000
+          });
+        @endif
+
+        @if (session('error'))
+          Swal.fire({
+            icon: 'error',
+            title: 'Gagal!',
+            text: "{{ session('error') }}",
+          });
+        @endif
+      });
+    </script>
     @livewireScripts
     @stack('scripts')
   </body>

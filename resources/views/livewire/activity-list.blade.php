@@ -161,6 +161,14 @@
                                             </td>
                                             <td>
                                                 <a href="{{ route('activities.show', $activity->id) }}" class="text-dark font-weight-bold">{{ $activity->name }}</a>
+                                                <br>
+                                                <small class="text-muted">
+                                                    @if($activity->location_type == 'online')
+                                                        Online
+                                                    @else
+                                                        {{ $activity->location ?? 'Offline' }}
+                                                    @endif
+                                                </small>
                                             </td>
                                             <td>
                                                 @switch($activity->status)

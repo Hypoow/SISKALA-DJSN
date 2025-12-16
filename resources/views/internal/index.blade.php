@@ -91,6 +91,7 @@
                                         </td>
                                         <td>{{ $activity->date_time->format('d M Y H:i') }}</td>
                                         <td>{{ $activity->location }}</td>
+                                        
                                         <td>
                                             @switch($activity->status)
                                                 @case(0) <span class="badge badge-primary">On Schedule</span> @break

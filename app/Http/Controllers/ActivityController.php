@@ -12,7 +12,11 @@ class ActivityController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('admin')->only(['create', 'store', 'edit', 'update', 'destroy']);
+        $this->middleware('admin')->only([
+            'create', 'store', 'edit', 'update', 'destroy',
+            'uploadMinutes', 'uploadAssignmentLetter',
+            'deleteMinutes', 'deleteAssignment', 'updateSummary'
+        ]);
     }
 
     public function index(Request $request)
@@ -159,20 +163,10 @@ class ActivityController extends Controller
 
         $activity = Activity::create($validated);
 
-        // Create Google Calendar Event
-        // Note: GoogleService must be updated to handle separated fields or we map them here?
-        // Let's assume GoogleService needs specific date/time.
-        // Or if the service expects 'date_time', we might need to modify the service too. 
-        // For now, let's pass the activity and assume I update the service later or it accepts the model.
-        $isIntegrated = GoogleCalendarService::createEvent($activity);
+        // Create Google Calendar Event (Asynchronous)
+        \App\Jobs\SyncGoogleCalendarEvent::dispatch($activity);
         
-        $message = 'Kegiatan berhasil ditambahkan';
-        if ($isIntegrated) {
-            $message .= ' dan terintegrasi ke Google Calendar.';
-        } else {
-            $error = GoogleCalendarService::getLastError();
-            $message .= ", namun gagal terintegrasi ke Google Calendar. Error: {$error}";
-        }
+        $message = 'Kegiatan berhasil ditambahkan dan sedang diproses untuk integrasi Google Calendar.';
 
         return redirect()->route('activities.index')->with('success', $message);
     }
@@ -264,9 +258,9 @@ class ActivityController extends Controller
         $activity->update($validated);
 
         // Update Google Calendar Event
-        GoogleCalendarService::updateEvent($activity);
+        \App\Jobs\SyncGoogleCalendarEvent::dispatch($activity, true);
 
-        return redirect()->route('activities.index')->with('success', 'Kegiatan berhasil diperbarui');
+        return redirect()->route('activities.index')->with('success', 'Kegiatan berhasil diperbarui dan sinkronisasi berjalan di latar belakang.');
     }
 
     public function destroy(Activity $activity)
