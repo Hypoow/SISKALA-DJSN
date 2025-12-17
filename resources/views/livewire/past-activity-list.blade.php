@@ -187,8 +187,8 @@
                                         @else
                                             @if(auth()->check() && auth()->user()->isAdmin())
                                             <input type="file" id="minutes_{{ $activity->id }}" wire:model.live="minutesFiles.{{ $activity->id }}" class="d-none" accept="application/pdf">
-                                            <button type="button" class="btn btn-sm btn-primary btn-block" onclick="document.getElementById('minutes_{{ $activity->id }}').click()">
-                                                <span wire:loading.remove wire:target="minutesFiles.{{ $activity->id }}"><i class="fe fe-upload"></i> Upload</span>
+                                            <button type="button" class="btn btn-sm btn-primary w-100" style="display: flex; align-items: center; justify-content: center; white-space: nowrap; width: 100% !important; border-radius: 50px !important;" onclick="document.getElementById('minutes_{{ $activity->id }}').click()">
+                                                <span wire:loading.remove wire:target="minutesFiles.{{ $activity->id }}" style="display: flex; align-items: center;"><i class="fe fe-upload mr-2"></i> Upload</span>
                                                 <span wire:loading wire:target="minutesFiles.{{ $activity->id }}" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                                             </button>
                                             @else
@@ -228,8 +228,8 @@
                                         @else
                                             @if(auth()->check() && auth()->user()->isAdmin())
                                             <input type="file" id="assignment_{{ $activity->id }}" wire:model.live="assignmentFiles.{{ $activity->id }}" class="d-none" accept="application/pdf">
-                                            <button type="button" class="btn btn-sm btn-primary btn-block" onclick="document.getElementById('assignment_{{ $activity->id }}').click()">
-                                                <span wire:loading.remove wire:target="assignmentFiles.{{ $activity->id }}"><i class="fe fe-upload"></i> Upload</span>
+                                            <button type="button" class="btn btn-sm btn-primary w-100" style="display: flex; align-items: center; justify-content: center; white-space: nowrap; width: 100% !important; border-radius: 50px !important;" onclick="document.getElementById('assignment_{{ $activity->id }}').click()">
+                                                <span wire:loading.remove wire:target="assignmentFiles.{{ $activity->id }}" style="display: flex; align-items: center;"><i class="fe fe-upload mr-2"></i> Upload</span>
                                                 <span wire:loading wire:target="assignmentFiles.{{ $activity->id }}" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                                             </button>
                                             @else

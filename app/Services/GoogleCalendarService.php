@@ -219,7 +219,7 @@ class GoogleCalendarService
 
     private static function buildDewanDescription(Activity $activity)
     {
-        // 1. Identify Invitees (Dewan)
+        // Identify Invitees (Dewan)
         $disposition = $activity->disposition_to ?? [];
         if (!is_array($disposition)) $disposition = [];
         
@@ -228,103 +228,67 @@ class GoogleCalendarService
 
         $desc = "Yth.\n";
 
-        // Logic 1: Header (Who to address)
-        if ($count > 5) {
-            // Rapat Besar / Pleno -> Use Full Hierarchy with Separated Ketua (But ONLY Invited Ones)
-            $invitedKetua = $invitedDewan->where('divisi', 'Ketua DJSN')->first();
-            $invitedMembers = $invitedDewan->where('divisi', '!=', 'Ketua DJSN')->sortBy('order');
-            
-            // A. Ketua
-            if ($invitedKetua) {
-                $desc .= "A. Ketua Dewan Jaminan Sosial Nasional\n";
-                $desc .= "   {$invitedKetua->name}\n\n";
-                // Adjust numbering for B if Ketua exists? Template says B. Anggota.
-            }
-            
-            // B. Anggota
-            if ($invitedMembers->count() > 0) {
-                $desc .= "B. Anggota Dewan Jaminan Sosial Nasional\n";
-                $num = 1;
-                foreach ($invitedMembers as $member) {
-                    $desc .= "{$num}. {$member->name}\n";
-                    $num++;
-                }
-                $desc .= "\n";
-            }
-            
-            $desc .= "C. Sekretariat DJSN\n";
-            $desc .= "D. Tenaga Ahli DJSN\n\n";
-        } elseif ($count > 0) {
-            // Small Meeting -> List Specific Names
+        // === TEMPLATE 1 & 3: Header Logic ===
+        if ($activity->invitation_type == 'inbound') {
+            // --- TEMPLATE 1 (External) ---
+            // List Names Directly
             foreach ($invitedDewan as $member) {
-                // Formatting name: check if it needs specific honorifics
-                // Defaulting to Full Name as it is safest and formal.
-                $desc .= "{$member->name}\n";
+                $desc .= "Bapak/Ibu {$member->name}\n";
             }
             $desc .= "\n";
-        } else {
-             // Fallback if logic called but no dewan found (shouldn't happen)
-             $desc .= "Anggota Dewan Jaminan Sosial Nasional\n\n";
-        }
-
-        // Logic 2: Opening Sentence (Internal vs External)
-        if ($activity->invitation_type == 'inbound') {
-            // External / Undangan Masuk
-            $desc .= "Mohon izin menyampaikan Undangan terkait {$activity->name}, yang akan diselenggarakan pada:\n\n";
-        } else {
-            // Internal / Rapat
-             $desc .= "Disampaikan dengan hormat, kami mengundang Saudara/i dalam {$activity->name} mengenai agenda tersebut.\n";
-             $desc .= "Rapat diselenggarakan pada:\n\n";
-        }
-
-        // Logic 3: Details
-        $dateStr = Carbon::parse($activity->start_date)->translatedFormat('l, d F Y');
-        $timeStr = $activity->start_time . ' WIB s.d. ' . ($activity->end_time ? $activity->end_time . ' WIB' : 'Selesai');
-        
-        $desc .= "Hari, Tanggal : {$dateStr}\n";
-        $desc .= "Waktu       : {$timeStr}\n";
-        $desc .= "Tempat      : " . ($activity->location_type == 'offline' ? $activity->location : 'Zoom Meeting') . "\n";
-        
-        if ($activity->location_type != 'offline') {
-            $desc .= "Media       : Zoom Meeting\n";
-            $desc .= "Meeting ID  : {$activity->meeting_id}\n";
-            $desc .= "Passcode    : {$activity->passcode}\n\n";
             
-            $desc .= "Bergabung ke Rapat Zoom\n";
-            $desc .= "{$activity->meeting_link}\n\n";
-        }
+            // Body
+            $instansi = $activity->organizer_name ? $activity->organizer_name : 'Pihak Penyelenggara';
+            $desc .= "Mohon izin menyampaikan Undangan dari {$instansi} terkait {$activity->name}, yang akan diselenggarakan pada:\n\n";
 
-        // Logic 4: Dispo Note / Closing
-        if ($activity->dispo_note) {
-            $cleanedNote = strip_tags($activity->dispo_note);
-            $desc .= "Catatan/Disposisi: {$cleanedNote}\n\n";
-        }
-
-        $desc .= "Demikian disampaikan, atas perhatian dan kerja sama Saudara/i kami ucapkan terima kasih.\n\n";
-        $desc .= "Salam Hormat";
-        
-        return $desc;
-    }
-
-    private static function buildSekretariatDescription(Activity $activity)
-    {
-        // Standard Title for Sekretariat Event
-        $desc = "Yth.\n";
-        $desc .= "Seluruh Sekretariat DJSN\n\n";
-        
-        // Opening Logic
-        if ($activity->invitation_type == 'inbound') {
-             $desc .= "Mohon izin menyampaikan undangan perihal {$activity->name}, yang akan diselenggarakan pada:\n\n";
         } else {
-             $desc .= "Mengundang Bapak/Ibu dalam {$activity->name}, yang akan diselenggarakan pada:\n\n";
+            // --- TEMPLATE 3 (Internal) ---
+            // Full Hierarchy Header
+            // A. Dewan
+            $invitedKetua = $invitedDewan->where('divisi', 'Ketua DJSN')->first();
+            $invitedMembers = $invitedDewan->where('divisi', '!=', 'Ketua DJSN')->sortBy('order');
+
+            $desc .= "A. Dewan Jaminan Sosial Nasional\n\n";
+            
+             // Separate Ketua logic? User example just lists names under A.
+             // But let's stick to the list.
+            if ($invitedKetua) {
+                 $desc .= "   {$invitedKetua->name}\n";
+            }
+            foreach ($invitedMembers as $member) {
+                 $desc .= "   {$member->name}\n";
+            }
+            $desc .= "\n";
+
+            $desc .= "B. Sekretariat Dewan Jaminan Sosial Nasional\n";
+            
+            $desc .= "Dengan hormat,\n\n";
+
+            // Body
+            // Unit Name comes from selected Internal PIC
+            $unitName = 'Komisi/Unit';
+            if ($activity->pic && count($activity->pic) > 0) {
+                $unitName = $activity->pic[0]; // Take the first PIC as the Organizer Unit
+            }
+
+            $desc .= "Disampaikan bahwa {$unitName} akan melaksanakan {$activity->name}. Sehubungan dengan hal tersebut, kami mengundang Bapak/Ibu untuk hadir dan berpartisipasi dalam kegiatan dimaksud yang akan dilaksanakan pada:\n\n";
         }
-        
+
+        // === COMMON DETAILS SECTION ===
+        // === COMMON DETAILS SECTION ===
         $dateStr = Carbon::parse($activity->start_date)->translatedFormat('l, d F Y');
-        $timeStr = $activity->start_time . ' - ' . ($activity->end_time ? $activity->end_time . ' WIB' : 'Selesai');
+        $startTime = Carbon::parse($activity->start_time)->format('H:i');
+        $endTime = $activity->end_time ? Carbon::parse($activity->end_time)->format('H:i') . ' WIB' : 'Selesai';
+        $timeStr = $startTime . ' - ' . $endTime;
         
         $desc .= "Hari, tanggal : {$dateStr}\n";
         $desc .= "Waktu : {$timeStr}\n";
-        $desc .= "Tempat : " . ($activity->location_type == 'offline' ? $activity->location : 'Zoom Meeting') . "\n";
+
+        if ($activity->location_type == 'offline') {
+            $desc .= "Tempat : {$activity->location}\n";
+        } else {
+             $desc .= "Media / Tempat : Zoom Meeting / {$activity->location}\n";
+        }
         
         if ($activity->location_type != 'offline') {
             $desc .= "Link Zoom : {$activity->meeting_link}\n";
@@ -332,11 +296,66 @@ class GoogleCalendarService
             $desc .= "Passcode : {$activity->passcode}\n";
         }
         
-        if ($activity->dresscode) {
-            $desc .= "Pakaian : {$activity->dresscode}\n";
+        if ($activity->invitation_type != 'inbound') {
+             // For Template 3 (Internal), add Agenda placeholder if mostly empty?
+             // Or rely on description field if needed.
+             // $desc .= "\nAgenda : [Agenda Kegiatan]\n"; 
+        }
+
+        $desc .= "\n";
+        
+        if ($activity->invitation_type == 'inbound') {
+             $desc .= "Demikian disampaikan, atas perhatian Bapak/Ibu kami ucapkan terima kasih.";
+        } else {
+             $desc .= "Demikian disampaikan, atas perhatian dan kerja sama Bapak/Ibu kami ucapkan terima kasih.\n\n";
+             $desc .= "Hormat kami,";
         }
         
-        $desc .= "\nDemikian disampaikan, terima kasih.";
+        return $desc;
+    }
+
+    private static function buildSekretariatDescription(Activity $activity)
+    {
+        $desc = "Yth.\n";
+        $desc .= "Bapak Sekretaris DJSN\n\n";
+        
+        if ($activity->invitation_type == 'inbound') {
+            // --- TEMPLATE 2 (External) ---
+            $instansi = $activity->organizer_name ? $activity->organizer_name : 'Pihak Penyelenggara';
+            $desc .= "Mohon izin menyampaikan Undangan dari {$instansi} terkait {$activity->name}, yang akan diselenggarakan pada:\n\n";
+        } else {
+            // --- TEMPLATE 4 (Internal) ---
+            $desc .= "Mohon izin menyampaikan Undangan terkait {$activity->name}, yang akan diselenggarakan pada:\n\n";
+        }
+        
+        $dateStr = Carbon::parse($activity->start_date)->translatedFormat('l, d F Y');
+        $dateStr = Carbon::parse($activity->start_date)->translatedFormat('l, d F Y');
+        $startTime = Carbon::parse($activity->start_time)->format('H:i');
+        $endTime = $activity->end_time ? Carbon::parse($activity->end_time)->format('H:i') . ' WIB' : 'Selesai';
+        $timeStr = $startTime . ' s.d. ' . $endTime;
+        
+        $desc .= "Hari, tanggal : {$dateStr}\n";
+        $desc .= "Waktu : {$timeStr}\n";
+        $desc .= "Tempat : " . ($activity->location_type == 'offline' ? $activity->location : 'Zoom Meeting') . "\n";
+        
+        if ($activity->location_type != 'offline') {
+            $desc .= "Link : {$activity->meeting_link}\n";
+            $desc .= "ID : {$activity->meeting_id}\n";
+            $desc .= "Pass : {$activity->passcode}\n";
+        }
+
+        $desc .= "\nKegiatan ditujukan untuk:\n";
+        
+        // List Invitees (This logic works for both Template 2 and 4 as per request)
+        // We list ALL disposition targets
+        $disposition = $activity->disposition_to ?? [];
+        if (is_array($disposition)) {
+             foreach ($disposition as $name) {
+                 $desc .= "{$name}\n";
+             }
+        }
+        
+        $desc .= "\nDemikian disampaikan, atas perhatian Bapak kami ucapkan terima kasih.";
         
         return $desc;
     }

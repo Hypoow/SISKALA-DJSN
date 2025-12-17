@@ -59,7 +59,7 @@
         @else
             @if(auth()->check() && auth()->user()->isAdmin())
             <input type="file" id="minutes_{{ $activity->id }}" wire:model.live="minutesFile" class="d-none" accept="application/pdf">
-            <button type="button" class="btn btn-sm btn-primary btn-block" onclick="document.getElementById('minutes_{{ $activity->id }}').click()">
+            <button type="button" class="btn btn-sm btn-primary btn-block w-100" style="width: 100% !important; border-radius: 50px !important; display: block;" onclick="document.getElementById('minutes_{{ $activity->id }}').click()">
                 <span wire:loading.remove wire:target="minutesFile"><i class="fe fe-upload"></i> Upload</span>
                 <span wire:loading wire:target="minutesFile" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
             </button>
@@ -100,7 +100,7 @@
         @else
             @if(auth()->check() && auth()->user()->isAdmin())
             <input type="file" id="assignment_{{ $activity->id }}" wire:model.live="assignmentFile" class="d-none" accept="application/pdf">
-            <button type="button" class="btn btn-sm btn-primary btn-block" onclick="document.getElementById('assignment_{{ $activity->id }}').click()">
+            <button type="button" class="btn btn-sm btn-primary btn-block w-100" style="width: 100% !important; border-radius: 50px !important; display: block;" onclick="document.getElementById('assignment_{{ $activity->id }}').click()">
                 <span wire:loading.remove wire:target="assignmentFile"><i class="fe fe-upload"></i> Upload</span>
                 <span wire:loading wire:target="assignmentFile" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
             </button>

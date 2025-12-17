@@ -70,19 +70,23 @@
                         @endif
                     </div>
 
-
+                    <div class="form-group mb-3">
+                        <label for="name">Nama Kegiatan <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ old('name', $activity->name ?? '') }}" required>
+                    </div>
 
                     <div class="form-row">
-                        <div class="col-md-6 mb-3">
-                            <label for="name">Nama Kegiatan <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="name" name="name" value="{{ old('name', $activity->name ?? '') }}" required>
-                        </div>
                         <div class="col-md-6 mb-3">
                             <label for="letter_number">Nomor Surat</label>
                             <input type="text" class="form-control" id="letter_number" name="letter_number" value="{{ old('letter_number', $activity->letter_number ?? '') }}" placeholder="Masukkan Nomor Surat">
                         </div>
+                        {{-- Organizer Name (External Only) --}}
+                        <div class="col-md-6 mb-3" id="organizer_wrapper" style="display: none;">
+                            <label for="organizer_name">Nama Instansi Penyelenggara</label>
+                            <input type="text" class="form-control" id="organizer_name" name="organizer_name" value="{{ old('organizer_name', $activity->organizer_name ?? '') }}" placeholder="Contoh: Kementerian Kesehatan">
+                        </div>
                     </div>
-                    
+
                     <div class="form-row">
                         <div class="col-md-6 mb-3">
                             <label for="start_date">Tanggal Mulai <span class="text-danger">*</span></label>
@@ -377,6 +381,7 @@
         const picGroup = document.getElementById('pic_group');
         const picInternalWrapper = document.getElementById('pic_internal_wrapper');
         const picExternalWrapper = document.getElementById('pic_external_wrapper');
+        const organizerWrapper = document.getElementById('organizer_wrapper');
         const invStatus = $('#invitation_status');
         const attachmentInput = document.getElementById('attachment_path');
         const invTypeSelect = $('#invitation_type');
@@ -401,6 +406,7 @@
             picGroup.style.display = 'block';
             picInternalWrapper.style.display = 'none';
             picExternalWrapper.style.display = 'block';
+            if(organizerWrapper) organizerWrapper.style.display = 'block';
             if(picAsterisk) picAsterisk.style.display = 'none'; // Optional for External
             
             // Auto-set Invitation Type to "Surat Masuk" (inbound)
@@ -423,6 +429,7 @@
             picGroup.style.display = 'block';
             picInternalWrapper.style.display = 'block';
             picExternalWrapper.style.display = 'none';
+            if(organizerWrapper) organizerWrapper.style.display = 'none';
             if(picAsterisk) picAsterisk.style.display = 'inline'; // Required for Internal
             
             // Show OCR Hints for Internal

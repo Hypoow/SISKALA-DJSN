@@ -37,6 +37,7 @@ class Activity extends Model
         'summary_content',
         'google_event_id_dewan',
         'google_event_id_sekretariat',
+        'organizer_name',
     ];
 
     protected $casts = [
