@@ -35,6 +35,7 @@ class GoogleCalendarService
             $client = new \Google_Client();
             $client->setAuthConfig($credentialsPath);
             $client->addScope(\Google_Service_Calendar::CALENDAR);
+            $client->addScope(\Google_Service_Drive::DRIVE_FILE); // Add Drive Scope for attachments
             
             return $client;
         } catch (\Exception $e) {
@@ -113,30 +114,40 @@ class GoogleCalendarService
         $dewanSuccess = true;
         $sekretariatSuccess = true;
 
-        // --- DEWAN EVENT ---
-        if ($dewanUsers->count() > 0) {
-            $dewanSuccess = self::manageEvent(
-                $service, 
-                $calendarId, 
-                $activity, 
-                'dewan', 
-                $dewanUsers->pluck('email')->toArray(),
-                self::buildDewanDescription($activity)
-            );
-        } else {
-            // Delete if exists but no longer selected
-            if ($activity->google_event_id_dewan) {
-                try { $service->events->delete($calendarId, $activity->google_event_id_dewan); } catch(\Exception $e){}
-                $activity->update(['google_event_id_dewan' => null]);
-            }
-        }
-
-        // --- SEKRETARIAT EVENT ---
         // Also trigger if 'Sekretariat DJSN' string is in disposition (legacy/group check)
         // Or if ANY non-Dewan is selected?
         // User implied split based on who is invited.
         $hasSekretariat = $sekretariatUsers->count() > 0;
         
+        // Logic for Undisposed Activities
+        if ($dewanUsers->isEmpty() && !$hasSekretariat) {
+             // If NO disposition (Undisposed), create a placeholder event in the Sekretariat slot.
+             // Color: Red (11)
+             // Description: "Keterangan: Belum di dispo"
+             
+             // Reuse Sekretariat slot
+             $undisposedSuccess = self::manageEvent(
+                $service, 
+                $calendarId, 
+                $activity, 
+                'sekretariat', 
+                [], // No attendees
+                self::buildSekretariatDescription($activity) . "\n\nKeterangan: Belum ada dispo",
+                '11' // Force Red Color
+            );
+            
+            // Ensure Dewan slot is clear
+            if ($activity->google_event_id_dewan) {
+                try { $service->events->delete($calendarId, $activity->google_event_id_dewan); } catch(\Exception $e){}
+                $activity->update(['google_event_id_dewan' => null]);
+            }
+            
+            return $undisposedSuccess;
+        }
+
+        // Standard Logic (Disposed)
+        
+        // Process Sekretariat First
         if ($hasSekretariat) {
             $sekretariatSuccess = self::manageEvent(
                 $service, 
@@ -145,6 +156,7 @@ class GoogleCalendarService
                 'sekretariat', 
                 $sekretariatUsers->pluck('email')->toArray(),
                 self::buildSekretariatDescription($activity)
+                // Color handled internally (8)
             );
         } else {
              if ($activity->google_event_id_sekretariat) {
@@ -153,26 +165,60 @@ class GoogleCalendarService
             }
         }
 
+        // Process Dewan Last
+        if ($dewanUsers->count() > 0) {
+            $dewanSuccess = self::manageEvent(
+                $service, 
+                $calendarId, 
+                $activity, 
+                'dewan', 
+                $dewanUsers->pluck('email')->toArray(),
+                self::buildDewanDescription($activity)
+                // Color handled internally (9)
+            );
+        } else {
+            if ($activity->google_event_id_dewan) {
+                try { $service->events->delete($calendarId, $activity->google_event_id_dewan); } catch(\Exception $e){}
+                $activity->update(['google_event_id_dewan' => null]);
+            }
+        }
+        
         return $dewanSuccess && $sekretariatSuccess;
     }
 
-    private static function manageEvent($service, $calendarId, $activity, $type, $attendees, $description) 
+    private static function manageEvent($service, $calendarId, $activity, $type, $attendees, $description, $overrideColorId = null) 
     {
         try {
             $eventIdColumn = "google_event_id_{$type}";
             $currentEventId = $activity->$eventIdColumn;
             
+            
             $event = new \Google_Service_Calendar_Event();
             
-            // Basic details
+            // Append suffix removed as per user request
             $event->setSummary($activity->name);
+            
             $event->setDescription($description);
-            $event->setColorId($type === 'dewan' ? '11' : '9'); // 11=Red(Dewan?), 9=Blue(Sekretariat?) - Just distinguishing. 
-            // User didn't specify color, keeping similar logic (Internal=Blue, External=Red). 
-            // Maybe Dewan=External-ish (Red), Sekretariat=Internal (Blue).
+            
+            // Color Logic
+            if ($overrideColorId) {
+                $event->setColorId($overrideColorId);
+            } else {
+                // Dewan: #213f66 ~ Blueberry (9)
+                // Sekretariat: #a9a9a9 ~ Graphite (8)
+                if ($type === 'dewan') {
+                    $event->setColorId('9'); 
+                } else {
+                    $event->setColorId('8');
+                }
+            }
 
             // Time
+            // Reverted time offset as per user request ("JANGAN UBAH WAKTU NYA")
+            // Times are exact.
+            
             $startDate = Carbon::parse($activity->start_date->format('Y-m-d') . ' ' . $activity->start_time);
+            
             $endDate = $activity->end_date && $activity->end_time 
                 ? Carbon::parse($activity->end_date->format('Y-m-d') . ' ' . $activity->end_time)
                 : $startDate->copy()->addHour();
@@ -233,7 +279,8 @@ class GoogleCalendarService
             // --- TEMPLATE 1 (External) ---
             // List Names Directly
             foreach ($invitedDewan as $member) {
-                $desc .= "Bapak/Ibu {$member->name}\n";
+                $salutation = (stripos($member->name, 'Indah Anggoro Putri') !== false) ? 'Ibu' : 'Bapak';
+                $desc .= "{$salutation} {$member->name}\n";
             }
             $desc .= "\n";
             
@@ -248,17 +295,22 @@ class GoogleCalendarService
             $invitedKetua = $invitedDewan->where('divisi', 'Ketua DJSN')->first();
             $invitedMembers = $invitedDewan->where('divisi', '!=', 'Ketua DJSN')->sortBy('order');
 
-            $desc .= "A. Dewan Jaminan Sosial Nasional\n\n";
+            $desc .= "A. Dewan Jaminan Sosial Nasional\n";
             
-             // Separate Ketua logic? User example just lists names under A.
-             // But let's stick to the list.
-            if ($invitedKetua) {
-                 $desc .= "   {$invitedKetua->name}\n";
-            }
-            foreach ($invitedMembers as $member) {
-                 $desc .= "   {$member->name}\n";
-            }
-            $desc .= "\n";
+             // Counter for numbered list
+             $counter = 1;
+             
+             // List all invited dewan sorted by order
+             // Note: Re-fetching/Sorting might be needed if Ketua/Members split isn't strictly needed for the list order,
+             // but user example implies a single list 1..N.
+             // We'll trust $invitedDewan which is already sorted by 'order' from line 226.
+             
+             foreach ($invitedDewan as $member) {
+                 $salutation = (stripos($member->name, 'Indah Anggoro Putri') !== false) ? 'Ibu' : 'Bapak';
+                 $desc .= "{$counter}. {$salutation} {$member->name}\n";
+                 $counter++;
+             }
+             $desc .= "\n";
 
             $desc .= "B. Sekretariat Dewan Jaminan Sosial Nasional\n";
             
@@ -349,9 +401,35 @@ class GoogleCalendarService
         // List Invitees (This logic works for both Template 2 and 4 as per request)
         // We list ALL disposition targets
         $disposition = $activity->disposition_to ?? [];
-        if (is_array($disposition)) {
+        if (is_array($disposition) && count($disposition) > 0) {
+             // Fetch users to get their titles (divisi) and role
+             $users = User::whereIn('name', $disposition)->get()->keyBy('name');
+
+             $lines = []; // Initialize an array to hold formatted lines
+             $number = 1; // Initialize counter for numbered list
+
              foreach ($disposition as $name) {
-                 $desc .= "{$name}\n";
+                 $user = $users->get($name);
+                 
+                 // SKIP if user is Dewan, as requested (focus on Sekretariat)
+                 if ($user && $user->role === 'Dewan') {
+                     continue;
+                 }
+
+                 $label = $name;
+                 
+                 // Check if user has a title associated with "Kepala" (Head) or is "Sekretaris DJSN"
+                 // Usage based on "divisi" field in User model (as populated by SekretariatSeeder)
+                 if ($user && !empty($user->divisi)) {
+                     $title = $user->divisi;
+                     // Logic: If title contains 'Kepala' (e.g. Kepala Bagian, Kepala Sub) or is 'Sekretaris DJSN'
+                     // We use the title instead of the name.
+                     if (stripos($title, 'Kepala') !== false || stripos($title, 'Sekretaris DJSN') !== false) {
+                         $label = $title;
+                     }
+                 }
+                 
+                 $desc .= "{$label}\n";
              }
         }
         

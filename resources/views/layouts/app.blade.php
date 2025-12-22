@@ -50,12 +50,27 @@
                 <img src="{{ asset('assets/images/logo.svg') }}" alt="..." class="avatar-img rounded-circle">
               </span>
             </a>
-            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
-              <a class="dropdown-item" href="#">Profile</a>
-              <a class="dropdown-item" href="#">Settings</a>
-              <form method="POST" action="{{ route('logout') }}">
+            <div class="dropdown-menu dropdown-menu-right shadow-lg border-0" aria-labelledby="navbarDropdownMenuLink" style="min-width: 250px; border-radius: 12px;">
+              <div class="dropdown-header d-flex align-items-center bg-light border-bottom py-3 px-3">
+                <span class="avatar avatar-sm mt-0 mr-3">
+                  <img src="{{ asset('assets/images/logo.svg') }}" alt="..." class="avatar-img rounded-circle">
+                </span>
+                <div class="user-info text-truncate">
+                    <h6 class="mb-0 text-dark font-weight-bold">{{ auth()->user()->name ?? 'User' }}</h6>
+                    <small class="text-secondary">{{ auth()->user()->role ?? 'Role' }}</small>
+                </div>
+              </div>
+              <div class="list-group list-group-flush">
+                  <a class="list-group-item list-group-item-action border-0 py-2 mt-2 px-3" href="{{ route('profile.edit') }}">
+                    <i class="fe fe-user mr-2 text-muted"></i> Profile Saya
+                  </a>
+              </div>
+              <div class="dropdown-divider mb-0"></div>
+              <form method="POST" action="{{ route('logout') }}" class="m-0">
                 @csrf
-                <button type="submit" class="dropdown-item">Logout</button>
+                <button type="submit" class="dropdown-item py-3 px-3 text-danger font-weight-bold">
+                    <i class="fe fe-log-out mr-2"></i> Keluar
+                </button>
               </form>
             </div>
           </li>
@@ -96,22 +111,37 @@
     <script src="{{ asset('tinydash/js/config.js') }}"></script>
     <script src="{{ asset('tinydash/js/apps.js') }}"></script>
     <script>
+      window.Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+          toast.addEventListener('mouseenter', Swal.stopTimer)
+          toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+      });
+
+      window.addEventListener('alert', event => { 
+        Toast.fire({
+          icon: event.detail.type,
+          title: event.detail.message
+        });
+      });
+
       $(function() {
         @if (session('success'))
-          Swal.fire({
+          Toast.fire({
             icon: 'success',
-            title: 'Berhasil!',
-            text: "{{ session('success') }}",
-            showConfirmButton: false,
-            timer: 3000
+            title: "{{ session('success') }}"
           });
         @endif
 
         @if (session('error'))
-          Swal.fire({
+          Toast.fire({
             icon: 'error',
-            title: 'Gagal!',
-            text: "{{ session('error') }}",
+            title: "{{ session('error') }}"
           });
         @endif
       });

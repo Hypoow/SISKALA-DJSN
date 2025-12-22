@@ -1,87 +1,94 @@
 <div wire:poll.5s>
-    <div class="card shadow">
-        <div class="card-body">
-            <div class="toolbar row mb-3">
-                <div class="col-md-6">
-                    <form class="form-inline" onsubmit="event.preventDefault();">
-                        <div class="form-row align-items-center">
-                            <div class="col-auto my-1">
-                                <label class="mr-sm-2 sr-only" for="typeFilter">Tipe</label>
-                                <select class="custom-select mr-sm-2" id="typeFilter" wire:model.live="type">
-                                    <option value="">Semua Tipe</option>
-                                    <option value="external">Eksternal</option>
-                                    <option value="internal">Internal</option>
-                                </select>
-                            </div>
-                            <div class="col-auto my-1">
-                                <label class="mr-sm-2 sr-only" for="sortDirectionPast">Urutan</label>
-                                <select class="custom-select mr-sm-2" id="sortDirectionPast" wire:model.live="sortDirection">
-                                    <option value="desc">Waktu: Terbaru (Akhir - Awal)</option>
-                                    <option value="asc">Waktu: Terlama (Awal - Akhir)</option>
-                                </select>
-                            </div>
-                            <div class="col-auto my-1">
-                                <label class="sr-only" for="search">Search</label>
-                                <div class="input-group">
-                                    <input type="text" class="form-control" id="search" wire:model.live="search" placeholder="Cari kegiatan...">
-                                    <div class="input-group-append">
-                                        <button class="btn btn-primary" type="button"><i class="fe fe-search"></i></button>
-                                    </div>
-                                </div>
+    <div class="card shadow border-0 rounded-lg overflow-hidden my-4">
+        <!-- Header -->
+        <div class="card-header bg-primary text-white p-4" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
+             <div class="d-flex justify-content-between align-items-center">
+                <div>
+                     <h5 class="card-title mb-1 text-white font-weight-bold text-uppercase" style="letter-spacing: 1px;">Kegiatan Selesai</h5>
+                     <p class="mb-0 text-white-50 small">Arsip kegiatan dan dokumen (Notulensi/Surat Tugas)</p>
+                </div>
+             </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="bg-light border-bottom p-3">
+             <div class="row align-items-center">
+                  <div class="col-md-3 mb-2 mb-md-0">
+                        <div class="input-group input-group-merge shadow-sm">
+                            <input type="text" class="form-control border-0 pl-4" wire:model.live="search" placeholder="Cari kegiatan...">
+                            <div class="input-group-append">
+                                <div class="input-group-text border-0 bg-white pr-4"><i class="fe fe-search text-muted"></i></div>
                             </div>
                         </div>
-                    </form>
-                </div>
-                <div class="col-md-6 text-right d-flex align-items-center justify-content-end">
-                    {{-- Legend --}}
-                    <div class="d-flex align-items-center">
-                        <span class="mr-2 font-weight-bold">
-                            <span class="d-none d-md-inline">Keterangan:</span>
-                            <span class="d-inline d-md-none">Ket:</span>
-                        </span>
-                        <span class="mr-2"><span class="status-dot" style="background-color: var(--primary-color);"></span> Internal</span>
-                        <span><span class="status-dot" style="background-color: var(--accent-color);"></span> Eksternal</span>
                     </div>
-                </div>
+                    <div class="col-md-3 mb-2 mb-md-0">
+                        <select class="form-control border-0 shadow-sm" wire:model.live="type" style="background-image: none;">
+                            <option value="">Semua Tipe</option>
+                            <option value="external">Eksternal</option>
+                            <option value="internal">Internal</option>
+                        </select>
+                    </div>
+                  <div class="col-md-3 mb-2 mb-md-0">
+                         <select class="form-control border-0 shadow-sm" wire:model.live="sortDirection" style="background-image: none;">
+                            <option value="desc">Waktu: Terbaru (Akhir - Awal)</option>
+                            <option value="asc">Waktu: Terlama (Awal - Akhir)</option>
+                        </select>
+                  </div>
+                    <div class="col-md-3 text-right">
+                        <div class="d-inline-flex align-items-center bg-white rounded-pill px-3 py-2 shadow-sm border">
+                            <span class="mr-2 small text-muted font-weight-bold">Ket:</span>
+                            <div class="d-flex align-items-center mr-3">
+                                <span class="rounded-circle mr-1" style="width: 10px; height: 10px; background-color: #007bff;"></span>
+                                <span class="small font-weight-bold text-dark">Internal</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="rounded-circle mr-1" style="width: 10px; height: 10px; background-color: #fd7e14;"></span>
+                                <span class="small font-weight-bold text-dark">Eksternal</span>
+                            </div>
+                        </div>
+                   </div>
+             </div>
+        </div>
+
+        @if (session()->has('success_upload'))
+            <div class="alert alert-success alert-dismissible fade show m-3 border-0 shadow-sm" role="alert">
+                <i class="fe fe-check-circle mr-2"></i> {{ session('success_upload') }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
+        @endif
 
-            @if (session()->has('success_upload'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ session('success_upload') }}
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-            @endif
-
-            <!-- Bulk Actions -->
+        <div class="card-body p-0">
+             <!-- Bulk Actions -->
             @if(auth()->check() && auth()->user()->isAdmin())
-                <div class="col-md-12 mb-2" 
+                <div class="col-12 p-0" 
                      x-data="{ count: @entangle('selected').live }" 
                      x-show="count && count.length > 0" 
                      x-cloak 
                      style="display: none;"
                      x-transition>
-                    <div class="alert alert-info d-flex align-items-center justify-content-between py-2">
-                        <span><strong x-text="count ? count.length : 0"></strong> kegiatan terpilih.</span>
+                    <div class="alert alert-primary border-0 rounded-0 mb-0 d-flex align-items-center justify-content-between py-3 px-4">
+                        <span class="text-white"><i class="fe fe-check-circle mr-2"></i> <strong x-text="count ? count.length : 0"></strong> kegiatan terpilih.</span>
                         <button type="button" 
                                 onclick="confirmBulkDeletePast()"
-                                class="btn btn-sm btn-danger">
-                            Hapus Terpilih
+                                class="btn btn-sm btn-light text-danger font-weight-bold shadow-sm">
+                            <i class="fe fe-trash-2 mr-1"></i> Hapus Terpilih
                         </button>
                     </div>
                 </div>
                 <script>
                     function confirmBulkDeletePast() {
                         Swal.fire({
-                            title: 'Yakin hapus kegiatan terpilih?',
+                            title: 'Hapus Kegiatan Terpilih?',
                             text: "Data yang dihapus tidak dapat dikembalikan!",
                             icon: 'warning',
                             showCancelButton: true,
                             confirmButtonColor: '#d33',
-                            cancelButtonColor: '#3085d6',
+                            cancelButtonColor: '#6c757d',
                             confirmButtonText: 'Ya, Hapus!',
-                            cancelButtonText: 'Batal'
+                            cancelButtonText: 'Batal',
+                            reverseButtons: true
                         }).then((result) => {
                             if (result.isConfirmed) {
                                 @this.call('deleteSelected');
@@ -91,80 +98,92 @@
                 </script>
             @endif
 
-            <!-- table -->
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover">
-                    <thead>
-                        <tr>
-                            @if(auth()->check() && auth()->user()->isAdmin())
-                            <th style="width: 40px;">
-                                <div class="custom-control custom-checkbox">
-                                    <input type="checkbox" class="custom-control-input" id="selectAllPast" wire:model.live="selectAll">
-                                    <label class="custom-control-label" for="selectAllPast"></label>
-                                </div>
-                            </th>
-                            @endif
-                            <th>Waktu</th>
-                            <th>Nama Kegiatan</th>
-                            <th>Status Pelaksanaan</th>
-                            <th>Notulensi</th>
-                            <th>Surat Tugas</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+             <!-- Table -->
+             <div class="table-responsive">
+                 <table class="table table-hover mb-0">
+                     <thead class="bg-light">
+                         <tr>
+                             @if(auth()->check() && auth()->user()->isAdmin())
+                                <th class="pl-4 align-middle" style="width: 5%;">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="selectAllPast" wire:model.live="selectAll">
+                                        <label class="custom-control-label" for="selectAllPast"></label>
+                                    </div>
+                                </th>
+                             @endif
+                             <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 pl-4">Tanggal & Waktu</th>
+                             <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Kegiatan</th>
+                             <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Status</th>
+                             <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Notulensi</th>
+                             <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Surat Tugas</th>
+                             <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Aksi</th>
+                         </tr>
+                     </thead>
+                     <tbody>
                         @forelse($groupedActivities as $month => $activities)
-                            <tr role="group" class="bg-light">
-                                <td colspan="{{ auth()->check() && auth()->user()->isAdmin() ? 7 : 6 }}" class="font-weight-bold text-uppercase text-primary pl-4" style="letter-spacing: 1px; border-bottom: 2px solid #007bff;">{{ $month }}</td>
+                            <tr class="bg-light">
+                                <td colspan="{{ auth()->check() && auth()->user()->isAdmin() ? 7 : 6 }}" class="py-2 pl-4">
+                                    <h6 class="mb-0 text-primary font-weight-bold text-uppercase" style="letter-spacing: 1px; font-size: 0.8rem;">
+                                        <i class="fe fe-calendar mr-2"></i>{{ $month }}
+                                    </h6>
+                                </td>
                             </tr>
                             @foreach($activities as $activity)
-                                <tr class="{{ $activity->type == 'internal' ? 'row-internal' : 'row-external' }}" wire:key="row-{{ $activity->id }}">
+                                <tr style="border-left: 4px solid {{ $activity->type == 'internal' ? '#007bff' : '#fd7e14' }};" wire:key="row-{{ $activity->id }}">
                                     @if(auth()->check() && auth()->user()->isAdmin())
-                                    <td>
+                                    <td class="pl-4 align-middle">
                                         <div class="custom-control custom-checkbox">
                                             <input type="checkbox" class="custom-control-input" id="check_{{ $activity->id }}" value="{{ $activity->id }}" wire:model.live="selected">
                                             <label class="custom-control-label" for="check_{{ $activity->id }}"></label>
                                         </div>
                                     </td>
                                     @endif
-                                    <td style="min-width: 140px;">
+                                    <td class="align-middle pl-4" style="min-width: 150px;">
                                         <div class="d-flex align-items-center">
-                                            <div class="text-center bg-white border border-secondary shadow-sm rounded" style="width: 50px; overflow: hidden;">
-                                                <div class="bg-secondary text-white small font-weight-bold py-0" style="font-size: 10px; line-height: 1.2;">
-                                                    {{ $activity->date_time->format('M') }}
-                                                </div>
-                                                <div class="h4 mb-0 font-weight-bold text-dark py-2">
-                                                    {{ $activity->date_time->format('d') }}
-                                                </div>
+                                            <div class="text-center rounded p-2 shadow-sm text-white" style="min-width: 50px; background-color: {{ $activity->type == 'internal' ? '#007bff' : '#fd7e14' }};">
+                                                <span class="d-block font-weight-bold small text-uppercase" style="line-height:1;">{{ $activity->date_time->format('M') }}</span>
+                                                <span class="d-block font-weight-bold h4 mb-0" style="line-height:1;">{{ $activity->date_time->format('d') }}</span>
                                             </div>
                                             <div class="ml-3">
-                                                <span class="h5 mb-0 font-weight-bold text-secondary">{{ $activity->date_time->format('H:i') }}</span>
-                                                <div class="small text-muted font-weight-bold text-uppercase">{{ $activity->date_time->isoFormat('dddd') }}</div>
+                                                <h6 class="mb-0 font-weight-bold text-dark">{{ $activity->date_time->format('H:i') }} WIB</h6>
+                                                <small class="text-muted text-uppercase font-weight-bold">{{ $activity->date_time->isoFormat('dddd') }}</small>
                                             </div>
                                         </div>
                                     </td>
-                                    <td>
-                                        <a href="{{ route('activities.show', $activity->id) }}" class="text-dark font-weight-bold">{{ $activity->name }}</a>
-                                        <br>
-                                        <small class="text-muted">{{ $activity->location_type == 'online' ? 'Online' : $activity->location }}</small>
+                                    <td class="align-middle">
+                                        <a href="{{ route('activities.show', $activity->id) }}" class="text-dark font-weight-bold mb-1 d-block text-decoration-none h6">
+                                            {{ $activity->name }}
+                                        </a>
+                                        <small class="text-muted"><i class="fe fe-map-pin mr-1"></i>{{ $activity->location_type == 'online' ? 'Online' : $activity->location }}</small>
                                     </td>
-                                    <td>
-                                        @switch($activity->status)
-                                            @case(0) <span class="badge badge-success">Terlaksana</span> @break
-                                            @case(1) <span class="badge badge-warning">Reschedule</span> @break
-                                            @case(2) <span class="badge badge-secondary">Belom ada Dispo</span> @break
-                                            @case(3) <span class="badge badge-danger">Batal</span> @break
+                                    <td class="align-middle text-center">
+                                         @switch($activity->status)
+                                            @case(0) <span class="badge badge-pill badge-light text-success border border-success px-3">Terlaksana</span> @break
+                                            @case(1) <span class="badge badge-pill badge-light text-warning border border-warning px-3">Reschedule</span> @break
+                                            @case(2) <span class="badge badge-pill badge-light text-secondary border border-secondary px-3">Menunggu Disposisi</span> @break
+                                            @case(3) <span class="badge badge-pill badge-light text-danger border border-danger px-3">Batal</span> @break
                                         @endswitch
+
+                                        <div class="mt-2">
+                                            @if(!empty($activity->summary_content))
+                                                <small class="text-success font-weight-bold" title="Hasil Rapat Tersedia">
+                                                    <i class="fe fe-check-circle mr-1"></i>Ringkasan Rapat Terisi
+                                                </small>
+                                            @else
+                                                <small class="text-muted" title="Belum ada ringkasan hasil rapat">
+                                                    <i class="fe fe-minus-circle mr-1"></i>Ringkasan Rapat Belum Diisi
+                                                </small>
+                                            @endif
+                                        </div>
                                     </td>
-                                    <td>
-                                        {{-- Minutes Upload --}}
+                                    <td class="align-middle text-center" style="min-width: 140px;">
                                         @if($activity->minutes_path)
-                                            <div class="btn-group btn-block">
-                                                <a href="{{ Storage::url($activity->minutes_path) }}" target="_blank" class="btn btn-sm btn-outline-primary text-truncate" title="Lihat Notulensi">
-                                                    <i class="fe fe-eye"></i> Lihat
+                                            <div class="btn-group shadow-sm rounded-pill">
+                                                <a href="{{ Storage::url($activity->minutes_path) }}" target="_blank" class="btn btn-sm btn-outline-primary border-0 bg-white d-flex align-items-center justify-content-center" title="Lihat Notulensi">
+                                                    <i class="fe fe-eye mr-2"></i> Lihat
                                                 </a>
                                                 @if(auth()->check() && auth()->user()->isAdmin())
-                                                <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle dropdown-toggle-split border-0 bg-white" data-toggle="dropdown">
                                                     <span class="sr-only">Toggle Dropdown</span>
                                                 </button>
                                                 <div class="dropdown-menu dropdown-menu-right">
@@ -181,31 +200,30 @@
                                             @if(auth()->check() && auth()->user()->isAdmin())
                                                 <input type="file" id="minutes_{{ $activity->id }}" wire:model.live="minutesFiles.{{ $activity->id }}" class="d-none" accept="application/pdf">
                                                 <div wire:loading wire:target="minutesFiles.{{ $activity->id }}" class="text-center mt-1">
-                                                     <small class="text-muted"><span class="spinner-border spinner-border-sm"></span> Uploading...</small>
+                                                     <small class="text-muted"><span class="spinner-border spinner-border-sm"></span></small>
                                                 </div>
                                             @endif
                                         @else
                                             @if(auth()->check() && auth()->user()->isAdmin())
                                             <input type="file" id="minutes_{{ $activity->id }}" wire:model.live="minutesFiles.{{ $activity->id }}" class="d-none" accept="application/pdf">
-                                            <button type="button" class="btn btn-sm btn-primary w-100" style="display: flex; align-items: center; justify-content: center; white-space: nowrap; width: 100% !important; border-radius: 50px !important;" onclick="document.getElementById('minutes_{{ $activity->id }}').click()">
-                                                <span wire:loading.remove wire:target="minutesFiles.{{ $activity->id }}" style="display: flex; align-items: center;"><i class="fe fe-upload mr-2"></i> Upload</span>
-                                                <span wire:loading wire:target="minutesFiles.{{ $activity->id }}" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill w-100 border-dashed d-flex align-items-center justify-content-center" onclick="document.getElementById('minutes_{{ $activity->id }}').click()">
+                                                <span wire:loading.remove wire:target="minutesFiles.{{ $activity->id }}" class="d-flex align-items-center"><i class="fe fe-upload-cloud mr-2"></i> Upload</span>
+                                                <span wire:loading wire:target="minutesFiles.{{ $activity->id }}"><span class="spinner-border spinner-border-sm text-secondary"></span></span>
                                             </button>
                                             @else
-                                            <span class="text-muted small font-italic">Belum ada</span>
+                                            <span class="text-muted small font-italic">-</span>
                                             @endif
                                         @endif
-                                        @error("minutesFiles.{$activity->id}") <span class="text-danger small">{{ $message }}</span> @enderror
+                                        @error("minutesFiles.{$activity->id}") <span class="d-block text-danger small mt-1">{{ $message }}</span> @enderror
                                     </td>
-                                    <td>
-                                        {{-- Assignment Upload --}}
+                                    <td class="align-middle text-center" style="min-width: 140px;">
                                         @if($activity->assignment_letter_path)
-                                            <div class="btn-group btn-block">
-                                                <a href="{{ Storage::url($activity->assignment_letter_path) }}" target="_blank" class="btn btn-sm btn-outline-primary text-truncate" title="Lihat Surat Tugas">
-                                                    <i class="fe fe-eye"></i> Lihat
+                                            <div class="btn-group shadow-sm rounded-pill">
+                                                <a href="{{ Storage::url($activity->assignment_letter_path) }}" target="_blank" class="btn btn-sm btn-outline-primary border-0 bg-white d-flex align-items-center justify-content-center" title="Lihat Surat Tugas">
+                                                    <i class="fe fe-eye mr-2"></i> Lihat
                                                 </a>
                                                 @if(auth()->check() && auth()->user()->isAdmin())
-                                                <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle dropdown-toggle-split border-0 bg-white" data-toggle="dropdown">
                                                     <span class="sr-only">Toggle Dropdown</span>
                                                 </button>
                                                 <div class="dropdown-menu dropdown-menu-right">
@@ -222,34 +240,34 @@
                                             @if(auth()->check() && auth()->user()->isAdmin())
                                                 <input type="file" id="assignment_{{ $activity->id }}" wire:model.live="assignmentFiles.{{ $activity->id }}" class="d-none" accept="application/pdf">
                                                 <div wire:loading wire:target="assignmentFiles.{{ $activity->id }}" class="text-center mt-1">
-                                                     <small class="text-muted"><span class="spinner-border spinner-border-sm"></span> Uploading...</small>
+                                                     <small class="text-muted"><span class="spinner-border spinner-border-sm"></span></small>
                                                 </div>
                                             @endif
                                         @else
                                             @if(auth()->check() && auth()->user()->isAdmin())
                                             <input type="file" id="assignment_{{ $activity->id }}" wire:model.live="assignmentFiles.{{ $activity->id }}" class="d-none" accept="application/pdf">
-                                            <button type="button" class="btn btn-sm btn-primary w-100" style="display: flex; align-items: center; justify-content: center; white-space: nowrap; width: 100% !important; border-radius: 50px !important;" onclick="document.getElementById('assignment_{{ $activity->id }}').click()">
-                                                <span wire:loading.remove wire:target="assignmentFiles.{{ $activity->id }}" style="display: flex; align-items: center;"><i class="fe fe-upload mr-2"></i> Upload</span>
-                                                <span wire:loading wire:target="assignmentFiles.{{ $activity->id }}" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill w-100 border-dashed d-flex align-items-center justify-content-center" onclick="document.getElementById('assignment_{{ $activity->id }}').click()">
+                                                <span wire:loading.remove wire:target="assignmentFiles.{{ $activity->id }}" class="d-flex align-items-center"><i class="fe fe-upload-cloud mr-2"></i> Upload</span>
+                                                <span wire:loading wire:target="assignmentFiles.{{ $activity->id }}"><span class="spinner-border spinner-border-sm text-secondary"></span></span>
                                             </button>
                                             @else
-                                            <span class="text-muted small font-italic">Belum ada</span>
+                                            <span class="text-muted small font-italic">-</span>
                                             @endif
                                         @endif
-                                        @error("assignmentFiles.{$activity->id}") <span class="text-danger small">{{ $message }}</span> @enderror
+                                        @error("assignmentFiles.{$activity->id}") <span class="d-block text-danger small mt-1">{{ $message }}</span> @enderror
                                     </td>
-                                    <td>
+                                    <td class="align-middle text-center">
                                         <div class="dropdown">
-                                            <button class="btn btn-sm btn-outline-secondary" type="button" id="dropdownMenuButton-{{ $activity->id }}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                <i class="fe fe-more-horizontal"></i>
+                                            <button class="btn btn-sm btn-icon btn-light shadow-sm" type="button" data-toggle="dropdown">
+                                                <i class="fe fe-more-vertical text-muted"></i>
                                             </button>
-                                            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton-{{ $activity->id }}">
+                                            <div class="dropdown-menu dropdown-menu-right shadow-lg border-0">
                                                 <a class="dropdown-item" href="{{ route('activities.show', $activity->id) }}">
-                                                    <i class="fe fe-eye mr-2"></i> Detail
+                                                    <i class="fe fe-eye mr-2 text-primary"></i> Detail
                                                 </a>
                                                 @if(auth()->check() && auth()->user()->isAdmin())
                                                 <a class="dropdown-item" href="{{ route('activities.edit', $activity->id) }}">
-                                                    <i class="fe fe-edit mr-2"></i> Edit
+                                                    <i class="fe fe-edit mr-2 text-warning"></i> Edit
                                                 </a>
                                                 @endif
                                             </div>
@@ -259,94 +277,23 @@
                             @endforeach
                         @empty
                             <tr>
-                                <td colspan="{{ auth()->check() && auth()->user()->isAdmin() ? 7 : 6 }}" class="text-center">Belum ada kegiatan selesai.</td>
+                                <td colspan="{{ auth()->check() && auth()->user()->isAdmin() ? 7 : 6 }}" class="text-center py-5">
+                                    <div class="d-flex flex-column align-items-center justify-content-center">
+                                        <div class="bg-light rounded-circle p-4 mb-3">
+                                            <i class="fe fe-archive text-muted display-4"></i>
+                                        </div>
+                                        <h5 class="text-muted font-weight-bold">Tidak ada kegiatan selesai</h5>
+                                        <p class="text-muted small">Kegiatan yang telah selesai akan muncul di sini.</p>
+                                    </div>
+                                </td>
                             </tr>
                         @endforelse
-                    </tbody>
-                </table>
-            </div>
+                     </tbody>
+                 </table>
+             </div>
         </div>
     </div>
-
-    {{-- Generic Delete Confirmation Script --}}
-    <script>
-        function confirmDelete(type, id) {
-            let title = type === 'minutes' ? 'Hapus Notulensi?' : 'Hapus Surat Tugas?';
-            let text = type === 'minutes' ? 'File notulensi akan dihapus.' : 'File surat tugas akan dihapus.';
-            
-            Swal.fire({
-                title: title,
-                text: text,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Ya, Hapus!',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Find the component instance for the row
-                    // Using @this in loop is tricky, so we rely on Livewire.find or dispatch event to row
-                    // But simpler: each row component can listen for an event, OR we can emit to specific component
-                    // Actually, easiest way in loop is to call method on the row component instance.
-                    // But `confirmDelete` is global script.
-                    
-                    // Solution: We'll modify the loop to embed the script inside the row or use wire:click to a helper that emits event?
-                    // Better: The row component has the method. We should trigger it from `wire:click`.
-                    // But we want SweetAlert.
-                    
-                    // Refined Approach: Use Livewire.dispatchTo specific component.
-                    // Or easier: 
-                    // Pass the component ID to the JS function?
-                    // Let's rely on `wire:click` passing the confirmation via a custom event listener in JS?
-                    // No, existing pattern: `onclick="confirmDelete..."`.
-                    
-                    // We need to call the method on the Correct Livewire Component.
-                    // We can use `Livewire.dispatch('delete-file', { type: type, id: id })` and have rows listen?
-                    // Or simpler: put the script INSIDE the row component? No, duplication.
-                    
-                    // Let's use `Livewire.find` if we have component ID.
-                    // But we don't have it easily here.
-                    
-                    // ALTERNATIVE:
-                    // Use `wire:click` on the button to trigger a `confirmingDelete` method in PHP, which dispatches a browser event to show Swal?
-                    // 1. Button wire:click="confirmDelete('minutes')"
-                    // 2. Component: public function confirmDelete($type) { $this->dispatch('show-delete-confirmation', type: $type, id: $this->id); }
-                    // 3. Global JS listens to `show-delete-confirmation`, shows Swal, then calls back.
-                    // This is robust.
-                    
-                    // FOR NOW: To keep it verifying quickly, I'll move the SWAL script logic INTO the row component view or assume the `onclick` can target the row.
-                    
-                    // ACTUALLY: The best way for Row components is to have the `x-data` Alpine component wrapper handle it, or just:
-                    // `wire:click` triggers a sweet alert confirmation via `Livewire.on`.
-                }
-            })
-        }
-    </script>
     
-    {{-- 
-       Correction: The previous plan had the script in the list, but now methods are on the ROW.
-       The row component needs to receive the call.
-       
-       Let's use the AlpineJS approach or inline script in the row is easiest for 100% correctness without complex ID passing.
-       I'll place a small script script tag in the row view? No, bad performance.
-       
-       Better: 
-       Button: `wire:click="$dispatch('trigger-delete', { type: 'minutes', id: {{ $this->getId() }} })"`
-       But `$this->getId()` is generic.
-       
-       Let's go with:
-       Button: `onclick="confirmDeleteRow('{{ $this->getId() }}', 'minutes')"`
-       
-       Script (Global):
-       function confirmDeleteRow(componentId, type) {
-           Swal.fire({...}).then(r => {
-               if(r.isConfirmed) {
-                   Livewire.find(componentId).call(type === 'minutes' ? 'deleteMinutes' : 'deleteAssignment');
-               }
-           })
-       }
-    --}}
     <script>
         function confirmDeleteFile(type, id) {
             let title = type === 'minutes' ? 'Hapus Notulensi?' : 'Hapus Surat Tugas?';
@@ -358,9 +305,10 @@
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
+                cancelButtonColor: '#6c757d',
                 confirmButtonText: 'Ya, Hapus!',
-                cancelButtonText: 'Batal'
+                cancelButtonText: 'Batal',
+                reverseButtons: true
             }).then((result) => {
                 if (result.isConfirmed) {
                     @this.call(type === 'minutes' ? 'deleteMinutes' : 'deleteAssignment', id);

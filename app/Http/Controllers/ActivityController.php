@@ -257,6 +257,16 @@ class ActivityController extends Controller
             $validated['end_date'] = $validated['start_date'];
         }
 
+        // Auto-Update Invitation Status logic:
+        // If status is 'Proses Disposisi' (0) AND 'disposition_to' has items,
+        // automatically set it to 'Sudah ada Disposisi' (1).
+        if (isset($validated['disposition_to']) && !empty($validated['disposition_to'])) {
+             // 0 = Proses Disposisi, 1 = Sudah ada Disposisi
+             if (intval($validated['invitation_status']) === 0) {
+                 $validated['invitation_status'] = 1;
+             }
+        }
+
         $activity->update($validated);
 
         // Update Google Calendar Event

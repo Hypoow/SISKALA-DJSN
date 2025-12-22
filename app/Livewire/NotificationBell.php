@@ -8,12 +8,36 @@ use Illuminate\Support\Facades\Auth;
 
 class NotificationBell extends Component
 {
+    public function clearHistory()
+    {
+        // Get all current notification IDs
+        $currentIds = $this->notifications->pluck('id')->toArray();
+        $hiddenNotifications = session()->get('hidden_notifications', []);
+        
+        // Merge and save
+        $newHidden = array_unique(array_merge($hiddenNotifications, $currentIds));
+        session()->put('hidden_notifications', $newHidden);
+    }
+
+    public function markAsRead($activityId)
+    {
+        $readNotifications = session()->get('read_notifications', []);
+        if (!in_array($activityId, $readNotifications)) {
+            $readNotifications[] = $activityId;
+            session()->put('read_notifications', $readNotifications);
+        }
+        
+        // Redirect is handled by the link href, so we just update the session
+    }
+
     public function getNotificationsProperty()
     {
         $user = Auth::user();
         if (!$user) {
             return collect();
         }
+
+        $hiddenNotifications = session()->get('hidden_notifications', []);
 
         // Admin: Urgent Activities (H-3, No Dispo)
         if ($user->isAdmin()) {
@@ -22,6 +46,9 @@ class NotificationBell extends Component
                            ->where(function($q) {
                                $q->whereNull('disposition_to')
                                  ->orWhere('disposition_to', '[]');
+                           })
+                           ->where(function($q) use ($hiddenNotifications) {
+                               $q->whereNotIn('id', $hiddenNotifications);
                            })
                            ->orderBy('start_date', 'asc')
                            ->get();
@@ -34,6 +61,9 @@ class NotificationBell extends Component
                            ->where(function($q) use ($user) {
                                $q->whereJsonContains('disposition_to', $user->name);
                            })
+                           ->where(function($q) use ($hiddenNotifications) {
+                               $q->whereNotIn('id', $hiddenNotifications);
+                           })
                            ->orderBy('start_date', 'asc')
                            ->get();
         }
@@ -43,8 +73,13 @@ class NotificationBell extends Component
 
     public function render()
     {
+        $readNotifications = session()->get('read_notifications', []);
+        $unreadCount = $this->notifications->whereNotIn('id', $readNotifications)->count();
+
         return view('livewire.notification-bell', [
-            'notifications' => $this->notifications
+            'notifications' => $this->notifications,
+            'readNotifications' => $readNotifications,
+            'unreadCount' => $unreadCount
         ]);
     }
 }
