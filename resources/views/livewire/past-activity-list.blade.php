@@ -1,4 +1,4 @@
-<div wire:poll.5s>
+<div wire:poll.8s>
     <div class="card shadow border-0 rounded-lg overflow-hidden my-4">
         <!-- Header -->
         <div class="card-header bg-primary text-white p-4" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">

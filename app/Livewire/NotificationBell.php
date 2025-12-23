@@ -19,7 +19,7 @@ class NotificationBell extends Component
         session()->put('hidden_notifications', $newHidden);
     }
 
-    public function markAsRead($activityId)
+    public function markAsRead($activityId, $url)
     {
         $readNotifications = session()->get('read_notifications', []);
         if (!in_array($activityId, $readNotifications)) {
@@ -27,7 +27,7 @@ class NotificationBell extends Component
             session()->put('read_notifications', $readNotifications);
         }
         
-        // Redirect is handled by the link href, so we just update the session
+        return redirect()->to($url);
     }
 
     public function getNotificationsProperty()

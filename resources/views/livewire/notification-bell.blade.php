@@ -24,8 +24,8 @@
                     @php
                         $isRead = in_array($notification->id, $readNotifications);
                     @endphp
-                    <a href="{{ route('activities.index', ['search' => $notification->name]) }}" 
-                       wire:click="markAsRead({{ $notification->id }})"
+                    <a href="javascript:void(0)" 
+                       wire:click="markAsRead({{ $notification->id }}, '{{ route('activities.index', ['search' => $notification->name]) }}')"
                        class="list-group-item list-group-item-action border-bottom py-3 px-4 d-flex align-items-start {{ $isRead ? 'bg-white' : 'bg-light' }}">
                         
                         <!-- Icon Column -->
@@ -58,7 +58,9 @@
                         </div>
                         
                         @if(!$isRead)
-                            <span class="ml-2 text-primary" title="Belum Dibaca"><i class="fe fe-circle" style="font-size: 8px;"></i></span>
+                            <span class="ml-2" title="Belum Dibaca">
+                                <span class="d-inline-block rounded-circle bg-primary" style="width: 10px; height: 10px;"></span>
+                            </span>
                         @endif
                     </a>
                 @endforeach

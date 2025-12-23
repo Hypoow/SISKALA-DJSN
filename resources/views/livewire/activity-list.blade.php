@@ -1,5 +1,5 @@
 <div>
-    <div wire:poll.5s>
+    <div wire:poll.8s>
         <!-- Urgent Activities Alert -->
         @if($this->urgentActivities->isNotEmpty() && auth()->check() && auth()->user()->isAdmin())
             <div class="alert alert-warning shadow-sm border-0 rounded-lg mb-4 mx-1" role="alert" style="background: linear-gradient(to right, #fff3cd, #fff8e1); border-left: 5px solid #ffc107 !important;">

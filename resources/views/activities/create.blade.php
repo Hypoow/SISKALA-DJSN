@@ -599,7 +599,7 @@
             if(attachmentGroup) attachmentGroup.style.display = 'block';
             
             // UI Updates for External (No Smart Assist)
-            $('#smart_assist_title').html('<i class="fe fe-paperclip mr-2 text-secondary"></i>Upload Lampiran');
+            $('#smart_assist_title').html('<i class="fe fe-paperclip mr-2 text-secondary"></i>Upload Surat Undangan');
             $('#smart_assist_desc').text('Upload surat undangan (PDF/Gambar) sebagai lampiran.');
             $('#ocr_loading').hide(); // Ensure loading is hidden
 

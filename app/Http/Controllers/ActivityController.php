@@ -277,6 +277,17 @@ class ActivityController extends Controller
 
     public function destroy(Activity $activity)
     {
+        // Delete Files
+        if ($activity->attachment_path) {
+            \Storage::disk('public')->delete($activity->attachment_path);
+        }
+        if ($activity->minutes_path) {
+            \Storage::disk('public')->delete($activity->minutes_path);
+        }
+        if ($activity->assignment_letter_path) {
+            \Storage::disk('public')->delete($activity->assignment_letter_path);
+        }
+
         // Delete Google Calendar Event
         GoogleCalendarService::deleteEvent($activity);
 
