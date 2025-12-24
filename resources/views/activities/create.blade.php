@@ -428,7 +428,7 @@
                                                      @endphp
                                                      <div class="col-md-6">
                                                          <div class="custom-control custom-checkbox mb-2">
-                                                             <input type="checkbox" class="custom-control-input dewan-checkbox group-{{ $groupIndex }}" id="dewan_{{ $member->id }}" name="disposition_to[]" value="{{ $member->name }}" {{ in_array($member->name, $selectedDewan) ? 'checked' : '' }}>
+                                                             <input type="checkbox" class="custom-control-input dewan-checkbox group-{{ $groupIndex }}" id="dewan_{{ $member->id }}" name="disposition_to[]" value="{{ $member->name }}" data-group-name="{{ $groupName }}" {{ in_array($member->name, $selectedDewan) ? 'checked' : '' }}>
                                                              <label class="custom-control-label" for="dewan_{{ $member->id }}">
                                                                  {{ $member->name }}
                                                                  @if($groupName === 'Sekretariat DJSN')
@@ -862,43 +862,106 @@
         }
 
         // 3. Tipe Lokasi, Media, & Lokasi
-        const mediaMatch = text.match(/(?:Media|Tempat)\s*:\s*(.*)/i);
-        let detectedType = 'offline';
-        let mediaName = '';
-
-        if (mediaMatch && mediaMatch[1]) {
-            const content = mediaMatch[1].toLowerCase();
-            if (content.includes('zoom')) { detectedType = 'online'; mediaName = 'Zoom'; }
-            else if (content.includes('meet') || content.includes('google')) { detectedType = 'online'; mediaName = 'Google Meet'; }
-            else if (content.includes('teams')) { detectedType = 'online'; mediaName = 'Microsoft Teams'; }
-            else if (content.includes('online')) { detectedType = 'online'; mediaName = 'Lainnya'; }
+        // Normalizes text for easier searching
+        const lowerText = text.toLowerCase();
+        
+        let detectedType = 'offline'; // Default
+        let placeVal = '';
+        let mediaVal = '';
+        
+        // Regex Patterns
+        const hybridPattern = /hybrid|kombinasi/i;
+        const onlinePattern = /zoom|google meet|microsoft teams|daring|virtual|video conference/i;
+        const placePattern = /(?:Tempat|Lokasi)\s*[:.]?\s*(.*?)(?=\n|Media|Waktu|$)/i;
+        const mediaPattern = /(?:Media|Platform|Link)\s*[:.]?\s*(.*?)(?=\n|Tempat|Waktu|$)/i;
+ 
+        // 1. Detect Type
+        // Start with Hybrid check
+        if (hybridPattern.test(lowerText)) {
+            detectedType = 'hybrid';
+        } else if (onlinePattern.test(lowerText) && !placePattern.test(text)) {
+             // Strong signal for online if online keywords exist but no explicit "Tempat" field found (or Tempat contains online keywords)
+             detectedType = 'online';
+        } else if (onlinePattern.test(lowerText)) {
+             // If both exist but not explicitly "hybrid", check if "Tempat" value effectively says "Online"
+             const tempPlaceIdx = text.search(placePattern);
+             if (tempPlaceIdx !== -1) {
+                 const placeMatch = text.match(placePattern);
+                 if (placeMatch && onlinePattern.test(placeMatch[1])) {
+                     detectedType = 'online';
+                 } else {
+                     // Could be hybrid if both specific place (offline) and online media are mentioned?
+                     // Let's assume Offline/Hybrid if a real place is named. 
+                     // Common issue: "Tempat: Hotel X, Media: Zoom" -> This IS Hybrid usually.
+                     // Let's default to Hybrid if both physical place AND online media are detected.
+                     const mediaMatch = text.match(mediaPattern);
+                     if (mediaMatch && onlinePattern.test(mediaMatch[1])) {
+                         detectedType = 'hybrid';
+                     }
+                 }
+             }
         }
         
-        if (detectedType === 'offline' && /zoom|google meet|microsoft teams|daring/i.test(text)) {
-             detectedType = 'online';
-             if (/zoom/i.test(text)) mediaName = 'Zoom';
+        // 2. Extract Values based on Type
+        
+        // Extract Media Info (Generic)
+        let mediaMatch = text.match(mediaPattern);
+        if (!mediaMatch) {
+            // Fallback: search for keywords directly if "Media:" label is missing
+            if (lowerText.includes('zoom')) mediaVal = 'Zoom';
+            else if (lowerText.includes('google meet')) mediaVal = 'Google Meet';
+            else if (lowerText.includes('teams')) mediaVal = 'Microsoft Teams';
+        } else {
+             const mContent = mediaMatch[1].toLowerCase();
+             if (mContent.includes('zoom')) mediaVal = 'Zoom';
+             else if (mContent.includes('meet')) mediaVal = 'Google Meet';
+             else if (mContent.includes('teams')) mediaVal = 'Microsoft Teams';
+             else mediaVal = 'Lainnya';
         }
 
+        // Extract Place Info
+        let placeMatch = text.match(placePattern);
+        if (placeMatch) {
+            placeVal = placeMatch[1].trim();
+            // Clean up if it just says "Offline" or generic terms
+            if (/^ruang/i.test(placeVal) || /^hotel/i.test(placeVal) || /^gedung/i.test(placeVal) || /^kantor/i.test(placeVal)) {
+                // Good value (heuristic)
+            }
+        }
+
+        // Apply Values
         $('#location_type').val(detectedType).trigger('change');
 
-        if (detectedType === 'online' || detectedType === 'hybrid') {
-            if (mediaName) $('#media_online').val(mediaName).trigger('change');
+        if (detectedType === 'offline') {
+            if (placeVal && !onlinePattern.test(placeVal)) {
+                 $('#location').val(placeVal);
+            }
+        } 
+        else if (detectedType === 'online') {
+            if (mediaVal) $('#media_online').val(mediaVal).trigger('change');
             
-            const meetingIdMatch = text.match(/Meeting ID\s*[:.]?\s*([\d\s]+)/i);
-            const passcodeMatch = text.match(/Passcode\s*[:.]?\s*([\w]+)/i);
+            // Try to find meeting details
+            const meetingIdMatch = text.match(/(?:Meeting ID|ID Rapat)\s*[:.]?\s*([\d\s]+)/i);
+            const passcodeMatch = text.match(/(?:Passcode|Kode Sandi|Password)\s*[:.]?\s*([\w]+)/i);
             const linkMatch = text.match(/https?:\/\/[^\s]+/i);
 
             if (meetingIdMatch) $('#meeting_id').val(meetingIdMatch[1].trim());
             if (passcodeMatch) $('#passcode').val(passcodeMatch[1].trim());
             if (linkMatch) $('#meeting_link').val(linkMatch[0]);
-        } else {
-            const placeMatch = text.match(/(?:Tempat|Lokasi)\s*:\s*(.*)/i);
-            if (placeMatch && !/zoom|meet|online/i.test(placeMatch[1])) {
-                 $('#location').val(placeMatch[1].trim());
-            }
+        }
+        else if (detectedType === 'hybrid') {
+            // Fill BOTH
+            if (placeVal) $('#location').val(placeVal);
+            if (mediaVal) $('#media_online').val(mediaVal).trigger('change');
+            
+            const meetingIdMatch = text.match(/(?:Meeting ID|ID Rapat)\s*[:.]?\s*([\d\s]+)/i);
+            const passcodeMatch = text.match(/(?:Passcode|Kode Sandi|Password)\s*[:.]?\s*([\w]+)/i);
+            
+            if (meetingIdMatch) $('#meeting_id').val(meetingIdMatch[1].trim());
+            if (passcodeMatch) $('#passcode').val(passcodeMatch[1].trim());
         }
 
-        // 4. PIC Extraction (Simplistic Keyword Match)
+        // 4. PIC Extraction & Disposition
         const councilKeywords = {
             'Nunung Nuryartono': ['Nuryartono', 'Nunung Nuryartono'],
             'Muttaqien': ['Muttaqien', 'MPH'],
@@ -915,7 +978,7 @@
             'Rudi Purwono': ['Rudi Purwono'],
             'Mickael Bobby Hoelman': ['Mickael Bobby', 'Bobby Hoelman'],
             'Royanto Purba': ['Royanto Purba', 'Royanto'],
-            // Sekretariat
+            // Sekretariat (Also useful to detect individual names if needed)
             'Imron Rosadi': ['Imron Rosadi'],
             'Dwi Janatun Rahayu': ['Dwi Janatun', 'Janatun Rahayu'],
             'Wenny Kartika Ayunungtyas': ['Wenny Kartika', 'Ayunungtyas'],
@@ -924,6 +987,7 @@
         };
 
         let foundPersons = [];
+        let commissionsToSelect = new Set();
         
         // Scope text for Disposition Search
         // Attempt to find "DAFTAR UNDANGAN" or "Lampiran" to avoid matching signers on Page 1
@@ -948,26 +1012,50 @@
                 const checkbox = $(`.dewan-checkbox[value="${fullName}"]`);
                 if (checkbox.length > 0) {
                     checkbox.prop('checked', true).trigger('change');
+                    
+                    // Logic to Auto-Select Commission PIC based on Member's Group
+                    const groupName = checkbox.data('group-name');
+                    if (groupName) {
+                        const lowerGroup = groupName.toLowerCase();
+                        if (lowerGroup.includes('kebijakan umum')) {
+                            commissionsToSelect.add('#pic_komisi-komjakum');
+                        } else if (lowerGroup.includes('pengawasan') || lowerGroup.includes('pme')) {
+                            commissionsToSelect.add('#pic_komisi-pme');
+                        }
+                    }
                 }
             }
         }
         
-        // Special Check for "Sekretariat DJSN" Group
-        if (/Sekretariat DJSN/i.test(dispoText)) {
-             console.log("Found 'Sekretariat DJSN' in text, selecting group...");
+        // Special Check for "Sekretariat DJSN" Group (Bulk Check)
+        // Look for the specific header in the document
+        if (/(?:Sekretariat\s+Dewan\s+Jaminan\s+Sosial\s+Nasional|Sekretariat\s+DJSN)/i.test(dispoText)) {
+             console.log("Found 'Sekretariat DJSN' header in text, selecting group...");
              
-             // 1. Select PIC Checkbox (ID: pic_sekretariat-djsn)
-             $('#pic_sekretariat-djsn').prop('checked', true).trigger('change');
+             // 1. Select PIC Checkbox
+             commissionsToSelect.add('#pic_sekretariat-djsn');
              
              // 2. Select All in Sekretariat Disposition Group
              // Find grouping based on header text "Sekretariat DJSN"
              $('.card-header button').each(function() {
                 if ($(this).text().trim() === 'Sekretariat DJSN') {
                     // Trigger the "Select All" checkbox in this header
-                    $(this).closest('.card-header').find('.group-check-all').prop('checked', true).trigger('change');
+                    const selectAll = $(this).closest('.card-header').find('.group-check-all');
+                    if (!selectAll.prop('checked')) {
+                         selectAll.prop('checked', true).trigger('change');
+                    }
                 }
              });
         }
+        
+        // Apply Commission PIC Selections
+        commissionsToSelect.forEach(selector => {
+            const picCheckbox = $(selector);
+            // Just check it without triggering 'change' to avoid auto-selecting all dispositions
+            if (!picCheckbox.prop('checked')) {
+                 picCheckbox.prop('checked', true); 
+            }
+        });
 
         if (foundPersons.length > 0) {
              console.log("Auto-filled Disposition for:", foundPersons);
