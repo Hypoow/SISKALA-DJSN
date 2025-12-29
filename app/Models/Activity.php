@@ -134,5 +134,13 @@ class Activity extends Model
 
         return $query;
     }
+
+    /**
+     * Get the follow-ups for the activity.
+     */
+    public function followups()
+    {
+        return $this->hasMany(ActivityFollowup::class);
+    }
 }
 

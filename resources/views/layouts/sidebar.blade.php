@@ -48,6 +48,14 @@
         <span>Kegiatan</span>
       </p>
       <ul class="navbar-nav flex-fill w-100 mb-2">
+        @if(auth()->check() && auth()->user()->isAdmin())
+        <li class="nav-item w-100 {{ request()->routeIs('activities.create') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('activities.create') }}">
+              <i class="fe fe-plus-circle fe-16"></i>
+              <span class="ml-3 item-text">Kegiatan Baru</span>
+            </a>
+        </li>
+        @endif
         <li class="nav-item w-100 {{ request()->routeIs('activities.index') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('activities.index') }}">
               <i class="fe fe-list fe-16"></i>
@@ -60,14 +68,12 @@
               <span class="ml-3 item-text">Kegiatan Selesai</span>
             </a>
         </li>
-        @if(auth()->check() && auth()->user()->isAdmin())
-        <li class="nav-item w-100 {{ request()->routeIs('activities.create') ? 'active' : '' }}">
-            <a class="nav-link" href="{{ route('activities.create') }}">
-              <i class="fe fe-plus-circle fe-16"></i>
-              <span class="ml-3 item-text">Kegiatan Baru</span>
+        <li class="nav-item w-100 {{ request()->routeIs('followup.dashboard') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('followup.dashboard') }}">
+              <i class="fe fe-check-square fe-16"></i>
+              <span class="ml-3 item-text">Tindak Lanjut</span>
             </a>
         </li>
-        @endif
       </ul>
 
       @if(auth()->check() && auth()->user()->isAdmin())

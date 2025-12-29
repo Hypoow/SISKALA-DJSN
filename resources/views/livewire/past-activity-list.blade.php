@@ -69,7 +69,7 @@
                      style="display: none;"
                      x-transition>
                     <div class="alert alert-primary border-0 rounded-0 mb-0 d-flex align-items-center justify-content-between py-3 px-4">
-                        <span class="text-white"><i class="fe fe-check-circle mr-2"></i> <strong x-text="count ? count.length : 0"></strong> kegiatan terpilih.</span>
+                        <span class="text-red"><i class="fe fe-check-circle mr-2"></i> <strong x-text="count ? count.length : 0"></strong> kegiatan terpilih.</span>
                         <button type="button" 
                                 onclick="confirmBulkDeletePast()"
                                 class="btn btn-sm btn-light text-danger font-weight-bold shadow-sm">

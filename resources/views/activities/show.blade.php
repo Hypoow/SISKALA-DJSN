@@ -123,7 +123,14 @@
                         </div>
                         @endif
 
+
                     </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                 <div class="card-body">
+                    @livewire('follow-up-manager', ['activity' => $activity])
+                 </div>
             </div>
 
             <!-- Hasil Rapat Card -->

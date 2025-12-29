@@ -46,6 +46,11 @@ Route::middleware('auth')->group(function () {
     Route::put('/activities/{activity}/summary', [ActivityController::class, 'updateSummary'])->name('activities.update-summary');
     Route::resource('activities', ActivityController::class);
 
+    // Follow-up Dashboard
+    Route::get('/follow-up', function () {
+        return view('followup.dashboard');
+    })->name('followup.dashboard');
+
     // Profile Management
     Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
