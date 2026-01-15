@@ -60,13 +60,13 @@
                                     </td>
                                     <td class="align-middle text-center">
                                         @if($user->role === 'admin')
-                                            <span class="badge badge-pill badge-primary px-3 py-2">Admin</span>
+                                            <span class="badge badge-pill badge-role-admin px-3 py-2">ADMIN</span>
                                         @elseif($user->role === 'Dewan')
-                                            <span class="badge badge-pill badge-success px-3 py-2">Dewan</span>
+                                            <span class="badge badge-pill badge-role-dewan px-3 py-2">DEWAN</span>
                                         @elseif($user->role === 'DJSN')
-                                            <span class="badge badge-pill badge-info text-white px-3 py-2">DJSN</span>
+                                            <span class="badge badge-pill badge-role-djsn px-3 py-2">DJSN</span>
                                         @else
-                                            <span class="badge badge-pill badge-secondary px-3 py-2">User</span>
+                                            <span class="badge badge-pill badge-role-user px-3 py-2">USER</span>
                                         @endif
                                     </td>
                                     <td class="align-middle text-center">
@@ -158,9 +158,9 @@
                   <div class="form-group">
                     <label for="userRole" class="small text-muted text-uppercase font-weight-bold">Peran (Role)</label>
                     <select class="form-control custom-select" id="userRole" name="role" required>
-                      <option value="user">User</option>
-                      <option value="admin">Admin</option>
-                      <option value="Dewan">Dewan</option>
+                      <option value="user">USER</option>
+                      <option value="admin">ADMIN</option>
+                      <option value="Dewan">DEWAN</option>
                       <option value="DJSN">DJSN</option>
                     </select>
                   </div>

@@ -94,9 +94,9 @@
                                         
                                         <td>
                                             @switch($activity->status)
-                                                @case(0) <span class="badge badge-primary">On Schedule</span> @break
-                                                @case(1) <span class="badge badge-success">Reschedule</span> @break
-                                                @case(2) <span class="badge badge-warning">Belom ada Dispo</span> @break
+                                                @case(0) <span class="badge badge-success">On Schedule</span> @break
+                                                @case(1) <span class="badge badge-secondary">Reschedule</span> @break
+                                                @case(2) <span class="badge badge-warning">Belum ada Disposisi</span> @break
                                                 @case(3) <span class="badge badge-danger">Tidak Dilaksanakan</span> @break
                                             @endswitch
                                         </td>

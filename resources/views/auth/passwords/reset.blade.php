@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="Aplikasi Penjadwalan DJSN">
-    <link rel="icon" href="{{ asset('images/logo-new.png') }}">
+    <link rel="icon" href="{{ asset('images/logo.svg') }}">
     <title>Reset Password - Schedulo DJSN</title>
     <!-- Fonts - Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -193,7 +193,7 @@
 
     <div class="login-card">
         <div class="brand-section">
-            <img src="{{ asset('images/logo-new.png') }}" alt="Logo" class="brand-logo">
+            <img src="{{ asset('images/logo.svg') }}" alt="Logo" class="brand-logo">
             <h1 class="page-title">Reset Password</h1>
             <p class="page-subtitle">Silakan buat password baru untuk akun Anda.</p>
         </div>

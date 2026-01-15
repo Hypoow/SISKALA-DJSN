@@ -327,7 +327,6 @@ class GoogleCalendarService
         }
 
         // === COMMON DETAILS SECTION ===
-        // === COMMON DETAILS SECTION ===
         $dateStr = Carbon::parse($activity->start_date)->translatedFormat('l, d F Y');
         $startTime = Carbon::parse($activity->start_time)->format('H:i');
         $endTime = $activity->end_time ? Carbon::parse($activity->end_time)->format('H:i') . ' WIB' : 'Selesai';
@@ -339,13 +338,19 @@ class GoogleCalendarService
         if ($activity->location_type == 'offline') {
             $desc .= "Tempat : {$activity->location}\n";
         } else {
-             $desc .= "Media / Tempat : Zoom Meeting / {$activity->location}\n";
+             $desc .= "Media / Tempat : Zoom Meeting {$activity->location}\n";
         }
         
         if ($activity->location_type != 'offline') {
-            $desc .= "Link Zoom : {$activity->meeting_link}\n";
-            $desc .= "Meeting ID : {$activity->meeting_id}\n";
-            $desc .= "Passcode : {$activity->passcode}\n";
+            if ($activity->meeting_link) {
+                $desc .= "Link Zoom : {$activity->meeting_link}\n";
+            }
+            if ($activity->meeting_id) {
+                $desc .= "Meeting ID : {$activity->meeting_id}\n";
+            }
+            if ($activity->passcode) {
+                $desc .= "Passcode : {$activity->passcode}\n";
+            }
         }
         
         if ($activity->invitation_type != 'inbound') {
@@ -391,9 +396,15 @@ class GoogleCalendarService
         $desc .= "Tempat : " . ($activity->location_type == 'offline' ? $activity->location : 'Zoom Meeting') . "\n";
         
         if ($activity->location_type != 'offline') {
-            $desc .= "Link : {$activity->meeting_link}\n";
-            $desc .= "ID : {$activity->meeting_id}\n";
-            $desc .= "Pass : {$activity->passcode}\n";
+            if ($activity->meeting_link) {
+                $desc .= "Link : {$activity->meeting_link}\n";
+            }
+            if ($activity->meeting_id) {
+                $desc .= "ID : {$activity->meeting_id}\n";
+            }
+            if ($activity->passcode) {
+                $desc .= "Pass : {$activity->passcode}\n";
+            }
         }
 
         $desc .= "\nKegiatan ditujukan untuk:\n";

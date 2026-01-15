@@ -45,6 +45,7 @@ class ActivityList extends Component
     // Bulk Delete Logic
     public $selected = [];
     public $selectAll = false;
+    public $deletedIds = []; // Track deleted IDs for Undo
 
     public function updatedSelectAll($value)
     {
@@ -86,12 +87,54 @@ class ActivityList extends Component
     {
         if (empty($this->selected)) return;
 
-        Activity::whereIn('id', $this->selected)->delete();
+        // Retrieve models to trigger 'deleting' event for file cleanup
+        $activities = Activity::whereIn('id', $this->selected)->get();
+        // Store IDs for potential Undo
+        $this->deletedIds = $this->selected;
+        
+        foreach ($activities as $activity) {
+            $activity->delete(); // Soft Delete
+        }
 
         $this->selected = [];
         $this->selectAll = false;
         
-        session()->flash('message', 'Kegiatan terpilih berhasil dihapus.');
+        // No flash message here, handled by frontend toast
+    }
+
+    public function delete($id)
+    {
+        $activity = Activity::find($id);
+        
+        if ($activity) {
+            // Check authorization if needed, currently reliant on view visibility or add check here
+            // if (auth()->user()->cannot('delete', $activity)) abort(403);
+            
+            $this->deletedIds = [$id];
+            $activity->delete(); // Soft Delete
+            // No flash message here, handled by frontend toast
+        }
+    }
+
+    public function restoreDeleted()
+    {
+        if (!empty($this->deletedIds)) {
+            Activity::withTrashed()->whereIn('id', $this->deletedIds)->restore();
+            $this->deletedIds = [];
+            $this->dispatch('alert', type: 'success', message: 'Penghapusan dibatalkan.');
+        }
+    }
+
+    public function forceDeleteDeleted()
+    {
+        if (!empty($this->deletedIds)) {
+            $activities = Activity::withTrashed()->whereIn('id', $this->deletedIds)->get();
+            foreach ($activities as $activity) {
+                $activity->forceDelete();
+            }
+            $this->deletedIds = [];
+            $this->dispatch('alert', type: 'success', message: 'Kegiatan berhasil dihapus permanen.');
+        }
     }
 
     public function render()

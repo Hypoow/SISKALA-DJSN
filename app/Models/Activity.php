@@ -4,20 +4,24 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Activity extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'type',
         'letter_number',
+
+
         'name',
         'start_date',
         'end_date',
         'start_time',
         'end_time',
         'pic',
+        'narasumber',
         'status',
         'invitation_status',
         'invitation_type',
@@ -38,20 +42,93 @@ class Activity extends Model
         'google_event_id_dewan',
         'google_event_id_sekretariat',
         'organizer_name',
+        'attendance_list',
+        'updated_by',
+        'attendance_details',
     ];
 
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
         'pic' => 'array',
+        'narasumber' => 'array',
         'disposition_to' => 'array',
+        'attendance_list' => 'array',
+        'attendance_details' => 'array',
     ];
+
+    /**
+     * Get the user who last updated the activity.
+     */
+    public function lastEditor()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    /**
+     * The "booted" method of the model.
+     *
+     * @return void
+     */
+    public function materials()
+    {
+        return $this->hasMany(ActivityMaterial::class);
+    }
+
+    protected static function booted()
+    {
+        // Use forceDeleting so files are only removed when permanently deleted
+        static::forceDeleting(function ($activity) {
+            // Delete Google Calendar Events
+            \App\Services\GoogleCalendarService::deleteEvent($activity);
+
+            // Delete Attachment (Surat Undangan)
+            if ($activity->attachment_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($activity->attachment_path)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($activity->attachment_path);
+            }
+
+            // Delete Minutes (Notulensi)
+            if ($activity->minutes_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($activity->minutes_path)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($activity->minutes_path);
+            }
+
+            // Delete Assignment Letter (Surat Tugas)
+            if ($activity->assignment_letter_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($activity->assignment_letter_path)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($activity->assignment_letter_path);
+            }
+            
+            // Delete Maintainance Files
+            foreach ($activity->materials as $material) {
+                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($material->file_path)) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($material->file_path);
+                }
+            }
+
+            // Delete Documentation Photos
+            foreach ($activity->documentations as $doc) {
+                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($doc->file_path)) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($doc->file_path);
+                }
+            }
+        });
+    }
+
+    /**
+     * Get the documentations for the activity.
+     */
+    public function documentations()
+    {
+        return $this->hasMany(ActivityDocumentation::class);
+    }
 
     /**
      * Virtual accessor for date_time to maintain backward compatibility with views.
      */
     public function getDateTimeAttribute()
     {
+        if (!$this->start_date) {
+            return null;
+        }
         return \Carbon\Carbon::parse($this->start_date->format('Y-m-d') . ' ' . $this->start_time);
     }
     
@@ -78,6 +155,9 @@ class Activity extends Model
             'Rudi Purwono',
             'Mickael Bobby Hoelman',
             'Royanto Purba'
+        ],
+        'Sekretariat DJSN' => [
+            'Imron Rosadi'
         ]
     ];
 

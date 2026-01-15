@@ -41,7 +41,8 @@ class ActivityController extends Controller
                 \Storage::disk('public')->delete($activity->minutes_path);
             }
 
-            $path = $request->file('minutes_path')->store('minutes', 'public');
+            $originalName = $request->file('minutes_path')->getClientOriginalName();
+            $path = $request->file('minutes_path')->storeAs("minutes/{$activity->id}", $originalName, 'public');
             $activity->update(['minutes_path' => $path]);
         }
 
@@ -60,7 +61,8 @@ class ActivityController extends Controller
                 \Storage::disk('public')->delete($activity->assignment_letter_path);
             }
 
-            $path = $request->file('assignment_letter_path')->store('assignment_letters', 'public');
+            $originalName = $request->file('assignment_letter_path')->getClientOriginalName();
+            $path = $request->file('assignment_letter_path')->storeAs("assignment_letters/{$activity->id}", $originalName, 'public');
             $activity->update(['assignment_letter_path' => $path]);
         }
 
@@ -85,6 +87,85 @@ class ActivityController extends Controller
             return redirect()->back()->with('success', 'Surat Tugas berhasil dihapus.');
         }
         return redirect()->back()->with('error', 'File tidak ditemukan.');
+    }
+
+    public function deleteAttachment(Activity $activity)
+    {
+        if ($activity->attachment_path) {
+            \Storage::disk('public')->delete($activity->attachment_path);
+            $activity->update(['attachment_path' => null]);
+            return redirect()->back()->with('success', 'Surat Undangan berhasil dihapus.');
+        }
+        return redirect()->back()->with('error', 'File tidak ditemukan.');
+    }
+
+    public function uploadMaterial(Request $request, Activity $activity)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'file_path' => 'required|file|max:20480', // 20MB
+        ]);
+
+        if ($request->hasFile('file_path')) {
+            $path = $request->file('file_path')->store('materials', 'public');
+            $activity->materials()->create([
+                'title' => $request->title,
+                'file_path' => $path,
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Bahan materi berhasil ditambahkan.');
+    }
+
+    public function deleteMaterial(\App\Models\ActivityMaterial $material)
+    {
+        if (\Storage::disk('public')->exists($material->file_path)) {
+            \Storage::disk('public')->delete($material->file_path);
+        }
+        $material->delete();
+        return redirect()->back()->with('success', 'Bahan materi berhasil dihapus.');
+    }
+
+    public function uploadDocumentation(Request $request, Activity $activity)
+    {
+        $request->validate([
+            'file_path' => 'required',
+            'file_path.*' => 'file|image|max:10240', // 10MB Images
+        ]);
+
+        $currentCount = $activity->documentations()->count();
+        $newCount = is_array($request->file('file_path')) ? count($request->file('file_path')) : 1;
+
+        if (($currentCount + $newCount) > 4) {
+            return redirect()->back()->with('error', 'Maksimal total 4 foto dokumentasi per kegiatan.');
+        }
+
+        if ($request->hasFile('file_path')) {
+            $activityName = \Illuminate\Support\Str::slug($activity->name);
+            foreach($request->file('file_path') as $index => $file) {
+                // Generate filename: Dokumentasi - Activity Name - Timestamp - Index.ext
+                $extension = $file->getClientOriginalExtension();
+                $filename = "Dokumentasi_{$activityName}_" . time() . "_{$index}.{$extension}";
+                
+                $path = $file->storeAs("activity_documentations/{$activity->id}", $filename, 'public');
+                
+                $activity->documentations()->create([
+                    'file_path' => $path,
+                    // Optional: 'caption' => '...' 
+                ]);
+            }
+        }
+
+        return redirect()->back()->with('success', 'Dokumentasi berhasil ditambahkan.');
+    }
+
+    public function deleteDocumentation(\App\Models\ActivityDocumentation $documentation)
+    {
+        if (\Storage::disk('public')->exists($documentation->file_path)) {
+            \Storage::disk('public')->delete($documentation->file_path);
+        }
+        $documentation->delete();
+        return redirect()->back()->with('success', 'Dokumentasi berhasil dihapus.');
     }
 
     public function create(Request $request)
@@ -124,8 +205,9 @@ class ActivityController extends Controller
             'meeting_link' => 'nullable|string',
             'meeting_id' => 'nullable|string',
             'passcode' => 'nullable|string',
-            'pic' => 'nullable|array',
+            // 'pic' removed from validation as it is auto-generated for internal
             'pic_external' => 'nullable|string',
+            'narasumber' => 'nullable|array', // Validasi Narasumber
             'organizer_name' => 'nullable|string',
             'dispo_note' => 'nullable|string',
             'disposition_to' => 'nullable|array',
@@ -139,9 +221,21 @@ class ActivityController extends Controller
         $validated['type'] = $validated['activity_type'];
         unset($validated['activity_type']);
 
-        // Handle PIC
-        if ($validated['type'] == 'external' && $request->filled('pic_external')) {
-            $validated['pic'] = [$request->pic_external];
+        // Handle PIC Logic
+        if ($validated['type'] == 'external') {
+            // External: Use manual input if provided
+            if ($request->filled('pic_external')) {
+                $validated['pic'] = [$request->pic_external];
+            } else {
+                $validated['pic'] = [];
+            }
+            // Handle Narasumber for External
+            $validated['narasumber'] = $request->narasumber ?? [];
+        } else {
+            // Internal: Auto-derive from disposition_to
+            $validated['pic'] = $this->deriveUnitKerjaFromDisposition($validated['disposition_to'] ?? []);
+            // Internal doesn't have Narasumber
+            $validated['narasumber'] = [];
         }
         unset($validated['pic_external']);
 
@@ -191,7 +285,7 @@ class ActivityController extends Controller
             return $user->divisi;
         });
 
-        return view('activities.create', compact('activity', 'dewanUsers'));
+        return view('activities.edit', compact('activity', 'dewanUsers'));
     }
 
     public function update(Request $request, Activity $activity)
@@ -212,35 +306,57 @@ class ActivityController extends Controller
             'meeting_link' => 'nullable|string',
             'meeting_id' => 'nullable|string',
             'passcode' => 'nullable|string',
-            'pic' => 'nullable|array',
+            // 'pic' removed from validation
             'pic_external' => 'nullable|string',
+            'narasumber' => 'nullable|array', // Validasi Narasumber
             'organizer_name' => 'nullable|string',
             'dispo_note' => 'nullable|string',
             'disposition_to' => 'nullable|array',
             'dresscode' => 'nullable|string',
             'attachment_path' => 'nullable|file|mimes:pdf|max:10240',
             'minutes_path' => 'nullable|file|mimes:pdf|max:10240',
+            'assignment_letter_path' => 'nullable|file|mimes:pdf|max:10240',
             'summary_content' => 'nullable|string',
         ]);
 
         if ($request->hasFile('attachment_path')) {
             $file = $request->file('attachment_path');
             $filename = $file->getClientOriginalName();
-            $path = $file->storeAs('attachments', $filename, 'public');
+            $path = $file->storeAs("attachments/{$activity->id}", $filename, 'public');
             $validated['attachment_path'] = $path;
         }
 
         if ($request->hasFile('minutes_path')) {
-            $path = $request->file('minutes_path')->store('minutes', 'public');
+            $file = $request->file('minutes_path');
+            $filename = $file->getClientOriginalName();
+            $path = $file->storeAs("minutes/{$activity->id}", $filename, 'public');
             $validated['minutes_path'] = $path;
         }
 
-        // Handle PIC
-        // Note: activity_type might not be in validated if it's disabled, check request or model
+        if ($request->hasFile('assignment_letter_path')) {
+            $file = $request->file('assignment_letter_path');
+            $filename = $file->getClientOriginalName();
+            $path = $file->storeAs("assignment_letters/{$activity->id}", $filename, 'public');
+            $validated['assignment_letter_path'] = $path;
+        }
+
+        // Handle PIC Logic
         $type = $request->input('activity_type', $activity->type);
         
-        if ($type == 'external' && $request->filled('pic_external')) {
-            $validated['pic'] = [$request->pic_external];
+        if ($type == 'external') {
+            if ($request->filled('pic_external')) {
+                $validated['pic'] = [$request->pic_external];
+            } else {
+                $validated['pic'] = []; // Clear if empty
+            }
+            // Handle Narasumber for External
+            $validated['narasumber'] = $request->narasumber ?? [];
+        } else {
+             // Internal: Auto-derive, preserving existing if needed or recalculating
+             // Re-calculate based on current disposition_to input
+             $validated['pic'] = $this->deriveUnitKerjaFromDisposition($validated['disposition_to'] ?? []);
+             // Internal doesn't have Narasumber
+             $validated['narasumber'] = [];
         }
         unset($validated['pic_external']);
 
@@ -257,15 +373,14 @@ class ActivityController extends Controller
             $validated['end_date'] = $validated['start_date'];
         }
 
-        // Auto-Update Invitation Status logic:
-        // If status is 'Proses Disposisi' (0) AND 'disposition_to' has items,
-        // automatically set it to 'Sudah ada Disposisi' (1).
         if (isset($validated['disposition_to']) && !empty($validated['disposition_to'])) {
-             // 0 = Proses Disposisi, 1 = Sudah ada Disposisi
              if (intval($validated['invitation_status']) === 0) {
                  $validated['invitation_status'] = 1;
              }
         }
+
+        // Record who updated the activity
+        $validated['updated_by'] = auth()->id();
 
         $activity->update($validated);
 
@@ -273,6 +388,35 @@ class ActivityController extends Controller
         \App\Jobs\SyncGoogleCalendarEvent::dispatch($activity, true);
 
         return redirect()->route('activities.index')->with('success', 'Kegiatan berhasil diperbarui dan sinkronisasi berjalan di latar belakang.');
+    }
+
+    /**
+     * Helper to derive Unit Kerja (PIC) from Disposition names.
+     */
+    private function deriveUnitKerjaFromDisposition(array $dispositionNames)
+    {
+        $unitKerja = [];
+        $councilStructure = Activity::COUNCIL_STRUCTURE;
+
+        // Flatten mapping for easier lookup: Name => Commission
+        $nameToCommission = [];
+        foreach ($councilStructure as $commission => $members) {
+            foreach ($members as $member) {
+                $nameToCommission[$member] = $commission;
+            }
+        }
+
+        foreach ($dispositionNames as $name) {
+            if (isset($nameToCommission[$name])) {
+                $unitKerja[] = $nameToCommission[$name];
+            } else {
+                // If not in Council Structure (Dewan), assume Sekretariat DJSN
+                // This covers DJSN users and potentially others not explicitly listed in Council Structure
+                $unitKerja[] = 'Sekretariat DJSN';
+            }
+        }
+
+        return array_values(array_unique($unitKerja));
     }
 
     public function destroy(Activity $activity)

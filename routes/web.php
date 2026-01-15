@@ -44,6 +44,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/activities/{activity}/upload-assignment', [ActivityController::class, 'uploadAssignmentLetter'])->name('activities.upload-assignment');
     Route::delete('/activities/{activity}/assignment', [ActivityController::class, 'deleteAssignment'])->name('activities.delete-assignment');
     Route::put('/activities/{activity}/summary', [ActivityController::class, 'updateSummary'])->name('activities.update-summary');
+    
+    // Materials & Documentation
+    Route::delete('/activities/{activity}/attachment', [ActivityController::class, 'deleteAttachment'])->name('activities.delete-attachment');
+    Route::post('/activities/{activity}/materials', [ActivityController::class, 'uploadMaterial'])->name('activities.upload-material');
+    Route::delete('/activities/materials/{material}', [ActivityController::class, 'deleteMaterial'])->name('activities.delete-material');
+    Route::post('/activities/{activity}/documentations', [ActivityController::class, 'uploadDocumentation'])->name('activities.upload-documentation');
+    Route::delete('/activities/documentations/{documentation}', [ActivityController::class, 'deleteDocumentation'])->name('activities.delete-documentation');
+
     Route::resource('activities', ActivityController::class);
 
     // Follow-up Dashboard
@@ -62,6 +70,9 @@ Route::middleware('auth')->group(function () {
     // Master Data Routes (Admin Only - checked in controller)
     Route::prefix('master-data')->name('master-data.')->group(function () {
         Route::get('/', [MasterDataController::class, 'index'])->name('index');
+        Route::get('/topics', function () {
+            return view('master-data.topics');
+        })->name('topics');
         Route::post('/', [MasterDataController::class, 'store'])->name('store');
         Route::put('/{user}', [MasterDataController::class, 'update'])->name('update');
         Route::delete('/{user}', [MasterDataController::class, 'destroy'])->name('destroy');

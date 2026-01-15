@@ -1,7 +1,8 @@
-<div>
+<div style="overflow: visible;">
+    <div>
     <!-- Stats Widgets -->
     <div class="row mb-4">
-        <div class="col-md-4">
+        <div class="col-md-4 fade-in delay-1">
             <div class="card shadow border-0">
                 <div class="card-body">
                     <div class="row align-items-center">
@@ -18,7 +19,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-4 fade-in delay-2">
             <div class="card shadow border-0">
                 <div class="card-body">
                     <div class="row align-items-center">
@@ -35,7 +36,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-4 fade-in delay-3">
             <div class="card shadow border-0">
                 <div class="card-body">
                     <div class="row align-items-center">
@@ -54,9 +55,9 @@
         </div>
     </div>
 
-    <div class="card shadow border-0 rounded-lg overflow-hidden mb-4">
+    <div class="card shadow border-0 rounded-lg mb-0 fade-in delay-3" style="overflow: visible;">
         <!-- Card Header -->
-        <div class="card-header bg-primary text-white p-4" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
+        <div class="card-header bg-primary text-white p-4" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border-top-left-radius: .5rem; border-top-right-radius: .5rem;">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h5 class="card-title mb-1 text-white font-weight-bold text-uppercase" style="letter-spacing: 1px;">Monitoring Tindak Lanjut</h5>
@@ -66,28 +67,77 @@
         </div>
 
         <!-- Toolbar & Filters -->
-        <div class="bg-light border-bottom p-3">
-            <div class="row align-items-center">
-                <div class="col-md-2 mb-2 mb-md-0">
-                    <select wire:model.live="year" class="form-control border-0 shadow-sm" style="background-image: none;">
-                        @foreach(range(date('Y')-1, date('Y')+1) as $y)
-                            <option value="{{ $y }}">{{ $y }}</option>
-                        @endforeach
-                    </select>
+        <div class="bg-light border-bottom p-3" style="position: relative; z-index: 100; overflow: visible;">
+            <div class="row align-items-center" style="overflow: visible;">
+                <div class="col-md-2 mb-2 mb-md-0" x-data="{ open: false }" @click.away="open = false" style="position: relative; z-index: 1050; overflow: visible;">
+                    <div class="position-relative">
+                        <button type="button" @click="open = !open" class="form-control-premium shadow-sm text-left d-flex align-items-center justify-content-between" style="background-image: none; height: auto;">
+                            <span class="text-truncate" x-text="$wire.year"></span>
+                            <i class="fe fe-chevron-down ml-2 header-arrow" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
+                        </button>
+                         <div class="dropdown-menu-premium shadow-lg w-100" x-show="open" x-transition style="display: none; max-height: 250px; overflow-y: auto; position: absolute; top: 100%; left: 0; z-index: 1060;">
+                             @foreach(range(date('Y')-1, date('Y')+1) as $y)
+                                 <div class="dropdown-item-premium" :class="{ 'active': $wire.year == {{ $y }} }" @click="$wire.set('year', '{{ $y }}'); open = false">{{ $y }}</div>
+                             @endforeach
+                         </div>
+                    </div>
                 </div>
-                <div class="col-md-3 mb-2 mb-md-0">
-                    <select wire:model.live="status" class="form-control border-0 shadow-sm" style="background-image: none;">
-                        <option value="all">Semua Status</option>
-                         @foreach($statusLabels as $key => $label)
-                            <option value="{{ $key }}">{{ $label }}</option>
-                        @endforeach
-                    </select>
+                <div class="col-md-2 mb-2 mb-md-0" x-data="{ open: false, getMonthName(m) { return m ? ['', 'Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][m] : 'Semua Bulan'; } }" @click.away="open = false" style="position: relative; z-index: 1049; overflow: visible;">
+                     <div class="position-relative">
+                        <button type="button" @click="open = !open" class="form-control-premium shadow-sm text-left d-flex align-items-center justify-content-between" style="background-image: none; height: auto;">
+                            <span class="text-truncate" x-text="getMonthName($wire.month)">Semua Bulan</span>
+                            <i class="fe fe-chevron-down ml-2 header-arrow" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
+                        </button>
+                        <div class="dropdown-menu-premium shadow-lg w-100" x-show="open" x-transition style="display: none; max-height: 300px; overflow-y: auto; position: absolute; top: 100%; left: 0; z-index: 1060;">
+                            <div class="dropdown-item-premium" :class="{ 'active': $wire.month == '' }" @click="$wire.set('month', ''); open = false">Semua Bulan</div>
+                            <div class="dropdown-item-premium" :class="{ 'active': $wire.month == '1' }" @click="$wire.set('month', '1'); open = false">Januari</div>
+                            <div class="dropdown-item-premium" :class="{ 'active': $wire.month == '2' }" @click="$wire.set('month', '2'); open = false">Februari</div>
+                            <div class="dropdown-item-premium" :class="{ 'active': $wire.month == '3' }" @click="$wire.set('month', '3'); open = false">Maret</div>
+                            <div class="dropdown-item-premium" :class="{ 'active': $wire.month == '4' }" @click="$wire.set('month', '4'); open = false">April</div>
+                            <div class="dropdown-item-premium" :class="{ 'active': $wire.month == '5' }" @click="$wire.set('month', '5'); open = false">Mei</div>
+                            <div class="dropdown-item-premium" :class="{ 'active': $wire.month == '6' }" @click="$wire.set('month', '6'); open = false">Juni</div>
+                            <div class="dropdown-item-premium" :class="{ 'active': $wire.month == '7' }" @click="$wire.set('month', '7'); open = false">Juli</div>
+                            <div class="dropdown-item-premium" :class="{ 'active': $wire.month == '8' }" @click="$wire.set('month', '8'); open = false">Agustus</div>
+                            <div class="dropdown-item-premium" :class="{ 'active': $wire.month == '9' }" @click="$wire.set('month', '9'); open = false">September</div>
+                            <div class="dropdown-item-premium" :class="{ 'active': $wire.month == '10' }" @click="$wire.set('month', '10'); open = false">Oktober</div>
+                            <div class="dropdown-item-premium" :class="{ 'active': $wire.month == '11' }" @click="$wire.set('month', '11'); open = false">November</div>
+                            <div class="dropdown-item-premium" :class="{ 'active': $wire.month == '12' }" @click="$wire.set('month', '12'); open = false">Desember</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-7">
-                    <div class="input-group input-group-merge shadow-sm">
-                        <input type="text" wire:model.live.debounce.300ms="search" class="form-control border-0 pl-4" placeholder="Cari Agenda atau PIC...">
+                <div class="col-md-2 mb-2 mb-md-0" x-data="{ open: false }" @click.away="open = false" style="position: relative; z-index: 1048; overflow: visible;">
+                    <div class="position-relative">
+                        <button type="button" @click="open = !open" class="form-control-premium shadow-sm text-left d-flex align-items-center justify-content-between" style="background-image: none; height: auto;">
+                            <span class="text-truncate" x-text="$wire.topic ? $wire.topic : 'Semua Topik'">Semua Topik</span>
+                            <i class="fe fe-chevron-down ml-2 header-arrow" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
+                        </button>
+                        <div class="dropdown-menu-premium shadow-lg w-100" x-show="open" x-transition style="display: none; max-height: 300px; overflow-y: auto; position: absolute; top: 100%; left: 0; z-index: 1060;">
+                            <div class="dropdown-item-premium" :class="{ 'active': $wire.topic == '' }" @click="$wire.set('topic', ''); open = false">Semua Topik</div>
+                            @foreach(\App\Models\Topic::orderBy('name')->get() as $t)
+                                <div class="dropdown-item-premium" :class="{ 'active': $wire.topic == '{{ $t->name }}' }" @click="$wire.set('topic', '{{ $t->name }}'); open = false">{{ $t->name }}</div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-2 mb-md-0" x-data="{ open: false, statuses: {{ json_encode($statusLabels) }} }" @click.away="open = false" style="position: relative; z-index: 1047; overflow: visible;">
+                    <div class="position-relative">
+                        <button type="button" @click="open = !open" class="form-control-premium shadow-sm text-left d-flex align-items-center justify-content-between" style="background-image: none; height: auto;">
+                            <span class="text-truncate" x-text="$wire.status === 'all' ? 'Semua Status' : (statuses[$wire.status] || 'Status')">Semua Status</span>
+                            <i class="fe fe-chevron-down ml-2 header-arrow" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
+                        </button>
+                        <div class="dropdown-menu-premium shadow-lg w-100" x-show="open" x-transition style="display: none; max-height: 300px; overflow-y: auto; position: absolute; top: 100%; left: 0; z-index: 1060;">
+                            <div class="dropdown-item-premium" :class="{ 'active': $wire.status == 'all' }" @click="$wire.set('status', 'all'); open = false">Semua Status</div>
+                            @foreach($statusLabels as $key => $label)
+                                <div class="dropdown-item-premium" :class="{ 'active': $wire.status == '{{ $key }}' }" @click="$wire.set('status', '{{ $key }}'); open = false">{{ $label }}</div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="input-group input-group-merge input-group-premium bg-white">
+                        <input type="text" wire:model.live.debounce.300ms="search" class="form-control border-0 pl-4 bg-transparent" placeholder="Cari Agenda atau PIC...">
                         <div class="input-group-append">
-                            <div class="input-group-text border-0 bg-white pr-4"><i class="fe fe-search text-muted"></i></div>
+                            <div class="input-group-text border-0 bg-transparent pr-4"><i class="fe fe-search text-muted"></i></div>
                         </div>
                     </div>
                 </div>
@@ -95,14 +145,15 @@
         </div>
 
         <!-- Data Table -->
-        <div class="card-body p-0">
+        <div class="card-body p-0" style="position: relative; z-index: 1;">
             <div class="table-responsive">
                 <table class="table table-hover table-striped mb-0">
                     <thead class="bg-light">
                         <tr>
-                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 pl-4" style="width: 25%;">Agenda & Waktu</th>
-                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" style="width: 30%;">Arahan / Tindak Lanjut</th>
-                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" style="width: 25%;">Proses Capaian</th>
+                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 pl-4" style="width: 20%;">Agenda & Waktu</th>
+                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" style="width: 10%;">PIC / Komisi</th>
+                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" style="width: 30%;">Arahan</th>
+                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" style="width: 20%;">Progres / Tindak Lanjut</th>
                             <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center" style="width: 10%;">Status</th>
                             <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center" style="width: 10%;">Deadline</th>
                         </tr>
@@ -110,7 +161,7 @@
                     <tbody>
                         @forelse($groupedActivities as $month => $monthActivities)
                             <tr class="bg-white">
-                                <td colspan="5" class="py-2 pl-4 border-bottom border-top">
+                                <td colspan="6" class="py-2 pl-4 border-bottom border-top">
                                     <h6 class="mb-0 text-primary font-weight-bold text-uppercase" style="letter-spacing: 1px; font-size: 0.8rem;">
                                         <i class="fe fe-calendar mr-2"></i>{{ $month }}
                                     </h6>
@@ -120,137 +171,213 @@
                                 @php
                                     $followups = $activity->followups;
                                     $rowCount = $followups->isNotEmpty() ? $followups->count() : 1;
+                                    // Group by PIC for rendering
+                                    $followupsByPic = $followups->groupBy('pic');
                                 @endphp
 
-                                @foreach($followups->isNotEmpty() ? $followups : [null] as $index => $item)
-                                <tr style="{{ $loop->first ? 'border-top: 1px solid #dee2e6;' : '' }}">
-                                    <!-- Activity Info (Rowspan) -->
-                                    @if($loop->first)
-                                    <td rowspan="{{ $rowCount }}" class="align-top pl-4" style="border-left: 4px solid {{ $activity->type == 'internal' ? '#007bff' : '#fd7e14' }}; background-color: #fff;">
-                                        <strong>{{ $activity->name }}</strong><br>
-                                        <small class="text-muted"><i class="fe fe-clock mr-1"></i>{{ $activity->date_time->format('d M Y, H:i') }}</small>
-                                        
-                                        <div class="mt-2">
-                                            @if($activity->type == 'internal')
-                                                <span class="badge badge-primary px-2 py-1">Internal</span>
-                                            @else
-                                                <span class="badge badge-warning text-white px-2 py-1">Eksternal</span>
-                                            @endif
-                                        </div>
+                                @if($followups->isEmpty())
+                                    <tr style="border-top: 2px solid #4a5155ff; border-bottom: 2px solid #4a5155ff;">
+                                        <!-- Activity Info -->
+                                        <td class="align-top pl-4 py-3" style="border-left: 4px solid {{ $activity->type == 'internal' ? '#004085' : '#17a2b8' }}; background-color: #fff; width: 20%; border-right: 2px solid #b8c2cc;">
+                                            <div style="max-height: 200px; overflow-y: auto;">
+                                                <a href="{{ route('activities.show', $activity->id) }}" class="text-dark font-weight-bold text-decoration-none" title="Lihat Detail">{{ $activity->name }}</a><br>
+                                                <small class="text-muted"><i class="fe fe-clock mr-1"></i>{{ $activity->date_time->format('d M, H:i') }}</small>
+                                                
+                                                <div class="mt-2">
+                                                    @if($activity->type == 'internal')
+                                                        <span class="badge badge-primary px-1 py-1" style="font-size: 0.7em; background-color: #004085;">Internal</span>
+                                                    @else
+                                                        <span class="badge badge-info text-white px-1 py-1" style="font-size: 0.7em;">{{ $activity->organizer_name ?? 'Eksternal' }}</span>
+                                                    @endif
+                                                </div>
 
-                                        @if($activity->minutes_path)
-                                            <div class="mt-2">
-                                                <a href="{{ Storage::url($activity->minutes_path) }}" target="_blank" class="text-primary small">
-                                                    <i class="fe fe-file-text mr-1"></i> Lihat Notulensi
-                                                </a>
-                                            </div>
-                                        @endif
-                                        
-                                        <div class="mt-2">
-                                            <a href="{{ route('activities.show', $activity->id) }}" class="btn btn-xs btn-outline-secondary">Lihat Detail</a>
-                                        </div>
-                                    </td>
-                                    @endif
+                                                @php
+                                                    $firstWithTopic = $activity->followups->first(function($val) { return !empty($val->topic); });
+                                                    $topicName = $firstWithTopic ? $firstWithTopic->topic : null;
+                                                @endphp
 
-                                    <!-- Follow-up Items -->
-                                    @if($item)
-                                        <td class="align-top">
-                                            <div class="p-2 rounded bg-light border border-light" style="border-left: 3px solid #007bff !important;">
-                                                <!-- Prioritas / PIC -->
-                                                @if($item->pic)
-                                                    <div class="mb-2">
-                                                        <span class="badge badge-pill badge-primary px-2" style="font-size: 0.7rem;">
-                                                            <i class="fe fe-user mr-1"></i> {{ $item->pic }}
+                                                @if($topicName)
+                                                    <div class="mt-2">
+                                                        @php $tColor = $this->getTopicColor($topicName); @endphp
+                                                        <span class="badge badge-pill px-2 py-1" style="background-color: {{ $tColor }}20; border: 1px solid {{ $tColor }}; color: {{ $tColor }}; font-weight: 600; font-size: 0.7em;">
+                                                            <i class="fe fe-tag mr-1"></i>{{ $topicName }}
                                                         </span>
                                                     </div>
                                                 @endif
-                                                
-                                                <!-- Instruction Content -->
-                                                <div class="text-dark small" style="line-height: 1.6;">
-                                                    @php
-                                                        $lines = collect(explode("\n", $item->instruction))->filter(function($line) { return trim($line) !== ''; });
-                                                    @endphp
-                                                    
-                                                    @if($lines->count() > 1)
-                                                        <ul class="pl-3 mb-0" style="list-style-type: disc;">
-                                                            @foreach($lines as $line)
-                                                                <li class="mb-1">{{ trim($line) }}</li>
-                                                            @endforeach
-                                                        </ul>
-                                                    @else
-                                                        {{ $item->instruction }}
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="align-top">
-                                            <!-- Editable Progress Input -->
-                                            @if($editingProgressId === $item->id)
-                                                <div class="bg-white p-2 border rounded shadow-sm">
-                                                    <label class="small font-weight-bold mb-1 d-block text-primary">Capaian: {{ $percentage }}%</label>
-                                                    <input type="range" wire:model.live="percentage" class="custom-range mb-2" min="0" max="100" step="5">
-                                                    
-                                                    <div class="input-group input-group-sm">
-                                                        <textarea wire:model="progressNote" class="form-control" rows="2" placeholder="Update progress..."></textarea>
-                                                        <div class="input-group-append">
-                                                            <button wire:click="saveProgress({{ $item->id }})" class="btn btn-primary" type="button"><i class="fe fe-check"></i></button>
-                                                            <button wire:click="$set('editingProgressId', null)" class="btn btn-light" type="button"><i class="fe fe-x"></i></button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            @else
-                                                <div class="cursor-pointer" wire:click="editProgress({{ $item->id }})" style="min-height: 20px;">
-                                                    <!-- Progress Bar -->
-                                                    <div class="progress mb-2" style="height: 6px;">
-                                                        <div class="progress-bar bg-{{ $item->percentage == 100 ? 'success' : 'primary' }}" role="progressbar" style="width: {{ $item->percentage }}%" aria-valuenow="{{ $item->percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
-                                                    </div>
-                                                    <div class="d-flex justify-content-between small text-muted mb-1">
-                                                        <span>{{ $item->percentage }}% Completed</span>
-                                                    </div>
 
-                                                    @if($item->progress_notes)
-                                                        <span class="small text-dark d-block">{{ $item->progress_notes }}</span>
-                                                    @else
-                                                        <span class="small text-muted font-italic">Klik untuk update...</span>
-                                                    @endif
-                                                    <i class="fe fe-edit-2 text-muted small mt-1" style="opacity: 0.5;"></i>
-                                                </div>
-                                            @endif
-                                        </td>
-                                        <td class="align-top text-center">
-                                            <div class="dropdown">
-                                                <button class="btn btn-xs dropdown-toggle btn-{{ $statusColors[$item->status] ?? 'secondary' }} text-white shadow-sm" type="button" data-toggle="dropdown">
-                                                    {{ $statusLabels[$item->status] ?? 'Pending' }}
-                                                </button>
-                                                <div class="dropdown-menu dropdown-menu-right">
-                                                    @foreach($statusLabels as $key => $label)
-                                                        <a class="dropdown-item small" href="#" wire:click.prevent="updateStatus({{ $item->id }}, {{ $key }})">{{ $label }}</a>
-                                                    @endforeach
-                                                </div>
+                                                @if($activity->minutes_path)
+                                                    <div class="mt-2">
+                                                        <a href="{{ Storage::url($activity->minutes_path) }}" target="_blank" class="text-primary small">
+                                                            <i class="fe fe-file-text mr-1"></i> Notulensi
+                                                        </a>
+                                                    </div>
+                                                @endif
+
+                                                @if($activity->attachment_path)
+                                                    <div class="mt-1">
+                                                        <a href="{{ Storage::url($activity->attachment_path) }}" target="_blank" class="text-primary small">
+                                                            <i class="fe fe-paperclip mr-1"></i> Surat Undangan
+                                                        </a>
+                                                    </div>
+                                                @endif
+
+                                                @if($activity->assignment_letter_path)
+                                                    <div class="mt-1">
+                                                        <a href="{{ Storage::url($activity->assignment_letter_path) }}" target="_blank" class="text-primary small">
+                                                            <i class="fe fe-file-text mr-1"></i> Surat Tugas
+                                                        </a>
+                                                    </div>
+                                                @endif
                                             </div>
                                         </td>
-                                        <td class="align-top text-center">
-                                            @if($item->deadline)
-                                                <span class="small {{ $item->deadline->isPast() && $item->status < 2 ? 'text-danger font-weight-bold' : 'text-muted' }}">
-                                                    {{ $item->deadline->format('d M Y') }}
-                                                </span>
-                                            @else
-                                                <span class="text-muted small">-</span>
-                                            @endif
-                                        </td>
-                                    @else
-                                        <!-- No Follow-ups -->
-                                        <td colspan="4" class="text-center text-muted small font-italic py-3">
+                                        <td colspan="5" class="text-center text-muted small font-italic py-3 align-middle">
                                             Belum ada tindak lanjut.
                                         </td>
-                                    @endif
-                                </tr>
-                                @endforeach
+                                    </tr>
+                                @else
+                                    @foreach($followupsByPic as $pic => $items)
+                                        @foreach($items as $item)
+                                            <tr id="followup-row-{{ $item->id }}" style="{{ ($loop->parent->first && $loop->first) ? 'border-top: 2px solid #66696aff;' : '' }} {{ ($loop->first && !$loop->parent->first) ? 'border-top: 2px solid #b8c2cc;' : '' }} {{ ($loop->parent->last && $loop->last) ? 'border-bottom: 2px solid #5b5f62ff;' : '' }}">
+                                                <!-- Activity Info (Rowspan for ALL followups) -->
+                                                @if($loop->parent->first && $loop->first)
+                                                    <td rowspan="{{ $rowCount }}" class="align-top pl-4 py-3" style="border-left: 2px solid {{ $activity->type == 'internal' ? '#004085' : '#17a2b8' }}; background-color: #fff; width: 20%; border-right: 2px solid rgba(184, 194, 204, 1);">
+                                                        <div style="max-height: 200px; overflow-y: auto;">
+                                                            <a href="{{ route('activities.show', $activity->id) }}" class="text-dark font-weight-bold text-decoration-none" title="Lihat Detail">{{ $activity->name }}</a><br>
+                                                            <small class="text-muted"><i class="fe fe-clock mr-1"></i>{{ $activity->date_time->format('d M, H:i') }}</small>
+                                                            
+                                                            <div class="mt-2">
+                                                                @if($activity->type == 'internal')
+                                                                    <span class="badge badge-primary px-1 py-1" style="font-size: 0.7em; background-color: #004085;">Internal</span>
+                                                                @else
+                                                                    <span class="badge badge-info text-white px-1 py-1" style="font-size: 0.7em;">{{ $activity->organizer_name ?? 'Eksternal' }}</span>
+                                                                @endif
+                                                            </div>
+
+                                                            @php
+                                                                $firstWithTopic = $activity->followups->first(function($val) { return !empty($val->topic); });
+                                                                $topicName = $firstWithTopic ? $firstWithTopic->topic : null;
+                                                            @endphp
+
+                                                            @if($topicName)
+                                                                <div class="mt-2">
+                                                                    @php $tColor = $this->getTopicColor($topicName); @endphp
+                                                                    <span class="badge badge-pill px-2 py-1" style="background-color: {{ $tColor }}20; border: 1px solid {{ $tColor }}; color: {{ $tColor }}; font-weight: 600; font-size: 0.7em;">
+                                                                        <i class="fe fe-tag mr-1"></i>{{ $topicName }}
+                                                                    </span>
+                                                                </div>
+                                                            @endif
+
+                                                            @if($activity->minutes_path)
+                                                                <div class="mt-2">
+                                                                    <a href="{{ Storage::url($activity->minutes_path) }}" target="_blank" class="text-primary small">
+                                                                        <i class="fe fe-file-text mr-1"></i> Notulensi
+                                                                    </a>
+                                                                </div>
+                                                            @endif
+
+                                                            @if($activity->attachment_path)
+                                                                <div class="mt-1">
+                                                                    <a href="{{ Storage::url($activity->attachment_path) }}" target="_blank" class="text-primary small">
+                                                                        <i class="fe fe-paperclip mr-1"></i> Surat Undangan
+                                                                    </a>
+                                                                </div>
+                                                            @endif
+
+                                                            @if($activity->assignment_letter_path)
+                                                                <div class="mt-1">
+                                                                    <a href="{{ Storage::url($activity->assignment_letter_path) }}" target="_blank" class="text-primary small">
+                                                                        <i class="fe fe-file-text mr-1"></i> Surat Tugas
+                                                                    </a>
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                    </td>
+                                                @endif
+
+                                                <!-- PIC Column (Rowspan per PIC Group) -->
+                                                @if($loop->first)
+                                                    <td rowspan="{{ $items->count() }}" class="align-top py-3 text-center" style="border-right: 1px solid #e9ecef;">
+                                                        @if($pic)
+                                                            <span class="badge badge-pill badge-{{ $this->getPicColor($pic) }} px-2 mb-1" style="white-space: normal; line-height: 1.4; display: inline-block;">
+                                                                {{ $pic }}
+                                                            </span>
+                                                        @else
+                                                            <span class="text-muted small">-</span>
+                                                        @endif
+                                                    </td>
+                                                @endif
+
+                                                <!-- Instruction -->
+                                                <td class="align-top py-2">
+                                                    <div class="markdown-content" style="font-size: 0.9em;">
+                                                        {!! \Illuminate\Support\Str::markdown($item->instruction) !!}
+                                                    </div>
+                                                </td>
+
+                                                <!-- Progress -->
+                                                <td class="align-top py-2">
+                                                    @if($editingProgressId === $item->id)
+                                                        <div class="input-group input-group-sm">
+                                                            <input type="text" wire:model="progressNote" class="form-control" placeholder="Update...">
+                                                            <div class="input-group-append">
+                                                                <button wire:click="saveProgress({{ $item->id }})" class="btn btn-primary px-2" type="button"><i class="fe fe-check"></i></button>
+                                                                <button wire:click="$set('editingProgressId', null)" class="btn btn-light px-2" type="button"><i class="fe fe-x"></i></button>
+                                                            </div>
+                                                        </div>
+                                                    @else
+                                                        <div class="cursor-pointer d-flex align-items-center justify-content-between" wire:click="editProgress({{ $item->id }})">
+                                                            @if($item->progress_notes)
+                                                                <span class="small text-dark text-truncate d-inline-block" style="max-width: 150px;" title="{{ $item->progress_notes }}">{{ $item->progress_notes }}</span>
+                                                            @else
+                                                                <span class="small text-muted font-italic opacity-50">Update...</span>
+                                                            @endif
+                                                            <i class="fe fe-edit-2 text-muted ml-1" style="font-size: 10px; opacity: 0.5;"></i>
+                                                        </div>
+                                                    @endif
+                                                </td>
+
+                                                <!-- Status -->
+                                                <td class="align-top py-2 text-center">
+                                                    <div class="dropdown">
+                                                        <button class="btn btn-xs dropdown-toggle btn-{{ $statusColors[$item->status] ?? 'secondary' }} text-white shadow-sm py-0 px-2" type="button" data-toggle="dropdown" style="font-size: 0.7rem;">
+                                                            {{ $statusLabels[$item->status] ?? 'Pending' }}
+                                                        </button>
+                                                        <div class="dropdown-menu dropdown-menu-right shadow-sm border-0">
+                                                            @foreach($statusLabels as $key => $label)
+                                                                <a class="dropdown-item small" href="#" wire:click.prevent="updateStatus({{ $item->id }}, {{ $key }})">{{ $label }}</a>
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
+                                                </td>
+
+                                                <!-- Deadline -->
+                                                <td class="align-top py-2 text-center">
+                                                    @if($item->deadline)
+                                                        <span class="small {{ $item->deadline->isPast() && $item->status < 2 ? 'text-danger font-weight-bold' : 'text-muted' }}" style="font-size: 0.75rem;">
+                                                            {{ $item->deadline->format('d M') }}
+                                                        </span>
+                                                    @else
+                                                        <span class="text-muted small">-</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    @endforeach
+                                @endif
                             @endforeach
+
                         @empty
-                        <tr>
-                            <td colspan="5" class="text-center py-5 text-muted">Data tidak ditemukan untuk filter ini.</td>
-                        </tr>
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="d-flex flex-column align-items-center justify-content-center">
+                                        <div class="bg-light rounded-circle p-4 mb-3">
+                                            <i class="fe fe-clipboard text-muted display-4"></i>
+                                        </div>
+                                        <h5 class="text-muted font-weight-bold">Tidak ada tindak lanjut ditemukan</h5>
+                                        <p class="text-muted small">Coba ubah filter atau kata kunci pencarian Anda.</p>
+                                    </div>
+                                </td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -260,5 +387,57 @@
             </div>
         </div>
     </div>
-</div>
+
+    <!-- Styles for Highlight Animation -->
+    <style>
+        @keyframes kf-highlight {
+            0% { background-color: #fff3cd; } /* Warning color light */
+            50% { background-color: #fff3cd; }
+            100% { background-color: transparent; }
+        }
+        
+        .row-highlight {
+            animation: kf-highlight 3s ease-out forwards;
+        }
+    </style>
+
+    <!-- Scripts for Auto-Refresh and Highlight -->
+    <script>
+        document.addEventListener('livewire:initialized', () => {
+            let lastActive = Date.now();
+            const updateLastActive = () => { lastActive = Date.now(); };
+            ['mousemove', 'click', 'scroll', 'keydown', 'touchstart'].forEach(evt => 
+                document.addEventListener(evt, updateLastActive)
+            );
+
+            setInterval(() => {
+                if (Date.now() - lastActive > 10000) {
+                    @this.$refresh();
+                }
+            }, 5000);
+
+            // Check for highlight_id in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const highlightId = urlParams.get('highlight_id');
+
+            if (highlightId) {
+                // Find the element
+                setTimeout(() => {
+                    const element = document.getElementById('followup-row-' + highlightId);
+                    if (element) {
+                        // Scroll into view
+                        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        
+                        // Add highlight class
+                        element.classList.add('row-highlight');
+                        
+                        // Clean URL to prevent re-highlighting on reload (Optional, keeping commented for now)
+                        // const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                        // window.history.replaceState({path: newUrl}, '', newUrl);
+                    }
+                }, 500); 
+            }
+        });
+    </script>
+    </div>
 </div>

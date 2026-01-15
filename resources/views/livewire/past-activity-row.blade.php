@@ -23,8 +23,8 @@
     <td class="text-center">
         @switch($activity->status)
             @case(0) <span class="badge badge-success">Terlaksana</span> @break
-            @case(1) <span class="badge badge-warning">Reschedule</span> @break
-            @case(2) <span class="badge badge-secondary">Belom ada Dispo</span> @break
+            @case(1) <span class="badge badge-secondary">Reschedule</span> @break
+            @case(2) <span class="badge badge-warning">Belum ada Disposisi</span> @break
             @case(3) <span class="badge badge-danger">Batal</span> @break
         @endswitch
     </td>

@@ -1,5 +1,53 @@
-<div>
-    <div wire:poll.8s>
+<div x-data="{
+    showUndo: false,
+    startDelete(id, isBulk = false) {
+        this.showUndo = true;
+        if (isBulk) {
+             @this.call('deleteSelected');
+        } else {
+             @this.call('delete', id);
+        }
+    },
+    undoDelete() {
+        @this.call('restoreDeleted');
+        this.showUndo = false;
+    },
+    closeUndo() {
+        @this.call('forceDeleteDeleted');
+        this.showUndo = false;
+    }
+}" style="overflow: visible;">
+    <!-- Undo Toast Notification -->
+    <div x-show="showUndo" 
+         x-cloak
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 transform translate-y-full"
+         x-transition:enter-end="opacity-100 transform translate-y-0"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 transform translate-y-0"
+         x-transition:leave-end="opacity-0 transform translate-y-full"
+         style="position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1050; min-width: 320px; max-width: 90%;"
+         class="shadow-lg rounded-lg overflow-hidden">
+         <div class="bg-dark text-white p-3 d-flex align-items-center justify-content-between shadow-lg" style="background: #32325d !important;">
+            <div class="d-flex align-items-center">
+                <i class="fe fe-trash-2 text-danger mr-3" style="font-size: 1.5rem;"></i>
+                <div>
+                     <span class="font-weight-bold d-block" style="font-size: 0.95rem;">Kegiatan dihapus.</span>
+                    <small class="text-white-50">Item telah dipindahkan ke sampah.</small>
+                </div>
+            </div>
+            <div class="d-flex align-items-center">
+                <button @click="undoDelete()" class="btn btn-warning btn-sm font-weight-bold rounded-pill px-3 shadow-sm mr-3">
+                    <i class="fe fe-rotate-ccw mr-1"></i> UNDO
+                </button>
+                <button @click="closeUndo()" class="btn btn-link text-white-50 p-0" title="Tutup & Hapus Permanen">
+                    <i class="fe fe-x" style="font-size: 1.2rem;"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div>
         <!-- Urgent Activities Alert -->
         @if($this->urgentActivities->isNotEmpty() && auth()->check() && auth()->user()->isAdmin())
             <div class="alert alert-warning shadow-sm border-0 rounded-lg mb-4 mx-1" role="alert" style="background: linear-gradient(to right, #fff3cd, #fff8e1); border-left: 5px solid #ffc107 !important;">
@@ -31,7 +79,7 @@
             </div>
         @endif
 
-        <div class="card shadow border-0 rounded-lg overflow-hidden my-4">
+        <div class="card shadow border-0 rounded-lg my-4 fade-in" style="overflow: visible;">
             <!-- Card Header -->
             <div class="card-header bg-primary text-white p-4" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
                 <div class="d-flex justify-content-between align-items-center">
@@ -48,38 +96,50 @@
             </div>
 
             <!-- Toolbar & Filters -->
-            <div class="bg-light border-bottom p-3">
-                <div class="row align-items-center">
+            <div class="bg-light border-bottom p-3" style="position: relative; z-index: 100; overflow: visible;">
+                <div class="row align-items-center" style="overflow: visible;">
                     <div class="col-md-3 mb-2 mb-md-0">
-                        <div class="input-group input-group-merge shadow-sm">
-                            <input type="text" class="form-control border-0 pl-4" wire:model.live.debounce.300ms="search" placeholder="Cari kegiatan...">
+                        <div class="input-group input-group-merge input-group-premium bg-white">
+                            <input type="text" class="form-control border-0 pl-4 bg-transparent" wire:model.live.debounce.300ms="search" placeholder="Cari kegiatan...">
                             <div class="input-group-append">
-                                <div class="input-group-text border-0 bg-white pr-4"><i class="fe fe-search text-muted"></i></div>
+                                <div class="input-group-text border-0 bg-transparent pr-4"><i class="fe fe-search text-muted"></i></div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3 mb-2 mb-md-0">
-                        <select class="form-control border-0 shadow-sm" wire:model.live="type" style="background-image: none;">
-                            <option value="">Semua Tipe Kegiatan</option>
-                            <option value="external">Eksternal (Undangan)</option>
-                            <option value="internal">Internal (Rapat/Dinas)</option>
-                        </select>
+                    <div class="col-md-2 mb-2 mb-md-0" x-data="{ open: false }" @click.away="open = false" style="position: relative; z-index: 1050; overflow: visible;">
+                        <div class="position-relative">
+                            <button type="button" @click="open = !open" class="form-control-premium shadow-sm text-left d-flex align-items-center justify-content-between" style="background-image: none; height: auto;">
+                                <span class="text-truncate" x-text="$wire.type === 'external' ? 'Eksternal' : ($wire.type === 'internal' ? 'Internal' : 'Semua Tipe Kegiatan')">Semua Tipe Kegiatan</span>
+                                <i class="fe fe-chevron-down ml-2 header-arrow" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
+                            </button>
+                            <div class="dropdown-menu-premium shadow-lg w-100" x-show="open" x-transition style="display: none; max-height: 250px; overflow-y: auto; position: absolute; top: 100%; left: 0; z-index: 1060;">
+                                <div class="dropdown-item-premium" :class="{ 'active': $wire.type === '' }" @click="$wire.set('type', ''); open = false">Semua Tipe Kegiatan</div>
+                                <div class="dropdown-item-premium" :class="{ 'active': $wire.type === 'internal' }" @click="$wire.set('type', 'internal'); open = false">Internal</div>
+                                <div class="dropdown-item-premium" :class="{ 'active': $wire.type === 'external' }" @click="$wire.set('type', 'external'); open = false">Eksternal</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-md-3 mb-2 mb-md-0">
-                        <select class="form-control border-0 shadow-sm" wire:model.live="sortDirection" style="background-image: none;">
-                            <option value="asc">Waktu: Terdekat (Awal - Akhir)</option>
-                            <option value="desc">Waktu: Terjauh (Akhir - Awal)</option>
-                        </select>
+                    <div class="col-md-3 mb-2 mb-md-0" x-data="{ open: false }" @click.away="open = false" style="position: relative; z-index: 1049; overflow: visible;">
+                        <div class="position-relative">
+                            <button type="button" @click="open = !open" class="form-control-premium shadow-sm text-left d-flex align-items-center justify-content-between" style="background-image: none; height: auto;">
+                                <span class="text-truncate" x-text="$wire.sortDirection === 'asc' ? 'Waktu: Terdekat (Awal - Akhir)' : 'Waktu: Terjauh (Akhir - Awal)'">Waktu: Terdekat (Awal - Akhir)</span>
+                                <i class="fe fe-chevron-down ml-2 header-arrow" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
+                            </button>
+                            <div class="dropdown-menu-premium shadow-lg w-100" x-show="open" x-transition style="display: none; max-height: 250px; overflow-y: auto; position: absolute; top: 100%; left: 0; z-index: 1060;">
+                                <div class="dropdown-item-premium" :class="{ 'active': $wire.sortDirection === 'asc' }" @click="$wire.set('sortDirection', 'asc'); open = false">Waktu: Terdekat (Awal - Akhir)</div>
+                                <div class="dropdown-item-premium" :class="{ 'active': $wire.sortDirection === 'desc' }" @click="$wire.set('sortDirection', 'desc'); open = false">Waktu: Terjauh (Akhir - Awal)</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-md-3 text-right">
+                    <div class="col-md-4 text-right">
                         <div class="d-inline-flex align-items-center bg-white rounded-pill px-3 py-2 shadow-sm border">
                             <span class="mr-2 small text-muted font-weight-bold">Ket:</span>
                             <div class="d-flex align-items-center mr-3">
-                                <span class="rounded-circle mr-1" style="width: 10px; height: 10px; background-color: #007bff;"></span>
+                                <span class="rounded-circle mr-1" style="width: 10px; height: 10px; background-color: #004085;"></span>
                                 <span class="small font-weight-bold text-dark">Internal</span>
                             </div>
                             <div class="d-flex align-items-center">
-                                <span class="rounded-circle mr-1" style="width: 10px; height: 10px; background-color: #fd7e14;"></span>
+                                <span class="rounded-circle mr-1" style="width: 10px; height: 10px; background-color: #17a2b8;"></span>
                                 <span class="small font-weight-bold text-dark">Eksternal</span>
                             </div>
                         </div>
@@ -99,32 +159,14 @@
                         <div class="alert alert-primary border-0 rounded-0 mb-0 d-flex align-items-center justify-content-between py-3 px-4">
                             <span class="text-red"><i class="fe fe-check-circle mr-2"></i> <strong x-text="count ? count.length : 0"></strong> kegiatan terpilih.</span>
                             <button type="button" 
-                                    onclick="confirmBulkDelete()"
+                                    @click="startDelete(null, true)"
                                     class="btn btn-sm btn-light text-danger font-weight-bold shadow-sm">
                                 <i class="fe fe-trash-2 mr-1"></i> Hapus Terpilih
                             </button>
                         </div>
                     </div>
-                    <script>
-                        function confirmBulkDelete() {
-                            Swal.fire({
-                                title: 'Hapus Kegiatan Terpilih?',
-                                text: "Data yang dihapus tidak dapat dikembalikan!",
-                                icon: 'warning',
-                                showCancelButton: true,
-                                confirmButtonColor: '#d33',
-                                cancelButtonColor: '#6c757d',
-                                confirmButtonText: 'Ya, Hapus!',
-                                cancelButtonText: 'Batal',
-                                reverseButtons: true
-                            }).then((result) => {
-                                if (result.isConfirmed) {
-                                    @this.call('deleteSelected');
-                                }
-                            })
-                        }
-                    </script>
                 @endif
+
 
                 <!-- Table -->
                 <div class="table-responsive">
@@ -143,6 +185,7 @@
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Detail Kegiatan</th>
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Status Pelaksanaan</th>
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Status Undangan</th>
+                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Surat Undangan</th>
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Tipe & Lokasi</th>
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Aksi</th>
                             </tr>
@@ -157,7 +200,7 @@
                                     </td>
                                 </tr>
                                 @foreach($activities as $activity)
-                                <tr style="border-left: 4px solid {{ $activity->type == 'internal' ? '#007bff' : '#fd7e14' }};">
+                                <tr style="border-left: 4px solid {{ $activity->type == 'internal' ? '#004085' : '#17a2b8' }};">
                                     @if(auth()->check() && auth()->user()->isAdmin())
                                     <td class="pl-4 align-middle">
                                         <div class="custom-control custom-checkbox">
@@ -168,9 +211,9 @@
                                     @endif
                                     <td class="align-middle pl-4" style="min-width: 150px;">
                                         <div class="d-flex align-items-center">
-                                            <div class="text-center rounded p-2 shadow-sm text-white" style="min-width: 50px; background-color: {{ $activity->type == 'internal' ? '#007bff' : '#fd7e14' }};">
+                                            <div class="text-center rounded p-2 shadow-sm text-white" style="min-width: 50px; background-color: {{ $activity->type == 'internal' ? '#004085' : '#17a2b8' }};">
                                                 <span class="d-block font-weight-bold small text-uppercase" style="line-height:1;">{{ $activity->date_time->format('M') }}</span>
-                                                <span class="d-block font-weight-bold h4 mb-0" style="line-height:1;">{{ $activity->date_time->format('d') }}</span>
+                                                <span class="d-block font-weight-bold h4 mb-0" style="line-height:1; color: #ffffffff;">{{ $activity->date_time->format('d') }}</span>
                                             </div>
                                             <div class="ml-3">
                                                 <h6 class="mb-0 font-weight-bold text-dark">{{ $activity->date_time->format('H:i') }} WIB</h6>
@@ -183,7 +226,7 @@
                                             {{ $activity->name }}
                                         </a>
                                         <div class="d-flex align-items-center text-muted small">
-                                            <i class="fe fe-map-pin mr-1"></i>
+                                            <i class="fe fe-map-pin mr-1" style="color: #EF4444;"></i>
                                             @if($activity->location_type == 'online')
                                                 <span>Online</span>
                                             @else
@@ -194,8 +237,8 @@
                                     <td class="align-middle text-center">
                                          @switch($activity->status)
                                             @case(0) <span class="badge badge-pill badge-light text-success border border-success px-3">On Schedule</span> @break
-                                            @case(1) <span class="badge badge-pill badge-light text-warning border border-warning px-3">Reschedule</span> @break
-                                            @case(2) <span class="badge badge-pill badge-light text-secondary border border-secondary px-3">Menunggu Disposisi</span> @break
+                                            @case(1) <span class="badge badge-pill badge-light text-secondary border border-secondary px-3">Reschedule</span> @break
+                                            @case(2) <span class="badge badge-pill badge-light text-warning border border-warning px-3">Menunggu Disposisi</span> @break
                                             @case(3) <span class="badge badge-pill badge-light text-danger border border-danger px-3">Dibatalkan</span> @break
                                         @endswitch
                                     </td>
@@ -216,19 +259,24 @@
                                         @endif
                                     </td>
                                     <td class="align-middle text-center">
+                                        @if($activity->attachment_path)
+                                            <a href="{{ Storage::url($activity->attachment_path) }}" target="_blank" class="btn btn-sm btn-outline-info shadow-sm rounded-pill px-3" data-toggle="tooltip" title="Lihat Surat Undangan">
+                                                <i class="fe fe-file-text mr-1"></i> Lihat
+                                            </a>
+                                        @else
+                                            <span class="text-muted small">-</span>
+                                        @endif
+                                    </td>
+                                    <td class="align-middle text-center">
                                         <div class="mb-1">
                                             @if($activity->type == 'internal')
-                                                <span class="badge badge-primary px-3">Internal</span>
+                                                <span class="badge badge-primary px-3" style="background-color: #004085;">Internal</span>
                                             @else
-                                                <span class="badge badge-warning text-white px-3">Eksternal</span>
+                                                <span class="badge badge-info text-white px-3">Eksternal</span>
                                             @endif
                                         </div>
                                         <div>
-                                            @if($activity->location_type == 'offline')
-                                                <small class="text-muted"><i class="fe fe-briefcase mr-1"></i>Offline</small>
-                                            @else
-                                                <small class="text-info"><i class="fe fe-video mr-1"></i>Online</small>
-                                            @endif
+                                            <span class="badge text-white px-3" style="background-color: #6c757d;">{{ ucfirst($activity->location_type) }}</span>
                                         </div>
                                     </td>
                                     <td class="align-middle text-center">
@@ -238,20 +286,16 @@
                                             </button>
                                             <div class="dropdown-menu dropdown-menu-right shadow-lg border-0">
                                                 <a class="dropdown-item" href="{{ route('activities.show', $activity->id) }}">
-                                                    <i class="fe fe-eye mr-2 text-primary"></i> Detail Lengkap
+                                                    <i class="fe fe-eye mr-2 text-primary"></i> Detail
                                                 </a>
                                                 @if(auth()->check() && auth()->user()->isAdmin())
                                                 <a class="dropdown-item" href="{{ route('activities.edit', $activity->id) }}">
-                                                    <i class="fe fe-edit mr-2 text-warning"></i> Edit Kegiatan
+                                                    <i class="fe fe-edit mr-2 text-warning"></i> Edit
                                                 </a>
                                                 <div class="dropdown-divider"></div>
-                                                <form id="delete-form-{{ $activity->id }}" action="{{ route('activities.destroy', $activity->id) }}" method="POST">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="button" class="dropdown-item text-danger" onclick="confirmDelete({{ $activity->id }})">
-                                                        <i class="fe fe-trash-2 mr-2"></i> Hapus
-                                                    </button>
-                                                </form>
+                                                <button type="button" class="dropdown-item text-danger" @click="startDelete({{ $activity->id }})">
+                                                    <i class="fe fe-trash-2 mr-2"></i> Hapus
+                                                </button>
                                                 @endif
                                             </div>
                                         </div>
@@ -282,24 +326,20 @@
             </div>
         </div>
     </div>
-
-    <script>
-        function confirmDelete(id) {
-            Swal.fire({
-                title: 'Hapus Kegiatan?',
-                text: "Data yang dihapus tidak dapat dikembalikan!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Ya, Hapus!',
-                cancelButtonText: 'Batal',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    document.getElementById('delete-form-' + id).submit();
-                }
-            })
-        }
-    </script>
 </div>
+
+<script>
+    document.addEventListener('livewire:initialized', () => {
+        let lastActive = Date.now();
+        const updateLastActive = () => { lastActive = Date.now(); };
+        ['mousemove', 'click', 'scroll', 'keydown', 'touchstart'].forEach(evt => 
+            document.addEventListener(evt, updateLastActive)
+        );
+
+        setInterval(() => {
+            if (Date.now() - lastActive > 10000) {
+                @this.$refresh();
+            }
+        }, 5000);
+    });
+</script>

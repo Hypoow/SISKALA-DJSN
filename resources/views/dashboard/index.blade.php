@@ -43,6 +43,9 @@
     .bg-gradient-success { background: linear-gradient(87deg, #2dce89 0, #2dcecc 100%) !important; }
     .bg-gradient-info { background: linear-gradient(87deg, #11cdef 0, #1171ef 100%) !important; }
     .bg-gradient-warning { background: linear-gradient(87deg, #fb6340 0, #fbb140 100%) !important; }
+    
+    /* Custom Gradient for Internal (Dark Blue) */
+    .bg-gradient-dark-blue { background: linear-gradient(87deg, #004085 0, #0056b3 100%) !important; }
 </style>
 @endpush
 
@@ -113,7 +116,7 @@
                             </div>
                         </div>
                         <div class="col-auto">
-                            <div class="icon-shape bg-gradient-info text-white shadow">
+                            <div class="icon-shape bg-gradient-dark-blue text-white shadow">
                                 <i class="fe fe-users"></i>
                             </div>
                         </div>
@@ -133,7 +136,7 @@
                             </div>
                         </div>
                         <div class="col-auto">
-                            <div class="icon-shape bg-gradient-warning text-white shadow">
+                            <div class="icon-shape bg-gradient-info text-white shadow">
                                 <i class="fe fe-globe"></i>
                             </div>
                         </div>
@@ -158,8 +161,8 @@
                                 <div class="badge badge-pill badge-warning-light text-warning-dark border border-warning mr-2 px-3 py-2">Hadir (Eksternal)</div>
                                 <div class="badge badge-pill badge-secondary-light text-secondary border border-secondary px-3 py-2">Opsional</div>
                              @else
-                                <div class="badge badge-pill badge-primary mr-2 px-3 py-2">Internal</div>
-                                <div class="badge badge-pill badge-warning text-dark px-3 py-2">Eksternal</div>
+                                <div class="badge badge-pill badge-primary mr-2 px-3 py-2" style="background-color: #004085;">Internal</div>
+                                <div class="badge badge-pill badge-info text-white px-3 py-2">Eksternal</div>
                              @endif
                         </div>
                         
@@ -314,22 +317,76 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Type Badge
         var typeBadge = props.type === 'external' 
-            ? '<span class="badge badge-pill badge-warning text-dark px-3 py-2">Eksternal</span>' 
-            : '<span class="badge badge-pill badge-primary px-3 py-2">Internal</span>';
+            ? '<span class="badge badge-pill badge-info text-white px-3 py-2">Eksternal</span>' 
+            : '<span class="badge badge-pill badge-primary px-3 py-2" style="background-color: #004085;">Internal</span>';
         $('#eventDetailType').html(typeBadge);
 
         // Location Logic
+        // Location Logic
         var locationHtml = '';
-        if (props.location_type === 'online') {
-            locationHtml = '<span class="badge badge-success mb-1">Online</span><br>';
+        if (props.location_type === 'offline') {
+            locationHtml = '<span class="badge badge-secondary mb-1">Offline</span>';
+            locationHtml += '<p class="text-dark mb-0"><i class="fe fe-map-pin mr-1 text-muted"></i>' + (props.location || '-') + '</p>';
+        } else if (props.location_type === 'online') {
+            locationHtml = '<span class="badge badge-secondary mb-1">Online' + (props.media_online ? ' (' + props.media_online + ')' : '') + '</span>';
+            
             if (props.meeting_link) {
-                locationHtml += '<a href="' + props.meeting_link + '" target="_blank" class="text-truncate d-block text-primary font-weight-bold" style="max-width:250px;">' + props.meeting_link + '</a>';
-            } else {
-                locationHtml += '-';
+                var link = props.meeting_link;
+                if(link.startsWith('http')) {
+                     locationHtml += '<p class="mb-0 mt-1"><a href="' + link + '" target="_blank" class="text-truncate d-block text-primary">' + link + '</a></p>';
+                } else {
+                     locationHtml += '<p class="mb-0 mt-1">' + link + '</p>';
+                }
             }
+
+            if(props.meeting_id || props.passcode) {
+                locationHtml += '<div class="mt-1 small text-muted">';
+                if (props.meeting_id) {
+                    locationHtml += '<strong>ID:</strong> ' + props.meeting_id + '<br>';
+                }
+                if (props.passcode) {
+                    locationHtml += '<strong>Pass:</strong> ' + props.passcode;
+                }
+                locationHtml += '</div>';
+            }
+        } else if (props.location_type === 'hybrid') {
+            locationHtml = '<span class="badge badge-secondary mb-1">Hybrid</span>';
+            
+            // Offline part
+            locationHtml += '<div class="mb-2">';
+            locationHtml += '<small class="text-muted font-weight-bold d-block">Offline:</small>';
+            locationHtml += '<p class="text-dark mb-0 pl-2 border-left"><i class="fe fe-map-pin mr-1 text-muted"></i>' + (props.location || '-') + '</p>';
+            locationHtml += '</div>';
+
+            // Online part
+            locationHtml += '<div class="mb-0">';
+            locationHtml += '<small class="text-muted font-weight-bold d-block">Online' + (props.media_online ? ' (' + props.media_online + ')' : '') + ':</small>';
+            locationHtml += '<div class="pl-2 border-left">';
+            
+            if (props.meeting_link) {
+                 var link = props.meeting_link;
+                if(link.startsWith('http')) {
+                     locationHtml += '<p class="mb-1"><a href="' + link + '" target="_blank" class="text-truncate d-block text-primary">' + link + '</a></p>';
+                } else {
+                     locationHtml += '<p class="mb-1">' + link + '</p>';
+                }
+            }
+            
+            if(props.meeting_id || props.passcode) {
+                locationHtml += '<div class="small text-muted">';
+                if (props.meeting_id) {
+                    locationHtml += '<strong>ID:</strong> ' + props.meeting_id + '<br>';
+                }
+                if (props.passcode) {
+                    locationHtml += '<strong>Pass:</strong> ' + props.passcode;
+                }
+                locationHtml += '</div>';
+            }
+            locationHtml += '</div></div>';
         } else {
-            locationHtml = '<span class="badge badge-secondary mb-1">Offline</span><br>' + (props.location_detail || '-');
+             locationHtml = '-';
         }
+
         $('#eventDetailLocation').html(locationHtml);
 
         // PIC Logic
@@ -353,7 +410,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         $('#eventDetailPic').html(picHtml);
 
-        $('#eventDetailDescription').text(props.description || '-');
+        if (props.description && props.description !== '-') {
+             // Basic newline to br if plain text, but if HTML passed assume it's good
+             // Since we removed strip_tags, we trust the content.
+             // If it's pure markdown, we'd need a parser. But Quill saves HTML.
+             $('#eventDetailDescription').html(props.description).addClass('markdown-content').removeClass('text-secondary');
+        } else {
+             $('#eventDetailDescription').text('-').removeClass('markdown-content').addClass('text-secondary');
+        }
 
         // Buttons
         var editBtn = $('#eventDetailEditBtn');

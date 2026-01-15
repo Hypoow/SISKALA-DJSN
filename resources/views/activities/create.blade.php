@@ -128,11 +128,99 @@
         display: inline-block;
         margin-right: 5px;
     }
+
+    /* Premium Select2 Tags for Narasumber */
+    .narasumber-container .select2-selection--multiple {
+        border: 1px solid #e9ecef !important;
+        background-color: #ffffff !important;
+        min-height: 50px !important;
+        border-radius: 12px !important;
+        padding: 8px 12px !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        transition: all 0.3s ease;
+    }
+    
+    .narasumber-container .select2-container--bootstrap4.select2-container--focus .select2-selection--multiple {
+        border-color: #ffc107 !important;
+        box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25) !important;
+    }
+
+    .narasumber-container .select2-selection--multiple .select2-selection__choice {
+        background: linear-gradient(45deg, #fffbcc, #fff3cd) !important;
+        border: 1px solid #ffeeba !important;
+        color: #856404 !important;
+        border-radius: 30px !important;
+        padding: 6px 15px !important;
+        font-size: 0.9rem !important;
+        font-weight: 600 !important;
+        margin-top: 5px !important;
+        margin-right: 8px !important;
+        box-shadow: 0 2px 4px rgba(133, 100, 4, 0.05) !important;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .narasumber-container .select2-selection--multiple .select2-selection__choice__remove {
+        color: #856404 !important;
+        margin-right: 8px !important;
+        font-weight: bold !important;
+        float: none !important;
+        padding-right: 0 !important;
+        opacity: 0.6;
+        transition: opacity 0.2s;
+        background-color: transparent !important;
+        border: none !important;
+    }
+    
+    .narasumber-container .select2-selection--multiple .select2-selection__choice__remove:hover {
+        opacity: 1;
+        color: #d39e00 !important;
+    }
+
+    /* Custom Dropdown Styling */
+    .select2-container--bootstrap4 .select2-dropdown {
+        border-radius: 12px !important;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
+        border: 0 none !important;
+        overflow: hidden !important;
+        margin-top: 8px;
+    }
+
+    .select2-results__group {
+        background-color: #fffbf2;
+        color: #d39e00;
+        padding: 10px 15px;
+        font-size: 0.8rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-bottom: 1px solid #fff3cd;
+    }
+
+    .select2-container--bootstrap4 .select2-results__option {
+        padding: 10px 15px !important;
+        font-size: 0.95rem;
+        color: #495057;
+        border-bottom: 1px solid #f8f9fa;
+        transition: all 0.2s;
+    }
+
+    .select2-container--bootstrap4 .select2-results__option--highlighted[aria-selected] {
+        background-color: #fff3cd !important;
+        color: #856404 !important;
+        font-weight: 600;
+        padding-left: 20px !important;
+    }
+    
+    .select2-container--bootstrap4 .select2-results__option[aria-selected="true"] {
+        background-color: #e2e6ea !important;
+        color: #212529 !important;
+    }
 </style>
 @endpush
 
 @section('content')
-<div class="container-fluid mb-5">
+<div class="container-fluid mb-5 fade-in">
     
     <!-- Header -->
     <div class="row mb-4 align-items-center justify-content-center">
@@ -212,8 +300,8 @@
                             </div>
                             
                             @if(isset($activity) && $activity->attachment_path)
-                                <div class="alert alert-light border d-inline-block px-4 py-2 mt-2">
-                                    <i class="fe fe-file-text mr-2 text-primary"></i> File tersimpan: 
+                                <div class="alert alert-glass alert-glass-success border-0 d-inline-block px-4 py-3 mt-2">
+                                    <i class="fe fe-check-circle mr-2"></i> File tersimpan: 
                                     <a href="{{ Storage::url($activity->attachment_path) }}" target="_blank" class="font-weight-bold">{{ basename($activity->attachment_path) }}</a>
                                 </div>
                             @endif
@@ -239,7 +327,7 @@
                             <!-- Organizer (External Only) -->
                             <div class="col-md-6 mb-3" id="organizer_wrapper" style="display: none;">
                                 <label for="organizer_name" class="font-weight-bold">Instansi Penyelenggara</label>
-                                <input type="text" class="form-control bg-light" id="organizer_name" name="organizer_name" value="{{ old('organizer_name', $activity->organizer_name ?? '') }}" placeholder="Contoh: Kementerian Kesehatan">
+                                <input type="text" class="form-control bg-white" id="organizer_name" name="organizer_name" value="{{ old('organizer_name', $activity->organizer_name ?? '') }}" placeholder="Contoh: Kementerian Kesehatan">
                             </div>
                         </div>
                     </div>
@@ -288,7 +376,7 @@
                                 <label for="location_type" class="font-weight-bold">Tipe Lokasi <span class="text-danger">*</span></label>
                                 <select class="form-control select2" id="location_type" name="location_type" onchange="updateLocationInput()" required>
                                     <option value="offline" {{ (old('location_type', $activity->location_type ?? '') == 'offline') ? 'selected' : '' }}>Offline (Tatap Muka)</option>
-                                    <option value="online" {{ (old('location_type', $activity->location_type ?? '') == 'online') ? 'selected' : '' }}>Online (Daring)</option>
+                                    <option value="online" {{ (old('location_type', $activity->location_type ?? '') == 'online') ? 'selected' : '' }}>Online (Dalam Jaringan)</option>
                                     <option value="hybrid" {{ (old('location_type', $activity->location_type ?? '') == 'hybrid') ? 'selected' : '' }}>Hybrid (Kombinasi)</option>
                                 </select>
                              </div>
@@ -337,9 +425,9 @@
                                 <label for="status" class="font-weight-bold">Status Pelaksanaan</label>
                                 <select class="form-control select2" id="status" name="status" required>
                                     <option value="0" data-color="#28a745" {{ (old('status', $activity->status ?? '') == 0) ? 'selected' : '' }}>On Schedule</option>
-                                    <option value="1" data-color="#ffc107" {{ (old('status', $activity->status ?? '') == 1) ? 'selected' : '' }}>Reschedule</option>
-                                    <option value="2" data-color="#6c757d" {{ (old('status', $activity->status ?? '') == 2) ? 'selected' : '' }}>Belum Ada Disposisi</option>
+                                    <option value="2" data-color="#ffc107" {{ (old('status', $activity->status ?? '') == 2) ? 'selected' : '' }}>Belum Ada Disposisi</option>
                                     <option value="3" data-color="#dc3545" {{ (old('status', $activity->status ?? '') == 3) ? 'selected' : '' }}>Tidak Dilaksanakan</option>
+                                    <option value="1" data-color="#6c757d" {{ (old('status', $activity->status ?? '') == 1) ? 'selected' : '' }}>Reschedule</option>
                                 </select>
                             </div>
                             
@@ -366,42 +454,54 @@
                  <div class="card mb-4" id="pic_group">
                     <div class="card-body p-4">
                         <h5 class="form-section-title"><i class="fe fe-users mr-2 text-info"></i>Peserta & Disposisi</h5>
-                        
-                        <div class="mb-4">
-                            <label class="font-weight-bold d-block">PIC Kegiatan / Unit Kerja <span class="text-danger" id="pic_asterisk">*</span></label>
-                            
-                            <!-- Internal Checkboxes -->
-                            <div id="pic_internal_wrapper" class="row">
-                                @php
-                                    $internalPics = \App\Models\Activity::INTERNAL_PICS;
-                                    $selectedPics = isset($activity) && $activity->pic ? $activity->pic : [];
-                                @endphp
-                                @foreach($internalPics as $pic)
-                                    @php
-                                        $colorClass = 'bg-secondary';
-                                        if($pic == 'Komisi Komjakum') $colorClass = 'bg-danger';
-                                        elseif($pic == 'Komisi PME') $colorClass = 'bg-success';
-                                        elseif($pic == 'Ketua DJSN') $colorClass = 'bg-primary';
-                                    @endphp
-                                    <div class="col-md-6 mb-2">
-                                        <div class="custom-control custom-checkbox p-3 border rounded">
-                                            <input type="checkbox" class="custom-control-input pic-checkbox" id="pic_{{ Str::slug($pic) }}" name="pic[]" value="{{ $pic }}" {{ in_array($pic, $selectedPics) ? 'checked' : '' }} data-target-group="{{ $pic }}">
-                                            <label class="custom-control-label font-weight-bold" for="pic_{{ Str::slug($pic) }}">
-                                                <span class="status-dot {{ $colorClass }} mr-2"></span> {{ $pic }}
-                                            </label>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
+                        <div class="mb-4">                            
+                            <!-- Internal Checkboxes REMOVED (Auto-filled by System) -->
+                            <div id="pic_internal_wrapper" class="row" style="display: none;"></div>
 
                             <!-- External Input -->
                             <div id="pic_external_wrapper" style="display: none;">
                                 <input type="text" class="form-control" id="pic_external" name="pic_external" value="{{ (isset($activity) && $activity->type == 'external') ? ($activity->pic[0] ?? '') : '' }}" placeholder="Masukkan Nama PIC Eksternal">
                             </div>
+
+                            <!-- Narasumber Input (External Only) -->
+                            <div id="narasumber_wrapper" class="mt-4 narasumber-container" style="display: none;">
+                                <div class="p-3 bg-light rounded border border-warning-subtle" style="border-left: 4px solid #ffc107;">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <div class="icon-shape bg-warning text-white rounded-circle mr-2" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fe fe-mic"></i>
+                                        </div>
+                                        <label class="font-weight-bold mb-0 text-dark">Narasumber Kegiatan</label>
+                                    </div>
+                                    <select class="form-control select2-tags" name="narasumber[]" multiple="multiple" style="width: 100%;">
+                                        @foreach($dewanUsers as $groupName => $members)
+                                            <optgroup label="{{ $groupName }}">
+                                                @foreach($members as $member)
+                                                    <option value="{{ $member->name }}" {{ (isset($activity) && is_array($activity->narasumber) && in_array($member->name, $activity->narasumber)) ? 'selected' : '' }}>{{ $member->name }}</option>
+                                                @endforeach
+                                            </optgroup>
+                                        @endforeach
+                                        <!-- Add existing manual tags if any (for edit mode) -->
+                                        @if(isset($activity) && is_array($activity->narasumber))
+                                            @foreach($activity->narasumber as $nara)
+                                                @php
+                                                    $exists = false;
+                                                    foreach($dewanUsers as $group) {
+                                                        if($group->contains('name', $nara)) { $exists = true; break; }
+                                                    }
+                                                @endphp
+                                                @if(!$exists)
+                                                    <option value="{{ $nara }}" selected>{{ $nara }}</option>
+                                                @endif
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                    <small class="text-muted mt-2 d-block"><i class="fe fe-info mr-1"></i> Pilih dari daftar anggota Dewan/Sekretariat atau ketik nama baru lalu tekan <strong>Enter</strong> untuk narasumber eksternal.</small>
+                                </div>
+                            </div>
                         </div>
                         
                         <!-- Disposition Accordion -->
-                        <div class="form-group mb-0">
+                        <div class="form-group mb-0 mt-0">
                             <label class="font-weight-bold">Target Disposisi / Undangan</label>
                              <div class="accordion" id="accordionDewan">
                                  @php $groupIndex = 0; @endphp
@@ -528,6 +628,15 @@
         templateSelection: formatState
     });
 
+    // Initialize Select2 with Tags for Narasumber
+    $('.select2-tags').select2({
+        theme: 'bootstrap4',
+        tags: true,
+        width: '100%',
+        placeholder: 'Pilih atau ketik nama narasumber',
+        tokenSeparators: [',']
+    });
+
     function syncDates() {
         // Did user want auto-sync? No, leaving as logic present in original file
     }
@@ -607,19 +716,25 @@
             invTypeSelect.val('inbound').trigger('change');
 
             // External Invitation Status Options
-            let options = [
-                {id: 0, text: 'Proses Disposisi', color: '#ffc107'}, 
-                {id: 1, text: 'Sudah ada Disposisi', color: '#28a745'}, 
+            let options = [ 
+                {id: 0, text: 'Sudah ada Disposisi', color: '#28a745'},
+                {id: 1, text: 'Proses Disposisi', color: '#ffc107'},
                 {id: 2, text: 'Untuk Diketahui Ketua', color: '#dc3545'}, 
                 {id: 3, text: 'Terjadwal Hadir', color: '#007bff'} 
             ];
             populateSelect(invStatus, options, currentInvStatus);
+
+            // Show Narasumber Input
+            $('#narasumber_wrapper').show();
 
         } else if (type === 'internal') {
             picInternalWrapper.style.display = 'flex'; // Use flex for row
             picExternalWrapper.style.display = 'none';
             if(organizerWrapper) organizerWrapper.style.display = 'none';
             if(picAsterisk) picAsterisk.style.display = 'inline'; // Required for Internal
+            
+            // Hide Narasumber Input
+            $('#narasumber_wrapper').hide();
             
             // Show Smart Assist for Internal
             if(attachmentGroup) attachmentGroup.style.display = 'block';
@@ -686,21 +801,8 @@
             }
         });
 
-        // PIC Checkbox Auto-Select Disposition Logic
-        $('.pic-checkbox').change(function() {
-            let targetGroup = $(this).data('target-group');
-            let isChecked = $(this).prop('checked');
-            
-            $('.card-header button').each(function() {
-                let groupName = $(this).text().trim();
-                if (groupName === targetGroup) {
-                    let selectAllCheckbox = $(this).closest('.card-header').find('.group-check-all');
-                    if (selectAllCheckbox.prop('checked') !== isChecked) {
-                        selectAllCheckbox.prop('checked', isChecked).trigger('change');
-                    }
-                }
-            });
-        });
+        // PIC Checkbox Auto-Select Disposition Logic REMOVED
+        // Since PIC is now auto-derived from Disposition, this interaction is no longer needed.
     });
 </script>
 <script>
@@ -713,10 +815,11 @@
         const selectedRadio = document.querySelector('input[name="activity_type"]:checked');
         const activityType = selectedRadio ? selectedRadio.value : '';
 
-        // Only run automation for Internal Activities or just run it generally?
-        // Original code limited to Internal. Let's keep it generally open or check user hint?
-        // User hint in UI was "Smart Assist" for all. But original logic was strict.
-        // Let's allow it for both but maybe prioritize fields.
+        // Only run automation for Internal Activities
+        if (activityType === 'external') {
+            console.log("External Activity selected. Skipping OCR.");
+            return;
+        }
         
         const loading = document.getElementById('ocr-loading');
         loading.style.display = 'block';

@@ -20,11 +20,257 @@
     <link rel="stylesheet" href="{{ asset('tinydash/css/app-light.css') }}" id="lightTheme">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
+    <link rel="stylesheet" href="{{ asset('tinydash/css/select2.css') }}">
+    <link rel="stylesheet" href="{{ asset('tinydash/css/select2-bootstrap4.css') }}">
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @livewireStyles
     <style>
         [x-cloak] { display: none !important; }
+        
+        /* Custom Badge Colors */
+        .badge-ketua {
+            background-color: #8B5CF6 !important; /* Violet/Purple */
+            color: white !important;
+        }
+        .badge-komjakum {
+            background-color: #007bff !important; /* Blue (Bootstrap Primary) */
+            color: white !important;
+        }
+        .badge-pme {
+            background-color: #28a745 !important; /* Green (Bootstrap Success) */
+            color: white !important;
+        }
+        .badge-sekretariat {
+            background-color: #F97316 !important; /* Orange */
+            color: white !important;
+        }
+        .badge-djsn {
+            background-color: #6c757d !important; /* Grey (Default) */
+            color: white !important;
+        }
+        
+        /* Background Utils */
+        .bg-ketua { background-color: #8B5CF6 !important; }
+        .bg-komjakum { background-color: #007bff !important; }
+        .bg-pme { background-color: #28a745 !important; }
+        .bg-sekretariat { background-color: #F97316 !important; }
+
+        /* Premium Markdown Styling */
+        .markdown-content {
+            color: #2d3748;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+        .markdown-content p {
+            margin-bottom: 0.75rem !important;
+        }
+        .markdown-content ul, 
+        .markdown-content ol {
+            padding-left: 0.5rem !important;
+            margin-bottom: 0.75rem !important;
+            list-style-position: inside !important;
+            display: block !important;
+        }
+        .markdown-content li {
+            margin-bottom: 0.25rem !important;
+            display: list-item !important;
+        }
+        .markdown-content ul {
+            list-style-type: disc !important;
+        }
+        .markdown-content ul li {
+            list-style-type: disc !important;
+        }
+        .markdown-content ol {
+            list-style-type: decimal !important;
+        }
+        .markdown-content ol li {
+            list-style-type: decimal !important;
+        }
+        .markdown-content blockquote {
+            border-left: 4px solid #3b82f6;
+            background-color: #f8fafc;
+            padding: 0.75rem 1rem;
+            margin-left: 0;
+            margin-bottom: 1rem;
+            font-style: italic;
+            color: #4a5568;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+        .markdown-content a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .markdown-content a:hover {
+            text-decoration: underline;
+        }
+        /* Premium Form Control (Dropdowns/Inputs) */
+        .form-control-premium {
+            display: block;
+            width: 100%;
+            padding: 0.5rem 2.5rem 0.5rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            line-height: 1.5;
+            color: #4a5568;
+            background-color: #fff;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23a0aec0' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 16px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 9999px; /* Pill shape */
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease-in-out;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+        }
+
+        .form-control-premium:hover {
+            border-color: #cbd5e0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transform: translateY(-1px);
+        }
+
+        .form-control-premium:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+            color: #2d3748;
+        }
+
+        .dropdown-menu-premium {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            z-index: 10000;
+            min-width: 100%;
+            padding: 0.5rem 0;
+            margin: 0.25rem 0 0;
+            font-size: 0.9rem;
+            color: #2d3748;
+            text-align: left;
+            list-style: none;
+            background-color: #fff;
+            background-clip: padding-box;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .dropdown-menu-premium.show {
+            display: block;
+        }
+
+        .dropdown-item-premium {
+            display: block;
+            width: 100%;
+            padding: 0.5rem 1.25rem;
+            clear: both;
+            font-weight: 500;
+            color: #4a5568;
+            text-align: inherit;
+            white-space: nowrap;
+            background-color: transparent;
+            border: 0;
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+        }
+
+        .dropdown-item-premium:hover, 
+        .dropdown-item-premium:focus {
+            color: #3b82f6;
+            background-color: #ebf8ff;
+            text-decoration: none;
+        }
+
+        .dropdown-item-premium.active {
+            color: #2b6cb0;
+            background-color: #e2e8f0;
+            font-weight: 600;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Search input specific */
+        .input-group-premium {
+            border-radius: 9999px;
+            overflow: hidden;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+        .input-group-premium:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+        }
+        .input-group-premium .form-control {
+            border: none;
+            box-shadow: none;
+        }
+        .input-group-premium .input-group-text {
+            background: transparent;
+            border: none;
+        }
+        .markdown-content code {
+            background-color: #f1f5f9;
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 0.875em;
+            color: #d63384;
+        }
+        .markdown-content table {
+            width: 100%;
+            margin-bottom: 1rem;
+            border-collapse: collapse;
+        }
+        .markdown-content th, 
+        .markdown-content td {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #e2e8f0;
+        }
+        .markdown-content th {
+            background-color: #f8fafc;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+        /* Fix for sticky positioning: ensure ancestors don't hide overflow */
+        body, html, .wrapper, .main-content, .container-fluid,
+        .simplebar-content-wrapper, .simplebar-mask, .simplebar-offset {
+            overflow: visible !important;
+        }
+        /* Ensure no transforms break fixed/sticky context */
+        .wrapper {
+            transform: none !important;
+        }
+
+        /* Sticky Action Header */
+        .sticky-action-header {
+            position: -webkit-sticky; /* Safari */
+            position: sticky;
+            top: 70px;
+            z-index: 999;
+            background-color: rgba(255, 255, 255, 0.98);
+            border-bottom: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            margin-left: -15px;
+            margin-right: -15px;
+            padding-left: 2rem !important;
+            padding-right: 2rem !important;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
     </style>
     @stack('styles')
     <script>
@@ -85,12 +331,18 @@
 
 
           @if ($errors->any())
-              <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                  <ul class="mb-0">
-                      @foreach ($errors->all() as $error)
-                          <li>{{ $error }}</li>
-                      @endforeach
-                  </ul>
+              <div class="alert alert-glass alert-glass-danger alert-dismissible fade show" role="alert">
+                  <div class="d-flex align-items-center">
+                      <span class="fe fe-alert-triangle fe-24 mr-3"></span>
+                      <div>
+                          <strong class="d-block mb-1">Perhatian!</strong>
+                          <ul class="mb-0 pl-3">
+                              @foreach ($errors->all() as $error)
+                                  <li>{{ $error }}</li>
+                              @endforeach
+                          </ul>
+                      </div>
+                  </div>
                   <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                       <span aria-hidden="true">&times;</span>
                   </button>
@@ -110,6 +362,7 @@
     <script src="{{ asset('tinydash/js/tinycolor-min.js') }}"></script>
     <script src="{{ asset('tinydash/js/config.js') }}"></script>
     <script src="{{ asset('tinydash/js/apps.js') }}"></script>
+    <script src="{{ asset('tinydash/js/select2.min.js') }}"></script>
     <script>
       window.Toast = Swal.mixin({
         toast: true,

@@ -32,7 +32,15 @@
                             <div>
                                 <h4 class="font-weight-bold mb-1">{{ auth()->user()->name }}</h4>
                                 <div class="mb-1">
-                                    <span class="badge badge-primary px-3 py-2 rounded-pill">{{ auth()->user()->role }}</span>
+                                    @if(auth()->user()->role === 'admin')
+                                        <span class="badge badge-role-admin px-3 py-2 rounded-pill">Admin</span>
+                                    @elseif(auth()->user()->role === 'Dewan')
+                                        <span class="badge badge-role-dewan px-3 py-2 rounded-pill">Dewan</span>
+                                    @elseif(auth()->user()->role === 'DJSN')
+                                        <span class="badge badge-role-djsn px-3 py-2 rounded-pill">DJSN</span>
+                                    @else
+                                        <span class="badge badge-role-user px-3 py-2 rounded-pill">User</span>
+                                    @endif
                                 </div>
                                 <small class="text-muted">{{ auth()->user()->email }}</small>
                             </div>

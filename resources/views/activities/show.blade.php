@@ -4,88 +4,183 @@
 
 @section('content')
 <div class="row justify-content-center">
-    <div class="col-12">
-        <!-- Header -->
-        <div class="row align-items-center mb-4">
+    <div class="col-12 col-xl-11">
+        
+        <!-- Sticky Action Header -->
+        <div class="row align-items-center mb-4 p-3 border-bottom sticky-action-header">
             <div class="col">
-                <h2 class="h5 page-title">
-                    <small class="text-muted text-uppercase">Detail Kegiatan</small><br />
-                    {{ $activity->name }}
+                <h2 class="h4 font-weight-bold mb-0 text-dark">
+                    Detail Kegiatan
                 </h2>
-                 <div class="mt-2">
+                <div class="d-flex align-items-center mt-1">
                     @if($activity->type == 'external')
-                        <span class="badge badge-info">Eksternal</span>
+                        <span class="badge badge-pill badge-info px-3 py-2 mr-2 text-white">Kegiatan Eksternal</span>
                     @else
-                        <span class="badge badge-primary">Internal</span>
+                        <span class="badge badge-pill badge-primary px-3 py-2 mr-2" style="background-color: #004085;">Kegiatan Internal</span>
                     @endif
                     
-                     @switch($activity->status)
-                        @case(0) <span class="badge badge-success ml-1">On Schedule</span> @break
-                        @case(1) <span class="badge badge-warning ml-1">Reschedule</span> @break
-                        @case(2) <span class="badge badge-secondary ml-1">Belom ada Dispo</span> @break
-                        @case(3) <span class="badge badge-danger ml-1">Tidak Dilaksanakan</span> @break
+                    @switch($activity->status)
+                        @case(0) <span class="badge badge-pill badge-success mr-2">On Schedule</span> @break
+                        @case(1) <span class="badge badge-pill badge-secondary mr-2">Reschedule</span> @break
+                        @case(2) <span class="badge badge-pill badge-warning mr-2">Belum ada Disposisi</span> @break
+                        @case(3) <span class="badge badge-pill badge-danger mr-2">Tidak Dilaksanakan</span> @break
                     @endswitch
-                 </div>
+
+                    <span class="text-muted small">
+                        Update terakhir: {{ $activity->updated_at->diffForHumans() }}
+                        @if($activity->lastEditor)
+                             oleh <span class="font-weight-bold">{{ $activity->lastEditor->name }}</span>
+                        @endif
+                    </span>
+                </div>
             </div>
             <div class="col-auto">
-                 @if(auth()->check() && auth()->user()->isAdmin())
-                    <a href="{{ route('activities.edit', $activity->id) }}" class="btn btn-primary"><span class="fe fe-edit"></span> Edit</a>
+                @php
+                    $backUrl = url()->previous();
+                    if ($backUrl == url()->current() || empty($backUrl)) {
+                        $backUrl = route('activities.index');
+                    }
+                @endphp
+                <a href="{{ $backUrl }}" class="btn btn-outline-secondary rounded-pill px-4 mr-2">
+                    <span class="fe fe-arrow-left mr-1"></span> Kembali
+                </a>
+                @if(auth()->check() && auth()->user()->isAdmin())
+                    <a href="{{ route('activities.edit', $activity->id) }}" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                        <span class="fe fe-edit mr-1"></span> Edit Kegiatan
+                    </a>
                 @endif
-                <a href="{{ route('activities.index') }}" class="btn btn-secondary"><span class="fe fe-arrow-left"></span> Kembali</a>
             </div>
         </div>
 
         <div class="row">
             <!-- Left Column: Main Info -->
             <div class="col-md-7">
-                <div class="card shadow mb-4">
-                    <div class="card-header">
-                        <strong class="card-title"><span class="fe fe-info mr-2"></span>Informasi Utama</strong>
+                
+                <!-- Name Card -->
+                 <div class="card mb-4" style="border-left: 5px solid {{ $activity->type == 'external' ? '#17a2b8' : '#004085' }};">
+                    <div class="card-body">
+                        <div class="form-group mb-0">
+                            <label class="form-label-premium">Nama Kegiatan</label>
+                            <p class="h5 font-weight-bold text-dark mb-0">{{ $activity->name }}</p>
+                        </div>
+                    </div>
+                 </div>
+
+                <!-- Informasi Utama Card -->
+                <div class="card mb-4">
+                    <div class="card-header d-flex align-items-center">
+                        <div class="icon-shape bg-light text-primary rounded-circle mr-3">
+                            <i class="fe fe-info"></i>
+                        </div>
+                        <strong class="card-title">Informasi Utama</strong>
                     </div>
                     <div class="card-body">
+                        <!-- Nomor Surat -->
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label text-muted font-weight-bold">Nomor Surat</label>
+                            <div class="col-sm-9">
+                                <p class="form-control-plaintext text-dark font-weight-bold">{{ $activity->letter_number ?? '-' }}</p>
+                            </div>
+                        </div>
+
+                        @if($activity->type == 'external')
+                        <!-- Organizer Name -->
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label text-muted font-weight-bold">Penyelenggara</label>
+                            <div class="col-sm-9">
+                                <p class="form-control-plaintext text-dark">{{ $activity->organizer_name ?? '-' }}</p>
+                            </div>
+                        </div>
+                        @endif
+
                         <!-- Waktu -->
                         <div class="form-group row">
-                            <label class="col-sm-3 col-form-label text-muted"><span class="fe fe-calendar mr-1"></span> Waktu</label>
+                            <label class="col-sm-3 col-form-label text-muted font-weight-bold">Waktu</label>
                             <div class="col-sm-9">
-                                <p class="form-control-static mb-0 font-weight-bold text-dark">{{ $activity->date_time->format('d F Y') }}</p>
-                                <small class="text-muted">{{ $activity->date_time->format('H:i') }} WIB</small>
+                                <p class="form-control-plaintext text-dark font-weight-bold mb-0">
+                                    {{ $activity->start_date->isoFormat('D MMMM Y') }}
+                                </p>
+                                <small class="text-muted">
+                                    {{ \Carbon\Carbon::parse($activity->start_time)->format('H:i') }} WIB - 
+                                    @if($activity->end_time)
+                                        {{ \Carbon\Carbon::parse($activity->end_time)->format('H:i') }} WIB
+                                    @else
+                                        Selesai
+                                    @endif
+                                    @if($activity->end_date && $activity->end_date != $activity->start_date)
+                                        (s.d {{ $activity->end_date->isoFormat('D MMMM Y') }})
+                                    @endif
+                                </small>
                             </div>
                         </div>
                         
                         <!-- Lokasi -->
                          <div class="form-group row">
-                            <label class="col-sm-3 col-form-label text-muted"><span class="fe fe-map-pin mr-1"></span> Lokasi</label>
+                            <label class="col-sm-3 col-form-label text-muted font-weight-bold">Lokasi</label>
                             <div class="col-sm-9">
                                 @if($activity->location_type == 'offline')
-                                    <span class="badge badge-secondary mb-1">Offline</span>
-                                    <p class="mb-0">{{ $activity->location }}</p>
-                                @else
-                                    <span class="badge badge-info mb-1">Online</span>
+                                    <span class="badge mb-1 badge-secondary">Offline</span>
+                                    <p class="form-control-plaintext text-dark">
+                                        <i class="fe fe-map-pin mr-1" style="color: #6c757d;"></i>{{ $activity->location }}
+                                    </p>
+                                @elseif($activity->location_type == 'online')
+                                    <span class="badge mb-1 badge-secondary">Online ({{ $activity->media_online }})</span>
                                     @if($activity->meeting_link)
                                         @if(filter_var($activity->meeting_link, FILTER_VALIDATE_URL))
-                                            <p class="mb-0"><a href="{{ $activity->meeting_link }}" target="_blank" class="text-truncate d-block">{{ $activity->meeting_link }}</a></p>
+                                            <p class="mb-0 mt-1"><a href="{{ $activity->meeting_link }}" target="_blank" class="text-truncate d-block">{{ $activity->meeting_link }}</a></p>
                                         @else
-                                            <p class="mb-0">{{ $activity->meeting_link }}</p>
+                                            <p class="mb-0 mt-1">{{ $activity->meeting_link }}</p>
                                         @endif
                                     @else
-                                        <p class="mb-0">-</p>
+                                        <p class="mb-0 mt-1">-</p>
                                     @endif
+                                    @if($activity->meeting_id)
+                                        <div class="mt-1 small">
+                                            <strong>ID:</strong> {{ $activity->meeting_id }} <br>
+                                            <strong>Pass:</strong> {{ $activity->passcode ?? '-' }}
+                                        </div>
+                                    @endif
+                                @else
+                                    <span class="badge mb-1 badge-secondary">Hybrid</span>
+                                    <div class="mb-2">
+                                        <small class="text-muted font-weight-bold d-block">Offline:</small>
+                                        <p class="form-control-plaintext text-dark mb-0 pl-2 border-left">
+                                            <i class="fe fe-map-pin mr-1" style="color: #6c757d;"></i>{{ $activity->location }}
+                                        </p>
+                                    </div>
+                                    <div class="mb-0">
+                                        <small class="text-muted font-weight-bold d-block">Online ({{ $activity->media_online }}):</small>
+                                        <div class="pl-2 border-left">
+                                            @if($activity->meeting_link)
+                                                @if(filter_var($activity->meeting_link, FILTER_VALIDATE_URL))
+                                                    <p class="mb-1"><a href="{{ $activity->meeting_link }}" target="_blank" class="text-truncate d-block">{{ $activity->meeting_link }}</a></p>
+                                                @else
+                                                    <p class="mb-1">{{ $activity->meeting_link }}</p>
+                                                @endif
+                                            @endif
+                                            
+                                            @if($activity->meeting_id)
+                                                <div class="small text-muted">
+                                                    <strong>ID:</strong> {{ $activity->meeting_id }} <br>
+                                                    <strong>Pass:</strong> {{ $activity->passcode ?? '-' }}
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
                                 @endif
                             </div>
                         </div>
 
-                        <hr>
-
                         <!-- Status Undangan -->
-                         <div class="form-group row">
-                            <label class="col-sm-3 col-form-label text-muted"><span class="fe fe-mail mr-1"></span> Undangan</label>
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label text-muted font-weight-bold">Status Undangan</label>
                             <div class="col-sm-9">
-                                <span class="badge badge-light border mb-1">{{ $activity->invitation_type == 'inbound' ? 'Surat Masuk' : 'Surat Keluar' }}</span>
-                                <div>
+                                <span class="badge badge-pill badge-light border mb-1">{{ $activity->invitation_type == 'inbound' ? 'Surat Masuk' : 'Surat Keluar' }}</span>
+                                <div class="mt-1">
                                      @if($activity->type == 'external')
                                         @switch($activity->invitation_status)
-                                            @case(0) <span class="badge badge-success">Proses Disposisi</span> @break
-                                            @case(1) <span class="badge badge-secondary" style="background-color: brown;">Sudah ada Disposisi</span> @break
+                                            @case(0) <span class="badge badge-success">Sudah ada Disposisi</span> @break
+                                            @case(1) <span class="badge badge-warning">Proses Disposisi</span> @break
                                             @case(2) <span class="badge badge-danger">Untuk Diketahui Ketua</span> @break
                                             @case(3) <span class="badge badge-primary">Terjadwal Hadir</span> @break
                                         @endswitch
@@ -103,262 +198,320 @@
                         <!-- PIC -->
                         @if($activity->pic)
                         <div class="form-group row">
-                            <label class="col-sm-3 col-form-label text-muted"><span class="fe fe-users mr-1"></span> PIC</label>
+                            <label class="col-sm-3 col-form-label text-muted font-weight-bold">PIC</label>
                             <div class="col-sm-9">
                                  @if($activity->type == 'external')
-                                    {{ is_array($activity->pic) ? implode(', ', $activity->pic) : $activity->pic }}
+                                    <p class="form-control-plaintext text-dark">{{ is_array($activity->pic) ? implode(', ', $activity->pic) : $activity->pic }}</p>
                                 @else
                                     @foreach($activity->pic as $pic)
                                         @php
                                             $badgeClass = 'badge-info';
-                                            if($pic == 'Komjakum') $badgeClass = 'badge-danger';
-                                            elseif($pic == 'PME') $badgeClass = 'badge-success';
-                                            elseif($pic == 'Sekretariat DJSN') $badgeClass = 'badge-secondary';
-                                            elseif($pic == 'Ketua DJSN') $badgeClass = 'badge-primary';
+                                            $picUpper = strtoupper($pic);
+                                            
+                                            if (str_contains($picUpper, 'KOMJAKUM')) {
+                                                $badgeClass = 'badge-komjakum';
+                                            } elseif (str_contains($picUpper, 'PME')) {
+                                                $badgeClass = 'badge-pme';
+                                            } elseif ($pic == 'Sekretariat DJSN') {
+                                                $badgeClass = 'badge-sekretariat';
+                                            } elseif ($pic == 'Ketua DJSN') {
+                                                $badgeClass = 'badge-ketua';
+                                            }
                                         @endphp
-                                        <span class="badge {{ $badgeClass }} mr-1">{{ $pic }}</span>
+                                        <span class="badge {{ $badgeClass }} mr-1 mb-1">{{ $pic }}</span>
                                     @endforeach
                                 @endif
                             </div>
                         </div>
                         @endif
 
-
                     </div>
-            </div>
-
-            <div class="card shadow mb-4">
-                 <div class="card-body">
-                    @livewire('follow-up-manager', ['activity' => $activity])
-                 </div>
-            </div>
-
-            <!-- Hasil Rapat Card -->
-             <div class="card shadow mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <strong class="card-title mb-0"><span class="fe fe-file-text mr-2"></span>Hasil Rapat Secara Singkat</strong>
-                    @if(auth()->check() && (auth()->user()->isAdmin() || auth()->user()->role === 'Sekretariat DJSN'))
-                        @if($activity->summary_content)
-                            <button type="button" class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#summaryModal">
-                                <span class="fe fe-edit"></span> Edit
-                            </button>
-                        @endif
-                    @endif
                 </div>
-                <div class="card-body">
-                    @if($activity->summary_content)
-                        <div class="markdown-content text-justify">{!! $activity->summary_content !!}</div>
-                    @else
-                        <div class="text-center py-4">
-                            <p class="text-muted mb-3">Belum ada hasil rapat singkat.</p>
-                            @if(auth()->check() && (auth()->user()->isAdmin() || auth()->user()->role === 'Sekretariat DJSN'))
-                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#summaryModal">
-                                    <span class="fe fe-plus"></span> Tambahkan Hasil Rapat
+
+                <!-- Hasil Rapat & Follow Up Wrapper to maintain single column flow if needed, or keep existing Follow Up Manager -->
+                <div class="card mb-4">
+                     <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div class="icon-shape bg-light text-primary rounded-circle mr-3">
+                                <i class="fe fe-file-text"></i>
+                            </div>
+                            <strong class="card-title mb-0">Hasil Rapat Secara Singkat</strong>
+                        </div>
+                        @if(auth()->check() && (auth()->user()->isAdmin() || auth()->user()->role === 'Sekretariat DJSN'))
+                            @if(!empty($activity->summary_content) && trim(strip_tags($activity->summary_content)) != '')
+                                <button type="button" class="btn btn-sm btn-outline-primary rounded-pill" data-toggle="modal" data-target="#summaryModal">
+                                    <span class="fe fe-edit"></span> Edit
                                 </button>
                             @endif
-                        </div>
-                    @endif
-                </div>
-            </div>
-            
-        </div>
-
-        <!-- Summary Modal -->
-        <div class="modal fade" id="summaryModal" tabindex="-1" role="dialog" aria-labelledby="summaryModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="summaryModalLabel">Hasil Rapat Secara Singkat</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <form action="{{ route('activities.update-summary', $activity->id) }}" method="POST" id="summaryForm">
-                        @csrf
-                        @method('PUT')
-                        <div class="modal-body">
-                            <div class="form-group">
-                                <label>Masukkan rangkuman hasil rapat:</label>
-                                <div id="summary-editor" style="height: 300px;">{!! $activity->summary_content !!}</div>
-                                <input type="hidden" name="summary_content" id="summary_content_input">
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                            <button type="submit" class="btn btn-primary">Simpan</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        @push('styles')
-        <link rel="stylesheet" href="{{ asset('tinydash/css/quill.snow.css') }}">
-
-        @endpush
-
-        @push('scripts')
-        <script src="{{ asset('tinydash/js/quill.min.js') }}"></script>
-        <script>
-            // Initialize Quill for Summary
-            var summaryQuill = new Quill('#summary-editor', {
-                theme: 'snow',
-                modules: {
-                    toolbar: [
-                        ['bold', 'italic', 'underline'],
-                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                        [{ 'header': [1, 2, 3, false] }],
-                        ['clean']
-                    ]
-                }
-            });
-
-            // Update hidden input on submit
-            $('#summaryForm').on('submit', function() {
-                $('#summary_content_input').val(summaryQuill.root.innerHTML);
-            });
-
-            function autoFormatSummary() {
-                let text = summaryQuill.getText();
-                
-                // Pre-process: Force newlines for list patterns that might be inline
-                // Case: "end text 2. New Item" -> "end text\n2. New Item"
-                
-                // 1. Handle "1. ", "2. " but AVOID "No. 1"
-                text = text.replace(/([\w\W])\s+(\d+\.)\s/g, function(match, prevChar, numDot) {
-                    // Check context: prevChar is the character before the space.
-                    // match is the full string "o. 1. " or "t 2. ".
-                    
-                    // If proper numbering, it usually follows a sentence end or is distinct.
-                    // Explicit check for "No."
-                    let fullContext = text.substring(text.indexOf(match) - 5, text.indexOf(match)); // Peek behind
-                    if (fullContext.includes("No.") || fullContext.includes("no.")) {
-                         return match; // Don't split
-                    }
-                    
-                    return prevChar + '\n' + numDot + ' ';
-                });
-
-                // 2. Handle "a) ", "b) "
-                text = text.replace(/([^\n])\s+([a-z]\))\s/g, '$1\n$2 ');
-                
-                // 3. Handle "1) ", "2) " (Level 3)
-                text = text.replace(/([^\n])\s+(\d+\))\s/g, '$1\n$2 ');
-
-                let lines = text.split('\n');
-                let html = '';
-                
-                // Regex patterns
-                const patterns = {
-                    level1: /^(\d+)\.\s+(.*)/, // 1. Text
-                    level2: /^([a-z])\)\s+(.*)/, // a) Text
-                    level3: /^(\d+)\)\s+(.*)/  // 1) Text
-                };
-
-                let currentLevel = 0; // 0 = root, 1 = ol, 2 = ol > ol (a), 3 = ol > ol > ol (i)
-
-                function ensureLevel(targetLevel, type = '') {
-                    // Close deeper levels
-                    while (currentLevel > targetLevel) {
-                        html += '</ol>';
-                        currentLevel--;
-                    }
-                    
-                    // Open new levels if needed
-                    while (currentLevel < targetLevel) {
-                        let listType = '';
-                        if (currentLevel === 0) listType = ''; // 1, 2, 3
-                        if (currentLevel === 1) listType = ' type="a"'; // a, b, c
-                        if (currentLevel === 2) listType = ' type="1"'; // 1, 2, 3
-                        
-                        // Override/Set based on target (simplified for standard 1 -> a -> i hierarchy)
-                        html += `<ol${listType}>`;
-                        currentLevel++;
-                    }
-                }
-
-                lines.forEach((line, index) => {
-                    line = line.trim();
-                    if (!line) return;
-
-                    let match1 = line.match(patterns.level1);
-                    let match2 = line.match(patterns.level2);
-                    let match3 = line.match(patterns.level3);
-
-                    if (match1) {
-                        ensureLevel(1);
-                        html += `<li>${match1[2]}`;
-                    } else if (match2) {
-                        ensureLevel(2);
-                        html += `<li>${match2[2]}`;
-                    } else if (match3) {
-                        ensureLevel(3);
-                        html += `<li>${match3[2]}`;
-                    } else {
-                        // Continuation of previous item
-                        if (currentLevel > 0) {
-                            html += ` ${line}`;
-                        } else {
-                            html += `<p>${line}</p>`;
-                        }
-                    }
-                });
-
-                // Close all remaining lists
-                while (currentLevel > 0) {
-                    html += '</ol>';
-                    currentLevel--;
-                }
-                
-                summaryQuill.clipboard.dangerouslyPasteHTML(html);
-            }
-        </script>
-        @endpush
-
-            <!-- Right Column: Details & Disposition -->
-            <div class="col-md-5">
-                 <!-- Lampiran Card -->
-                <div class="card shadow mb-4">
-                    <div class="card-header">
-                        <strong class="card-title"><span class="fe fe-paperclip mr-2"></span>Lampiran Surat</strong>
-                    </div>
-                    <div class="card-body text-center">
-                         @if($activity->attachment_path)
-                            <div class="file-icon mb-2">
-                                <span class="fe fe-file-text fe-32 text-primary"></span>
-                            </div>
-                            <h6 class="mb-1 text-truncate" title="{{ basename($activity->attachment_path) }}">{{ basename($activity->attachment_path) }}</h6>
-                            <a href="{{ Storage::url($activity->attachment_path) }}" target="_blank" class="btn btn-sm btn-outline-primary mt-2"><span class="fe fe-download"></span> Lihat / Download</a>
-                        @else
-                            <span class="text-muted font-italic">Tidak ada lampiran.</span>
                         @endif
+                    </div>
+                    <div class="card-body">
+                        @if(!empty($activity->summary_content) && trim(strip_tags($activity->summary_content)) != '')
+                            <div class="markdown-content text-justify">{!! $activity->summary_content !!}</div>
+                        @else
+                            <div class="text-center py-4">
+                                <p class="text-muted mb-3">Belum ada hasil rapat singkat.</p>
+                                @if(auth()->check() && (auth()->user()->isAdmin() || auth()->user()->role === 'Sekretariat DJSN'))
+                                    <button type="button" class="btn btn-primary rounded-pill" data-toggle="modal" data-target="#summaryModal">
+                                        <span class="fe fe-plus"></span> Tambahkan Hasil Rapat
+                                    </button>
+                                @endif
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                @livewire('follow-up-manager', ['activity' => $activity])
+
+            </div>
+
+             <!-- Right Column: Details & Disposition -->
+            <div class="col-md-5">
+                
+                <!-- Dokumen Pendukung Card -->
+                <div class="card mb-4">
+                     <div class="card-header d-flex align-items-center">
+                        <div class="icon-shape bg-light text-primary rounded-circle mr-3">
+                            <i class="fe fe-folder"></i>
+                        </div>
+                        <strong class="card-title">Dokumen Pendukung</strong>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            <!-- 1. Surat Undangan -->
+                            <div class="list-group-item p-3">
+                                <div class="row align-items-center">
+                                    <div class="col-auto">
+                                        <span class="avatar avatar-sm bg-light text-primary rounded-circle">
+                                            <i class="fe fe-mail"></i>
+                                        </span>
+                                    </div>
+                                    <div class="col pl-0">
+                                        <small class="text-muted d-block mb-0 font-weight-bold uppercase-label">Surat Undangan</small>
+                                        @if($activity->attachment_path)
+                                            <a href="{{ Storage::url($activity->attachment_path) }}" target="_blank" class="font-weight-bold text-dark d-block text-truncate" style="max-width: 250px;">{{ basename($activity->attachment_path) }}</a>
+                                        @else
+                                            <span class="text-muted font-italic small">-</span>
+                                        @endif
+                                    </div>
+                                    @if($activity->attachment_path)
+                                        <div class="col-auto">
+                                            <a href="{{ Storage::url($activity->attachment_path) }}" target="_blank" class="btn btn-sm btn-outline-primary rounded-circle"><i class="fe fe-download"></i></a>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                            
+                            <!-- 2. Notulensi -->
+                            <div class="list-group-item p-3">
+                                <div class="row align-items-center">
+                                    <div class="col-auto">
+                                        <span class="avatar avatar-sm bg-light text-primary rounded-circle">
+                                            <i class="fe fe-file-text"></i>
+                                        </span>
+                                    </div>
+                                    <div class="col pl-0">
+                                        <small class="text-muted d-block mb-0 font-weight-bold uppercase-label">Notulensi</small>
+                                        @if($activity->minutes_path)
+                                            <a href="{{ Storage::url($activity->minutes_path) }}" target="_blank" class="font-weight-bold text-dark d-block text-truncate" style="max-width: 250px;">{{ basename($activity->minutes_path) }}</a>
+                                        @else
+                                            <span class="text-muted font-italic small">-</span>
+                                        @endif
+                                    </div>
+                                     @if($activity->minutes_path)
+                                        <div class="col-auto">
+                                            <a href="{{ Storage::url($activity->minutes_path) }}" target="_blank" class="btn btn-sm btn-outline-primary rounded-circle"><i class="fe fe-download"></i></a>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- 3. Bahan Materi -->
+                            <div class="list-group-item p-3">
+                                <div class="row align-items-start">
+                                    <div class="col-auto mt-1">
+                                        <span class="avatar avatar-sm bg-light text-primary rounded-circle">
+                                            <i class="fe fe-briefcase"></i>
+                                        </span>
+                                    </div>
+                                    <div class="col pl-0">
+                                        <small class="text-muted d-block mb-1 font-weight-bold uppercase-label">Bahan Materi</small>
+                                        @if($activity->materials && $activity->materials->count() > 0)
+                                            <ul class="list-unstyled mb-0">
+                                                @foreach($activity->materials as $mat)
+                                                    <li class="mb-2 d-flex justify-content-between align-items-center bg-light p-2 rounded">
+                                                        <a href="{{ Storage::url($mat->file_path) }}" target="_blank" class="text-dark font-weight-bold text-truncate" style="max-width: 200px;">
+                                                            {{ $mat->title ?? basename($mat->file_path) }}
+                                                        </a>
+                                                        <a href="{{ Storage::url($mat->file_path) }}" target="_blank" class="text-primary"><i class="fe fe-download"></i></a>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        @else
+                                            <span class="text-muted font-italic small">-</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 4. Surat Tugas -->
+                            <div class="list-group-item p-3">
+                                 <div class="row align-items-center">
+                                    <div class="col-auto">
+                                        <span class="avatar avatar-sm bg-light text-primary rounded-circle">
+                                            <i class="fe fe-check-circle"></i>
+                                        </span>
+                                    </div>
+                                    <div class="col pl-0">
+                                        <small class="text-muted d-block mb-0 font-weight-bold uppercase-label">Surat Tugas</small>
+                                        @if($activity->assignment_letter_path)
+                                            <a href="{{ Storage::url($activity->assignment_letter_path) }}" target="_blank" class="font-weight-bold text-dark d-block text-truncate" style="max-width: 250px;">{{ basename($activity->assignment_letter_path) }}</a>
+                                        @else
+                                            <span class="text-muted font-italic small">-</span>
+                                        @endif
+                                    </div>
+                                     @if($activity->assignment_letter_path)
+                                        <div class="col-auto">
+                                            <a href="{{ Storage::url($activity->assignment_letter_path) }}" target="_blank" class="btn btn-sm btn-outline-primary rounded-circle"><i class="fe fe-download"></i></a>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- 5. Dokumentasi Foto -->
+                            <div class="list-group-item p-3">
+                                 <div class="row align-items-start">
+                                    <div class="col-auto mt-1">
+                                        <span class="avatar avatar-sm bg-light text-primary rounded-circle">
+                                            <i class="fe fe-image"></i>
+                                        </span>
+                                    </div>
+                                    <div class="col pl-0">
+                                        <small class="text-muted d-block mb-2 font-weight-bold uppercase-label">Dokumentasi Foto</small>
+                                        @if($activity->documentations && $activity->documentations->count() > 0)
+                                            <div class="row">
+                                                @foreach($activity->documentations as $doc)
+                                                    <div class="col-6 mb-3">
+                                                        <div class="position-relative shadow-sm rounded overflow-hidden group-hover-parent">
+                                                            <a href="#" class="d-block" data-toggle="modal" data-target="#photoModal" data-src="{{ Storage::url($doc->file_path) }}">
+                                                                <div class="bg-light" style="
+                                                                    background-image: url('{{ Storage::url($doc->file_path) }}'); 
+                                                                    background-size: cover; 
+                                                                    background-position: center; 
+                                                                    padding-bottom: 75%; /* 4:3 Aspect Ratio */
+                                                                "></div>
+                                                            </a>
+                                                            <div class="position-absolute p-2" style="top: 0; right: 0; z-index: 10;">
+                                                                <a href="{{ Storage::url($doc->file_path) }}" download class="btn btn-sm bg-white text-primary shadow-sm rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; padding: 0;" title="Download Foto">
+                                                                    <i class="fe fe-download"></i>
+                                                                </a>
+                                                            </div>
+                                                            <div class="position-absolute bottom-0 left-0 w-100 p-1 bg-gradient-dark text-white small text-truncate" style="background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);">
+                                                                {{ $doc->caption ?? '' }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @else
+                                            <span class="text-muted font-italic small">-</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
                     </div>
                 </div>
 
                 <!-- Disposition Card -->
-                <div class="card shadow mb-4">
-                    <div class="card-header">
-                        <strong class="card-title"><span class="fe fe-check-square mr-2"></span>Tujuan Disposisi</strong>
+                <div class="card mb-4">
+                     <div class="card-header d-flex align-items-center">
+                        <div class="icon-shape bg-light text-primary rounded-circle mr-3">
+                            <i class="fe fe-check-square"></i>
+                        </div>
+                        <strong class="card-title">Tujuan Disposisi</strong>
                     </div>
                     <div class="card-body">
+                         <!-- Narasumber Display (Moved from Main Info) -->
+                         @if($activity->type == 'external' && !empty($activity->narasumber))
+                            <div class="mb-4 bg-white rounded-lg shadow-sm border border-warning-subtle overflow-hidden" style="border-left: 4px solid #ffc107;">
+                                <div class="px-4 py-3 bg-light-warning d-flex align-items-center border-bottom border-warning-subtle" style="background-color: #fffdf5;">
+                                    <div class="icon-shape bg-warning text-white rounded-circle mr-3 shadow-sm" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fe fe-mic"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="font-weight-bold mb-0 text-dark">Narasumber Kegiatan</h6>
+                                        <small class="text-muted">Daftar pembicara untuk kegiatan ini</small>
+                                    </div>
+                                </div>
+                                <div class="p-4">
+                                    <div class="d-flex flex-wrap">
+                                        @foreach($activity->narasumber as $nara)
+                                            <div class="d-flex align-items-center bg-white border rounded-pill px-3 py-2 mr-3 mb-2 shadow-sm" style="border-color: #ffeeba !important;">
+                                                <div class="avatar avatar-xs bg-warning text-white rounded-circle mr-2 d-flex align-items-center justify-content-center">
+                                                <i class="fe fe-user" style="font-size: 12px;"></i>
+                                            </div>
+                                                <span class="font-weight-bold text-dark" style="color: #664d03 !important;">{{ $nara }}</span>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                         @endif
+
                          @if($activity->disposition_to)
                             @php
                                 $councilStructure = \App\Models\Activity::COUNCIL_STRUCTURE;
                                 $selected = $activity->disposition_to;
                             @endphp
                             
-                            <div class="timeline">
+                            <div class="timeline ml-3 timeline-disposition">
                             @foreach($councilStructure as $groupName => $members)
                                 @php
                                     $groupSelected = array_intersect($members, $selected);
+                                    $attendanceList = $activity->attendance_list ?? [];
                                 @endphp
                                 @if(!empty($groupSelected))
                                     <div class="pb-3 timeline-item item-primary">
-                                        <div class="pl-5">
-                                            <div class="mb-1"><strong>{{ $groupName }}</strong></div>
+                                        <div class="pl-4">
+                                            <div class="mb-1 font-weight-bold text-dark">{{ $groupName }}</div>
                                             <ul class="list-unstyled mb-0 text-muted small">
                                                 @foreach($groupSelected as $member)
-                                                    <li class="mb-1"><span class="fe fe-check text-success mr-1"></span>{{ $member }}</li>
+                                                    @php
+                                                        $isPresent = in_array($member, $attendanceList);
+                                                    @endphp
+                                                    <li class="mb-1 d-flex flex-column">
+                                                        <div class="d-flex align-items-center">
+                                                            @if($isPresent)
+                                                                <span class="fe fe-check text-success mr-2 font-weight-bold"></span>
+                                                            @else
+                                                                <span class="mr-2 text-muted font-weight-bold" style="width: 14px; text-align: center;">-</span>
+                                                            @endif
+                                                            <span class="{{ $isPresent ? 'text-dark font-weight-bold' : '' }}">{{ $member }}</span>
+                                                        </div>
+                                                        {{-- Displahy Representative if applicable --}}
+                                                        @if($member === 'Imron Rosadi')
+                                                            @php
+                                                                // Find user ID for Imron Rosadi to check details
+                                                                // Ideally we pass this map to view, but for now we look it up or rely on Attendance Data structure
+                                                                // Since attendance_details is keyed by user ID, we need to know the ID of Imron.
+                                                                // We can try to find him via Helper or view composer, but for quick fix:
+                                                                $imronUser = \App\Models\User::where('name', 'Imron Rosadi')->first();
+                                                                $details = $activity->attendance_details ?? [];
+                                                                $repName = null;
+                                                                if ($imronUser && isset($details[$imronUser->id]['representative'])) {
+                                                                    $repName = $details[$imronUser->id]['representative'];
+                                                                }
+                                                            @endphp
+
+                                                            @if($repName)
+                                                                <div class="ml-4 pl-1 text-muted small">
+                                                                    <i class="fe fe-corner-down-right mr-1"></i> Diwakili: <span class="font-weight-bold text-dark">{{ $repName }}</span>
+                                                                </div>
+                                                            @endif
+                                                        @endif
+                                                    </li>
                                                 @endforeach
                                             </ul>
                                         </div>
@@ -373,22 +526,26 @@
                 </div>
                 
                 @if($activity->dispo_note || $activity->dresscode)
-                 <div class="card shadow mb-4">
-                    <div class="card-header">
-                         <strong class="card-title"><span class="fe fe-align-left mr-2"></span>Catatan Tambahan</strong>
+                 <div class="card mb-4">
+                    <div class="card-header d-flex align-items-center">
+                         <div class="icon-shape bg-light text-primary rounded-circle mr-3">
+                            <i class="fe fe-align-left"></i>
+                        </div>
+                         <strong class="card-title">Catatan Tambahan</strong>
                     </div>
                     <div class="card-body">
                         @if($activity->dresscode)
                         <div class="mb-3">
                             <label class="text-muted small text-uppercase font-weight-bold">Dresscode</label>
-                            <p class="mb-0">{{ $activity->dresscode }}</p>
+                            <p class="mb-0 font-weight-bold text-dark">{{ $activity->dresscode }}</p>
                         </div>
+                        <hr>
                         @endif
                         
                         @if($activity->dispo_note)
                         <div>
                             <label class="text-muted small text-uppercase font-weight-bold">Keterangan</label>
-                            <div class="bg-light p-3 rounded markdown-content">
+                            <div class="bg-light p-3 rounded markdown-content border">
                                 {!! $activity->dispo_note !!}
                             </div>
                         </div>
@@ -397,10 +554,113 @@
                  </div>
                  @endif
 
-
-
             </div>
         </div>
     </div>
 </div>
+
+<!-- Summary Modal (Keep functionality) -->
+<div class="modal fade" id="summaryModal" tabindex="-1" role="dialog" aria-labelledby="summaryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="summaryModalLabel">Hasil Rapat Secara Singkat</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="{{ route('activities.update-summary', $activity->id) }}" method="POST" id="summaryForm">
+                @csrf
+                @method('PUT')
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Masukkan rangkuman hasil rapat:</label>
+                        <div id="summary-editor" style="height: 300px;">{!! $activity->summary_content !!}</div>
+                        <input type="hidden" name="summary_content" id="summary_content_input">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Photo Modal -->
+<div class="modal fade" id="photoModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content bg-transparent border-0 shadow-none">
+            <div class="modal-body p-0 text-center position-relative">
+                <button type="button" class="close text-white position-absolute" data-dismiss="modal" aria-label="Close" style="top: -30px; right: 0; opacity: 1; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <img src="" id="photoModalImage" class="img-fluid rounded shadow-lg" alt="Dokumentasi">
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
+
+@push('styles')
+<link rel="stylesheet" href="{{ asset('tinydash/css/quill.snow.css') }}">
+<style>
+    .uppercase-label {
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+    }
+    .form-label-premium {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #adb5bd;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    /* Fix Timeline Dot Alignment */
+    .timeline-disposition .timeline-item::before {
+        top: 4px !important; /* Push dot down to align with text center */
+    }
+
+    /* Remove excessive line above the first dot */
+    .timeline-disposition .timeline-item:first-child::after {
+        top: 4px !important;
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script src="{{ asset('tinydash/js/quill.min.js') }}"></script>
+<script>
+    // Initialize Quill for Summary
+    var summaryQuill = new Quill('#summary-editor', {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                ['bold', 'italic', 'underline'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                [{ 'header': [1, 2, 3, false] }],
+                ['clean']
+            ]
+        }
+    });
+
+    // Update hidden input on submit
+    $('#summaryForm').on('submit', function() {
+        $('#summary_content_input').val(summaryQuill.root.innerHTML);
+    });
+    
+    // Photo Modal Script
+    $('#photoModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var src = button.data('src');
+        var modal = $(this);
+        modal.find('#photoModalImage').attr('src', src);
+    });
+</script>
+@endpush

@@ -39,7 +39,7 @@ class DashboardController extends Controller
                                 ->get();
 
         foreach ($activities as $activity) {
-            $color = $activity->type == 'external' ? '#fd7e14' : '#007bff'; // Default: Orange vs Blue
+            $color = $activity->type == 'external' ? '#17a2b8' : '#004085'; // Light Blue (External) vs Dark Blue (Internal)
             
             $events[] = [
                 'id' => $activity->id,
@@ -47,14 +47,18 @@ class DashboardController extends Controller
                 'start' => \Carbon\Carbon::parse($activity->start_date->format('Y-m-d') . ' ' . $activity->start_time)->toIso8601String(),
                 'backgroundColor' => $color,
                 'borderColor' => $color,
+                'textColor' => '#ffffff',
                 // 'url' => route('activities.show', $activity->id), // Removed to prevent auto-navigation
                 'extendedProps' => [
                     'type' => $activity->type,
                     'location_type' => $activity->location_type,
-                    'location_detail' => $activity->location,
+                    'location' => $activity->location,
+                    'media_online' => $activity->media_online,
                     'meeting_link' => $activity->meeting_link,
+                    'meeting_id' => $activity->meeting_id,
+                    'passcode' => $activity->passcode,
                     'pic' => $activity->pic,
-                    'description' => $activity->dispo_note ? strip_tags($activity->dispo_note) : '-',
+                    'description' => $activity->dispo_note ?? '-',
                     'status' => $activity->status
                 ]
             ];

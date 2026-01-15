@@ -81,10 +81,16 @@
         <span>Admin</span>
       </p>
       <ul class="navbar-nav flex-fill w-100 mb-2">
-        <li class="nav-item w-100 {{ request()->routeIs('master-data.*') ? 'active' : '' }}">
+        <li class="nav-item w-100 {{ request()->routeIs('master-data.index') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('master-data.index') }}">
               <i class="fe fe-users fe-16"></i>
-              <span class="ml-3 item-text">Master Data</span>
+              <span class="ml-3 item-text">Master User</span>
+            </a>
+        </li>
+        <li class="nav-item w-100 {{ request()->routeIs('master-data.topics') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('master-data.topics') }}">
+              <i class="fe fe-tag fe-16"></i>
+              <span class="ml-3 item-text">Master Topik</span>
             </a>
         </li>
       </ul>

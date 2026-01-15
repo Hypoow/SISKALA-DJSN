@@ -12,9 +12,14 @@ class FollowUpManager extends Component
     public Activity $activity;
     
     // Form Properties
-    public $inputs = []; // Array to hold inputs for each suggested PIC: ['Komisi PME' => 'instruction...']
-    public $deadlines = []; // Array to hold deadlines: ['Komisi PME' => '2023-12-01']
+    public $topic;
+    public $existingTopic = null; // To lock topic
     
+    public $selectedPic = null;
+    public $instructionRows = [
+        ['text' => '', 'deadline' => '']
+    ];
+
     // Single Edit Properties
     public $editTopic;
     public $editInstruction;
@@ -27,79 +32,62 @@ class FollowUpManager extends Component
     public $showForm = false;
     public $editingId = null;
 
-    protected $rules = [
-        'inputs.*' => 'nullable|string',
-        'deadlines.*' => 'nullable|date',
-        'editInstruction' => 'required_if:isEditing,true|string',
-        'editPic' => 'required_if:isEditing,true|string',
-    ];
+
 
     public function mount(Activity $activity)
     {
         $this->activity = $activity;
-        $this->prepareInputs();
+        $this->checkExistingTopic();
     }
 
-    public function prepareInputs()
+    public function checkExistingTopic()
     {
-        $dispositions = $this->activity->disposition_to ?? [];
-        $foundCommissions = [];
-
-        foreach ($dispositions as $person) {
-            $commission = $this->getCommissionForPerson($person);
-            if ($commission) {
-                $foundCommissions[] = $commission;
-            } else {
-                // If the person/group itself is a key (e.g. Sekretariat DJSN if selected directly)
-                $foundCommissions[] = $person;
-            }
-        }
-
-        // Always include Sekretariat if 'Sekretariat DJSN' is in dispo or simply add it if appropriate?
-        // User request: "menyesuaikan yang di dispo".
-        // Also ensure we have unique keys
-        $uniqueCommissions = array_unique($foundCommissions);
-        
-        // Setup inputs
-        foreach($uniqueCommissions as $comm) {
-            // Check if valid commission key or just a name
-            $this->inputs[$comm] = ''; 
-            $this->deadlines[$comm] = null;
-        }
-
-        // Fallback: If no dispositions, maybe provide a generic blank?
-        if(empty($this->inputs)) {
-            $this->inputs['Tindak Lanjut Umum'] = '';
-            $this->deadlines['Tindak Lanjut Umum'] = null;
+        $first = $this->activity->followups()->first();
+        if ($first) {
+            $this->existingTopic = $first->topic;
+            $this->topic = $first->topic;
         }
     }
 
-    private function getCommissionForPerson($name)
+    public function addInstructionRow()
     {
-        foreach (Activity::COUNCIL_STRUCTURE as $commission => $members) {
-            // Check if name is the commission itself
-            if ($name === $commission) return $commission;
-            // Check if name is in members
-            if (in_array($name, $members)) return $commission;
-        }
-        
-        // If not found in Council Structure (Dewan), group into Sekretariat DJSN
-        // This handles explicit "Sekretariat DJSN" selection AND individual staff names
-        return 'Sekretariat DJSN'; 
+        $this->instructionRows[] = ['text' => '', 'deadline' => ''];
+    }
+
+    public function removeInstructionRow($index)
+    {
+        unset($this->instructionRows[$index]);
+        $this->instructionRows = array_values($this->instructionRows);
+    }
+
+    public function resetInputs()
+    {
+        $this->selectedPic = null;
+        $this->instructionRows = [
+            ['text' => '', 'deadline' => '']
+        ];
+        $this->checkExistingTopic();
     }
 
     public function save()
     {
+        $this->validate([
+            'topic' => 'required|string',
+            'selectedPic' => 'required|string',
+            'instructionRows.*.text' => 'required|string',
+        ]);
+
         $count = 0;
-        foreach ($this->inputs as $pic => $instruction) {
-            if (!empty($instruction)) {
+        foreach ($this->instructionRows as $row) {
+            if (!empty($row['text'])) {
                 ActivityFollowup::create([
                     'activity_id' => $this->activity->id,
-                    'topic' => null, // Optional in batch
-                    'instruction' => $instruction,
-                    'pic' => $pic,
-                    'deadline' => $this->deadlines[$pic] ?? null,
+                    'topic' => $this->topic, 
+                    'instruction' => $row['text'],
+                    'pic' => $this->selectedPic,
+                    'deadline' => !empty($row['deadline']) ? $row['deadline'] : null,
                     'status' => ActivityFollowup::STATUS_PENDING,
+                    'checklist' => null, 
                 ]);
                 $count++;
             }
@@ -110,17 +98,11 @@ class FollowUpManager extends Component
             $this->showForm = false;
             $this->dispatch('followup-saved');
         } else {
-            // Maybe show error or just close?
-             $this->addError('inputs', 'Setidaknya isi satu tindak lanjut.');
+             $this->addError('instructionRows', 'Setidaknya isi satu poin tindak lanjut.');
         }
     }
 
-    public function resetInputs()
-    {
-        $this->inputs = [];
-        $this->deadlines = [];
-        $this->prepareInputs(); // Reset to suggested
-    }
+
 
     public function edit($id)
     {
@@ -133,11 +115,20 @@ class FollowUpManager extends Component
         $this->editPic = $item->pic;
         $this->editDeadline = $item->deadline ? $item->deadline->format('Y-m-d') : null;
         $this->editStatus = $item->status;
+        
+        // Don't trigger select2 change immediately which might overwrite with null if not careful
+        // Use dispatch only if needed, logic in view handles init value
+        $this->dispatch('edit-mode-toggled', topicName: $this->editTopic);
     }
 
     public function update()
     {
-        $this->validate();
+        $this->validate([
+            'editTopic' => 'required|string',
+            'editPic' => 'required|string',
+            'editInstruction' => 'required|string',
+            'editDeadline' => 'nullable|date',
+        ]);
         
         $item = ActivityFollowup::findOrFail($this->editingId);
         $item->update([
@@ -167,7 +158,10 @@ class FollowUpManager extends Component
     public function render()
     {
         return view('livewire.follow-up-manager', [
-            'followups' => $this->activity->followups()->orderBy('created_at', 'desc')->get()
+            'followups' => $this->activity->followups()
+                ->orderByRaw('deadline IS NULL, deadline ASC')
+                ->orderBy('created_at', 'desc')
+                ->get()
         ]);
     }
 }
