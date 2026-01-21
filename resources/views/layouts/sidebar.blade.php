@@ -1,4 +1,4 @@
-<aside class="sidebar-left border-right shadow" id="leftSidebar" data-simplebar>
+<aside class="sidebar-left border-right shadow" id="leftSidebar">
     <a href="#" class="btn collapseSidebar toggle-btn d-lg-none text-white ml-2 mt-3" data-toggle="toggle">
       <i class="fe fe-x"><span class="sr-only"></span></i>
     </a>

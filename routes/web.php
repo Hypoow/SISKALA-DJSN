@@ -73,6 +73,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/topics', function () {
             return view('master-data.topics');
         })->name('topics');
+        Route::post('/reorder', [MasterDataController::class, 'reorder'])->name('reorder');
         Route::post('/', [MasterDataController::class, 'store'])->name('store');
         Route::put('/{user}', [MasterDataController::class, 'update'])->name('update');
         Route::delete('/{user}', [MasterDataController::class, 'destroy'])->name('destroy');

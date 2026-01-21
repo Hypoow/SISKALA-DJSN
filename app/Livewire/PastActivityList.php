@@ -497,22 +497,46 @@ class PastActivityList extends Component
         });
 
         // Fetch Dewan Users
-        $dewanUsers = \App\Models\User::where('role', 'Dewan')
+        $dewanUsersRaw = \App\Models\User::where('role', 'Dewan')
                      ->orderBy('order')
-                     ->get()
-                     ->groupBy('divisi');
-        
-        // Ensure Sekretariat DJSN is present if not in DB as 'Dewan' role but needed for attendance
-        // Checking if Imron Rosadi exists in the fetched users
+                     ->get();
+
+        // Ensure Sekretariat DJSN is present (Imron Rosadi) even if not role='Dewan'
         $imron = \App\Models\User::where('name', 'Imron Rosadi')->first();
-        if ($imron) {
-             // Add him to a special group if he's not already covered or merge him
-             // If his role is not 'Dewan', he won't be in $dewanUsers.
-             // Let's force add him to a 'Sekretariat DJSN' group for the view.
-             if (!$dewanUsers->has('Sekretariat DJSN')) {
-                 $dewanUsers->put('Sekretariat DJSN', collect([$imron]));
-             }
+        if ($imron && !$dewanUsersRaw->contains('id', $imron->id)) {
+            $dewanUsersRaw->push($imron);
         }
+
+        // Custom Grouping Logic
+        $dewanUsers = $dewanUsersRaw->groupBy(function ($user) {
+            $divisi = strtoupper($user->divisi);
+            $name = strtoupper($user->name);
+
+            if ($divisi == 'KETUA DJSN') {
+                return 'Ketua DJSN';
+            }
+            
+            if (str_contains($divisi, 'PME')) {
+                return 'Komisi PME';
+            }
+
+            if (str_contains($divisi, 'KOMJAKUM')) {
+                return 'Komisi Komjakum';
+            }
+
+            if (str_contains($divisi, 'SEKRETARI') || $name == 'IMRON ROSADI') {
+                return 'Sekretariat DJSN';
+            }
+
+            return 'Lainnya'; // Fallback
+        });
+
+        // Define specific order for groups
+        $groupOrder = ['Ketua DJSN', 'Komisi PME', 'Komisi Komjakum', 'Sekretariat DJSN'];
+        $dewanUsers = $dewanUsers->sortBy(function ($users, $key) use ($groupOrder) {
+            $index = array_search($key, $groupOrder);
+            return $index === false ? 999 : $index;
+        });
 
         return view('livewire.past-activity-list', [
             'groupedActivities' => $groupedActivities,

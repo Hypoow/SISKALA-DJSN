@@ -104,8 +104,8 @@ class GoogleCalendarService
         // Ideally we query Users to check roles based on names in disposition
         
         $dewanUsers = User::whereIn('name', $disposition)->where('role', 'Dewan')->get();
-        $sekretariatUsers = User::whereIn('name', $disposition)->whereIn('role', ['DJSN', 'Admin'])->get(); 
-        // Note: Admin might be Sekrtariat too. Assuming 'DJSN' is the role for staff.
+        // Sekretariat includes all roles that are NOT Dewan (DJSN, Tata Usaha, Persidangan, Bagian Umum, Admin)
+        $sekretariatUsers = User::whereIn('name', $disposition)->where('role', '!=', 'Dewan')->get();
         
         // Logic: 
         // If Dewan selected -> Create/Update Dewan Event

@@ -178,7 +178,11 @@
                              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Kegiatan</th>
                              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Status</th>
                              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Dokumen</th>
+                              @if(!auth()->check() || !auth()->user()->hasRole('Dewan'))
                              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Surat Tugas</th>
+                              @else
+                             <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Kehadiran</th>
+                              @endif
                              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Dokumentasi</th>
                              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Aksi</th>
                          </tr>
@@ -293,13 +297,15 @@
                                     <td class="align-middle text-center" style="min-width: 140px;">
                                         <button class="btn btn-sm btn-outline-light border text-dark shadow-sm px-3 py-2 text-left" wire:click="openAssignmentModal({{ $activity->id }})" wire:loading.attr="disabled" style="min-width: 140px;">
                                             <div class="d-flex align-items-center mb-1">
-                                                @if(!empty($activity->attendance_list))
+                                                 @if(!empty($activity->attendance_list))
                                                     <i class="fe fe-check-circle text-success mr-2"></i>
                                                 @else
                                                     <i class="fe fe-minus text-muted mr-2"></i>
                                                 @endif
                                                  <span class="small font-weight-bold">Kehadiran</span>
                                             </div>
+                                            
+                                            @if(!auth()->check() || !auth()->user()->hasRole('Dewan'))
                                             <div class="d-flex align-items-center">
                                                 @if($activity->assignment_letter_path)
                                                     <i class="fe fe-check-circle text-success mr-2"></i>
@@ -308,6 +314,7 @@
                                                 @endif
                                                  <span class="small font-weight-bold">Surat Tugas</span>
                                             </div>
+                                            @endif
                                         </button>
                                     </td>
                                     <td class="align-middle text-center" style="min-width: 140px;">
@@ -637,6 +644,7 @@
                                 <i class="fe fe-users mr-2"></i> Kehadiran
                             </a>
                         </li>
+                        @if(!auth()->check() || !auth()->user()->hasRole('Dewan'))
                         <li class="nav-item">
                             <a class="nav-link font-weight-bold {{ $activeTab == 'letter' ? 'active' : '' }}" 
                                wire:click="$set('activeTab', 'letter')"
@@ -644,6 +652,7 @@
                                 <i class="fe fe-file-text mr-2"></i>Surat Tugas
                             </a>
                         </li>
+                        @endif
                     </ul>
                     
                     <div class="tab-content" id="assignmentTabContent">
@@ -680,15 +689,28 @@
                                                     </div>
                                                     
                                                     {{-- Special Handling for Imron Rosadi Representative --}}
-                                                    @if($user->name === 'Imron Rosadi')
-                                                        <div class="mt-1 ml-4">
+                                                    @if($user->name === 'Imron Rosadi' || str_contains($user->name, 'Sekretaris DJSN'))
+                                                        @php
+                                                            $isInputPresent = in_array($user->name, $attendanceData);
+                                                            $repValue = $attendanceDetails[$user->id]['representative'] ?? '';
+                                                            $isAdmin = auth()->check() && auth()->user()->isAdmin();
+                                                            // Show if: (Admin AND Present) OR (Non-Admin AND Present AND Has Value)
+                                                            $showRepInput = ($isAdmin && $isInputPresent) || (!$isAdmin && $isInputPresent && !empty($repValue));
+                                                        @endphp
+                                                        @if($showRepInput)
+                                                        <div class="mt-1 ml-4 fade-in">
                                                             <div class="input-group input-group-sm shadow-sm rounded">
                                                                 <div class="input-group-prepend">
                                                                     <span class="input-group-text bg-light border-0"><small class="font-weight-bold">Diwakili:</small></span>
                                                                 </div>
-                                                                <input type="text" class="form-control border-0 bg-light" placeholder="Nama Perwakilan (jika tidak hadir)..." wire:model="attendanceDetails.{{ $user->id }}.representative">
+                                                                <input type="text" 
+                                                                    class="form-control border-0 bg-light" 
+                                                                    placeholder="{{ $isAdmin ? 'Nama Perwakilan (jika tidak hadir)...' : '' }}" 
+                                                                    wire:model="attendanceDetails.{{ $user->id }}.representative"
+                                                                    {{ !$isAdmin ? 'readonly' : '' }}>
                                                             </div>
                                                         </div>
+                                                        @endif
                                                     @endif
                                                 </div>
                                             @endforeach

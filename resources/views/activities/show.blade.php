@@ -6,49 +6,30 @@
 <div class="row justify-content-center">
     <div class="col-12 col-xl-11">
         
-        <!-- Sticky Action Header -->
-        <div class="row align-items-center mb-4 p-3 border-bottom sticky-action-header">
-            <div class="col">
-                <h2 class="h4 font-weight-bold mb-0 text-dark">
+        <!-- Sticky Action Header (Minimalist) -->
+        <div class="row align-items-center mb-4 p-2 border-bottom sticky-action-header bg-white shadow-sm" style="position: sticky; top: 70px; z-index: 99; transition: top 0.3s;">
+            <div class="col-6 col-md">
+                <h2 class="font-weight-bold mb-0 text-dark" style="font-size: clamp(1rem, 2vw, 1.25rem);">
                     Detail Kegiatan
                 </h2>
-                <div class="d-flex align-items-center mt-1">
-                    @if($activity->type == 'external')
-                        <span class="badge badge-pill badge-info px-3 py-2 mr-2 text-white">Kegiatan Eksternal</span>
-                    @else
-                        <span class="badge badge-pill badge-primary px-3 py-2 mr-2" style="background-color: #004085;">Kegiatan Internal</span>
-                    @endif
-                    
-                    @switch($activity->status)
-                        @case(0) <span class="badge badge-pill badge-success mr-2">On Schedule</span> @break
-                        @case(1) <span class="badge badge-pill badge-secondary mr-2">Reschedule</span> @break
-                        @case(2) <span class="badge badge-pill badge-warning mr-2">Belum ada Disposisi</span> @break
-                        @case(3) <span class="badge badge-pill badge-danger mr-2">Tidak Dilaksanakan</span> @break
-                    @endswitch
-
-                    <span class="text-muted small">
-                        Update terakhir: {{ $activity->updated_at->diffForHumans() }}
-                        @if($activity->lastEditor)
-                             oleh <span class="font-weight-bold">{{ $activity->lastEditor->name }}</span>
-                        @endif
-                    </span>
-                </div>
             </div>
-            <div class="col-auto">
-                @php
-                    $backUrl = url()->previous();
-                    if ($backUrl == url()->current() || empty($backUrl)) {
-                        $backUrl = route('activities.index');
-                    }
-                @endphp
-                <a href="{{ $backUrl }}" class="btn btn-outline-secondary rounded-pill px-4 mr-2">
-                    <span class="fe fe-arrow-left mr-1"></span> Kembali
-                </a>
-                @if(auth()->check() && auth()->user()->isAdmin())
-                    <a href="{{ route('activities.edit', $activity->id) }}" class="btn btn-primary rounded-pill px-4 shadow-sm">
-                        <span class="fe fe-edit mr-1"></span> Edit Kegiatan
+            <div class="col-6 col-md-auto text-right">
+                <div class="d-flex justify-content-end">
+                    @php
+                        $backUrl = url()->previous();
+                        if ($backUrl == url()->current() || empty($backUrl)) {
+                            $backUrl = route('activities.index');
+                        }
+                    @endphp
+                    <a href="{{ $backUrl }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 mr-2">
+                        <i class="fe fe-arrow-left mr-1"></i> <span class="d-none d-sm-inline">Kembali</span>
                     </a>
-                @endif
+                    @if(auth()->check() && auth()->user()->isAdmin())
+                        <a href="{{ route('activities.edit', $activity->id) }}" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm">
+                            <i class="fe fe-edit mr-1"></i> <span class="d-none d-sm-inline">Edit</span>
+                        </a>
+                    @endif
+                </div>
             </div>
         </div>
 
@@ -75,6 +56,34 @@
                         <strong class="card-title">Informasi Utama</strong>
                     </div>
                     <div class="card-body">
+                        <!-- Nomor Surat -->
+
+                        <!-- Status & Update Info (Moved from Header) -->
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label text-muted font-weight-bold">Status</label>
+                            <div class="col-sm-9 d-flex align-items-center flex-wrap">
+                                @if($activity->type == 'external')
+                                    <span class="badge badge-pill badge-info px-3 py-2 mr-2 mb-2 text-white">Kegiatan Eksternal</span>
+                                @else
+                                    <span class="badge badge-pill badge-primary px-3 py-2 mr-2 mb-2" style="background-color: #004085;">Kegiatan Internal</span>
+                                @endif
+                                
+                                @switch($activity->status)
+                                    @case(0) <span class="badge badge-pill badge-success mr-2 mb-2">On Schedule</span> @break
+                                    @case(1) <span class="badge badge-pill badge-secondary mr-2 mb-2">Reschedule</span> @break
+                                    @case(2) <span class="badge badge-pill badge-warning mr-2 mb-2">Belum ada Disposisi</span> @break
+                                    @case(3) <span class="badge badge-pill badge-danger mr-2 mb-2">Tidak Dilaksanakan</span> @break
+                                @endswitch
+
+                                <span class="text-muted small mb-2 d-inline-block">
+                                    <i class="fe fe-clock mr-1"></i>Updated {{ $activity->updated_at->diffForHumans() }}
+                                    @if($activity->lastEditor)
+                                         by <strong>{{ $activity->lastEditor->name }}</strong>
+                                    @endif
+                                </span>
+                            </div>
+                        </div>
+
                         <!-- Nomor Surat -->
                         <div class="form-group row">
                             <label class="col-sm-3 col-form-label text-muted font-weight-bold">Nomor Surat</label>
@@ -355,6 +364,7 @@
                             </div>
 
                             <!-- 4. Surat Tugas -->
+                            @if(!auth()->check() || !auth()->user()->hasRole('Dewan'))
                             <div class="list-group-item p-3">
                                  <div class="row align-items-center">
                                     <div class="col-auto">
@@ -377,6 +387,7 @@
                                     @endif
                                 </div>
                             </div>
+                            @endif
 
                             <!-- 5. Dokumentasi Foto -->
                             <div class="list-group-item p-3">
@@ -460,7 +471,55 @@
                             </div>
                          @endif
 
-                         @if($activity->disposition_to)
+                         @if(isset($groupedDisposition) && $groupedDisposition->isNotEmpty())
+                            <div class="timeline ml-3 timeline-disposition">
+                            @foreach($groupedDisposition as $groupName => $users)
+                                @php
+                                    // $users is a Collection of User objects
+                                    $sortedUsers = $users; // Already sorted in controller or by default? We rely on retrieval order.
+                                    
+                                    // In controller for `show`, sorting inside groups wasn't explicitly done, but retrieved by name?
+                                    // Actually we just care about grouping for now.
+                                    $attendanceList = $activity->attendance_list ?? [];
+                                @endphp
+                                <div class="pb-3 timeline-item item-primary">
+                                    <div class="pl-4">
+                                        <div class="mb-1 font-weight-bold text-dark">{{ $groupName }}</div>
+                                        <ul class="list-unstyled mb-0 text-muted small">
+                                            @foreach($users as $user)
+                                                @php
+                                                    $isPresent = in_array($user->name, $attendanceList);
+                                                @endphp
+                                                <li class="mb-1 d-flex flex-column">
+                                                    <div class="d-flex align-items-center">
+                                                        @if($isPresent)
+                                                            <span class="fe fe-check text-success mr-2 font-weight-bold"></span>
+                                                        @else
+                                                            <span class="mr-2 text-muted font-weight-bold" style="width: 14px; text-align: center;">-</span>
+                                                        @endif
+                                                        <span class="{{ $isPresent ? 'text-dark font-weight-bold' : '' }}">{{ $user->name }}</span>
+                                                    </div>
+                                                    {{-- Representative Display (Imron Rosadi logic) --}}
+                                                    @if($user->name === 'Imron Rosadi')
+                                                        @php
+                                                            $details = $activity->attendance_details ?? [];
+                                                            $repName = $details[$user->id]['representative'] ?? null;
+                                                        @endphp
+                                                        @if($repName)
+                                                            <div class="ml-4 pl-1 text-muted small">
+                                                                <i class="fe fe-corner-down-right mr-1"></i> Diwakili: <span class="font-weight-bold text-dark">{{ $repName }}</span>
+                                                            </div>
+                                                        @endif
+                                                    @endif
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                </div>
+                            @endforeach
+                            </div>
+                        @elseif($activity->disposition_to)
+                             {{-- Fallback for legacy views pending controller update or cache issues --}}
                             @php
                                 $councilStructure = \App\Models\Activity::COUNCIL_STRUCTURE;
                                 $selected = $activity->disposition_to;
@@ -490,13 +549,9 @@
                                                             @endif
                                                             <span class="{{ $isPresent ? 'text-dark font-weight-bold' : '' }}">{{ $member }}</span>
                                                         </div>
-                                                        {{-- Displahy Representative if applicable --}}
+                                                        {{-- Display Representative if applicable (Legacy string logic) --}}
                                                         @if($member === 'Imron Rosadi')
                                                             @php
-                                                                // Find user ID for Imron Rosadi to check details
-                                                                // Ideally we pass this map to view, but for now we look it up or rely on Attendance Data structure
-                                                                // Since attendance_details is keyed by user ID, we need to know the ID of Imron.
-                                                                // We can try to find him via Helper or view composer, but for quick fix:
                                                                 $imronUser = \App\Models\User::where('name', 'Imron Rosadi')->first();
                                                                 $details = $activity->attendance_details ?? [];
                                                                 $repName = null;
@@ -504,7 +559,7 @@
                                                                     $repName = $details[$imronUser->id]['representative'];
                                                                 }
                                                             @endphp
-
+    
                                                             @if($repName)
                                                                 <div class="ml-4 pl-1 text-muted small">
                                                                     <i class="fe fe-corner-down-right mr-1"></i> Diwakili: <span class="font-weight-bold text-dark">{{ $repName }}</span>
@@ -520,7 +575,7 @@
                             @endforeach
                             </div>
                         @else
-                            <p class="text-muted mb-0">-</p>
+                             <p class="text-muted mb-0">-</p>
                         @endif
                     </div>
                 </div>

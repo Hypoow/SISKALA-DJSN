@@ -59,7 +59,8 @@ class DashboardController extends Controller
                     'passcode' => $activity->passcode,
                     'pic' => $activity->pic,
                     'description' => $activity->dispo_note ?? '-',
-                    'status' => $activity->status
+                    'status' => $activity->status,
+                    'organizer_name' => $activity->organizer_name,
                 ]
             ];
         }

@@ -8,7 +8,7 @@
     <link rel="icon" href="{{ asset('assets/images/logo.svg') }}">
     <title>@yield('title', 'Schedulo DJSN')</title>
     <!-- Simple bar CSS -->
-    <link rel="stylesheet" href="{{ asset('tinydash/css/simplebar.css') }}">
+    <!-- Simple bar CSS removed -->
     <!-- Fonts CSS -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Icons CSS -->
@@ -26,6 +26,12 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @livewireStyles
     <style>
+        /* FIX: Prevent Layout Shift when Modal Opens */
+        body.modal-open {
+            overflow: auto !important;
+            padding-right: 0 !important;
+        }
+
         [x-cloak] { display: none !important; }
         
         /* Custom Badge Colors */
@@ -356,7 +362,7 @@
     <script src="{{ asset('tinydash/js/popper.min.js') }}"></script>
     <script src="{{ asset('tinydash/js/moment.min.js') }}"></script>
     <script src="{{ asset('tinydash/js/bootstrap.min.js') }}"></script>
-    <script src="{{ asset('tinydash/js/simplebar.min.js') }}"></script>
+    <!-- Simplebar JS removed -->
     <script src='{{ asset('tinydash/js/daterangepicker.js') }}'></script>
     <script src='{{ asset('tinydash/js/jquery.stickOnScroll.js') }}'></script>
     <script src="{{ asset('tinydash/js/tinycolor-min.js') }}"></script>
@@ -400,6 +406,26 @@
       });
     </script>
     @livewireScripts
+    <script>
+        // Fix Sidebar Responsiveness by ensuring correct class presence
+        $(document).ready(function() {
+            function checkWidth() {
+                var windowSize = $(window).width();
+                // 1200px is the standard xl breakpoint where sidebar behavior changes
+                if (windowSize < 1200) {
+                    $(".vertical").addClass("narrow");
+                } else {
+                    $(".vertical").removeClass("narrow");
+                }
+            }
+
+            // Execute on load
+            checkWidth();
+            
+            // Execute on resize
+            $(window).resize(checkWidth);
+        });
+    </script>
     @stack('scripts')
   </body>
 </html>

@@ -23,16 +23,61 @@ class MasterDataController extends Controller
 
     public function index()
     {
-        $users = User::orderByRaw("CASE 
+        $users = User::orderBy('order', 'asc') // Prioritize custom drag-and-drop order
+            ->orderByRaw("CASE 
             WHEN role = 'admin' THEN 1 
-            WHEN role = 'user' THEN 2 
-            WHEN role = 'Dewan' THEN 3 
-            ELSE 4 END")
-            ->orderBy('order', 'asc') // Sort by the assigned order
-            ->orderBy('name', 'asc')  // Fallback to name if order is null
+            WHEN role = 'DJSN' THEN 2
+            WHEN role = 'Tata Usaha' THEN 3
+            WHEN role = 'Persidangan' THEN 4
+            WHEN role = 'Bagian Umum' THEN 5
+            WHEN role = 'Dewan' THEN 6
+            ELSE 7 END")
+            ->orderBy('name', 'asc')
             ->get();
+
+        // Grouping Logic (Identical to ActivityController + Admin/User fallback)
+        $groupedUsers = $users->groupBy(function($user) {
+             if ($user->role === 'Dewan') {
+                $divisi = strtolower($user->divisi ?? '');
+                if (str_contains($divisi, 'ketua djsn')) return 'Ketua DJSN';
+                if (str_contains($divisi, 'pme') || str_contains($divisi, 'monitoring')) return 'Komisi PME';
+                if (str_contains($divisi, 'komjakum') || str_contains($divisi, 'kebijakan')) return 'Komisi Komjakum';
+                
+                // Dynamic Grouping for other Commissions
+                if (str_contains($divisi, 'komisi')) {
+                    // Return the proper case name of the division (e.g., "Komisi X")
+                    return ucwords($user->divisi);
+                }
+                
+                return 'Anggota Dewan Lainnya';
+            }
+            if ($user->role === 'admin') return 'Admin Utama';
+            if ($user->role === 'DJSN') return 'Sekretariat DJSN'; // Generic Label for specific role
             
-        return view('master-data.index', compact('users'));
+            // Fallback for others by Role Name
+            return $user->role;
+        });
+
+        // Define Priority Order for Groups
+        $groupPriority = [
+            'Admin Utama' => 0,
+            'Ketua DJSN' => 1,
+            'Komisi PME' => 2,
+            'Komisi Komjakum' => 3,
+            'Anggota Dewan Lainnya' => 4,
+            'Sekretariat DJSN' => 5, // Access Level 1
+            'Tata Usaha' => 6,
+            'Persidangan' => 7,
+            'Bagian Umum' => 8,
+            'User' => 9
+        ];
+
+        // Sort the Groups
+        $groupedUsers = $groupedUsers->sortBy(function($items, $key) use ($groupPriority) {
+            return $groupPriority[$key] ?? 99;
+        });
+            
+        return view('master-data.index', compact('groupedUsers'));
     }
 
     public function store(Request $request)
@@ -87,10 +132,42 @@ class MasterDataController extends Controller
         return redirect()->route('master-data.index')->with('success', 'Akun berhasil diperbarui.');
     }
 
+    public function reorder(Request $request) {
+        $request->validate([
+            'order' => 'required|array',
+            'order.*' => 'exists:users,id',
+        ]);
+
+        $ids = $request->order;
+        
+        // 1. Get current "order" values of these specific users
+        // We want to preserve the set of values, just shuffle who has which value.
+        // This ensures distinct groups don't clash or reset to 1.
+        $currentOrders = User::whereIn('id', $ids)
+                             ->pluck('order')
+                             ->sort() // Sort values ascending (10, 20, 30)
+                             ->values(); // Reset keys
+
+        // 2. Iterate the NEW order of IDs, and assign the SORTED values
+        foreach ($ids as $index => $id) {
+            // Assign lowest available order value to the first person in the new list, etc.
+            if (isset($currentOrders[$index])) {
+                User::where('id', $id)->update(['order' => $currentOrders[$index]]);
+            }
+        }
+
+        return response()->json(['success' => true]);
+    }
+
     public function destroy(User $user)
     {
         if ($user->id === Auth::id()) {
             return redirect()->route('master-data.index')->with('error', 'Anda tidak dapat menghapus akun sendiri.');
+        }
+
+        // Prevent deleting Admin Utama
+        if ($user->role === 'admin' || $user->id === 1) {
+            return redirect()->route('master-data.index')->with('error', 'Akun Admin Utama tidak dapat dihapus.');
         }
 
         $user->delete();

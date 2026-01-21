@@ -157,9 +157,8 @@
                          {{-- Legend --}}
                         <div class="mr-md-4 mb-3 mb-md-0 d-flex">
                              @if(Auth::user()->role === 'Dewan')
-                                <div class="badge badge-pill badge-primary-light text-primary border border-primary mr-2 px-3 py-2">Hadir (Internal)</div>
-                                <div class="badge badge-pill badge-warning-light text-warning-dark border border-warning mr-2 px-3 py-2">Hadir (Eksternal)</div>
-                                <div class="badge badge-pill badge-secondary-light text-secondary border border-secondary px-3 py-2">Opsional</div>
+                                <div class="badge badge-pill badge-primary mr-2 px-3 py-2" style="background-color: #004085;">Internal</div>
+                                <div class="badge badge-pill badge-info text-white px-3 py-2">Eksternal</div>
                              @else
                                 <div class="badge badge-pill badge-primary mr-2 px-3 py-2" style="background-color: #004085;">Internal</div>
                                 <div class="badge badge-pill badge-info text-white px-3 py-2">Eksternal</div>
@@ -316,9 +315,14 @@ document.addEventListener('DOMContentLoaded', function() {
         var props = info.event.extendedProps;
         
         // Type Badge
-        var typeBadge = props.type === 'external' 
-            ? '<span class="badge badge-pill badge-info text-white px-3 py-2">Eksternal</span>' 
-            : '<span class="badge badge-pill badge-primary px-3 py-2" style="background-color: #004085;">Internal</span>';
+        // Type Badge
+        var typeBadge = '';
+        if (props.type === 'external') {
+            var label = props.organizer_name ? props.organizer_name : 'Eksternal';
+            typeBadge = '<span class="badge badge-pill badge-info text-white px-3 py-2">' + label + '</span>';
+        } else {
+             typeBadge = '<span class="badge badge-pill badge-primary px-3 py-2" style="background-color: #004085;">Internal</span>';
+        }
         $('#eventDetailType').html(typeBadge);
 
         // Location Logic

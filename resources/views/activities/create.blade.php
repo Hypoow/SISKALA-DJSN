@@ -134,10 +134,15 @@
         border: 1px solid #e9ecef !important;
         background-color: #ffffff !important;
         min-height: 50px !important;
+        height: auto !important; /* Allow growth */
         border-radius: 12px !important;
-        padding: 8px 12px !important;
+        padding: 6px 15px !important; /* Adjusted padding */
         box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         transition: all 0.3s ease;
+        display: flex !important;
+        align-items: center !important;
+        flex-wrap: wrap; /* Allow wrapping */
+        line-height: 1.5 !important;
     }
     
     .narasumber-container .select2-container--bootstrap4.select2-container--focus .select2-selection--multiple {
@@ -236,43 +241,35 @@
             @method('PUT')
         @endif
 
-        <!-- 1. Type Selection -->
+        <!-- 1. Type Selection (Modern Toggle) -->
         <div class="row justify-content-center mb-5">
-            <div class="col-md-5 mb-3 mb-md-0">
-                <input type="radio" name="activity_type" id="type_internal" value="internal" class="type-card-input" 
-                    onchange="updateFormType()" {{ (old('activity_type', $activity->type ?? '') == 'internal') ? 'checked' : '' }}
-                    {{ isset($activity) ? 'disabled' : '' }}>
-                <label for="type_internal" class="type-card-label h-100">
-                    <div class="type-card internal d-flex flex-column justify-content-center align-items-center">
-                        <i class="fe fe-briefcase type-card-icon"></i>
-                        <h5 class="type-card-title">Kegiatan Internal</h5>
-                        <p class="type-card-desc mb-0">Rapat, Koordinasi, dan acara internal DJSN.</p>
-                    </div>
-                </label>
+            <div class="col-md-6 text-center">
+                <div class="btn-group btn-group-toggle custom-toggle-pill shadow-sm p-1 bg-white rounded-pill" data-toggle="buttons" style="min-width: 300px;">
+                    <label class="btn btn-white rounded-pill border-0 px-4 py-3 m-0 transition-all flex-fill w-50" id="label_internal">
+                        <input type="radio" name="activity_type" id="type_internal" value="internal" autocomplete="off" onchange="updateFormType()" {{ (old('activity_type', $activity->type ?? '') == 'internal') ? 'checked' : '' }} {{ isset($activity) ? 'disabled' : '' }}>
+                        <i class="fe fe-briefcase mr-2"></i> Internal
+                    </label>
+                    <label class="btn btn-white rounded-pill border-0 px-4 py-3 m-0 transition-all flex-fill w-50" id="label_external">
+                        <input type="radio" name="activity_type" id="type_external" value="external" autocomplete="off" onchange="updateFormType()" {{ (old('activity_type', $activity->type ?? '') == 'external') ? 'checked' : '' }} {{ isset($activity) ? 'disabled' : '' }}>
+                        <i class="fe fe-mail mr-2"></i> Eksternal
+                    </label>
+                </div>
+                 <!-- Note -->
+                 <p class="text-muted small mt-3 slide-up-hint">Pilih jenis kegiatan untuk menampilkan formulir.</p>
+
+                <!-- Hidden inputs -->
+                @if(isset($activity))
+                     <input type="hidden" name="activity_type" value="{{ $activity->type }}">
+                @endif
+                <select id="activity_type" class="d-none" name="activity_type_shim" disabled>
+                     <option value="internal">Internal</option>
+                     <option value="external">External</option>
+                </select>
             </div>
-            <div class="col-md-5">
-                <input type="radio" name="activity_type" id="type_external" value="external" class="type-card-input" 
-                    onchange="updateFormType()" {{ (old('activity_type', $activity->type ?? '') == 'external') ? 'checked' : '' }}
-                    {{ isset($activity) ? 'disabled' : '' }}>
-                <label for="type_external" class="type-card-label h-100">
-                    <div class="type-card external d-flex flex-column justify-content-center align-items-center">
-                        <i class="fe fe-mail type-card-icon"></i>
-                        <h5 class="type-card-title">Kegiatan Eksternal</h5>
-                        <p class="type-card-desc mb-0">Undangan dari Kementerian, Lembaga, atau Mitra.</p>
-                    </div>
-                </label>
-            </div>
-            
-            <!-- Hidden input to maintain value if disabled (edit mode) -->
-            @if(isset($activity))
-                <input type="hidden" name="activity_type" id="activity_type_hidden" value="{{ $activity->type }}">
-            @endif
-            <!-- Hidden Select for JS Compatibility (updateFormType logic looks for Select value, we will shim this) -->
-            <select id="activity_type" class="d-none" name="activity_type_shim" disabled>
-                 <option value="internal">Internal</option>
-                 <option value="external">External</option>
-            </select>
         </div>
+
+        <!-- Main Form Container (Initially Hidden) -->
+        <div id="main_form_container" style="display: none;">
 
         <div class="row justify-content-center">
             <div class="col-lg-10">
@@ -316,18 +313,18 @@
                         
                         <div class="form-group mb-4">
                             <label for="name" class="font-weight-bold">Nama Kegiatan / Perihal <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control form-control-lg" id="name" name="name" value="{{ old('name', $activity->name ?? '') }}" placeholder="Contoh: Rapat Pleno Pembahasan Anggaran..." required>
+                            <input type="text" class="form-control form-control-lg" id="name" name="name" value="{{ old('name', $activity->name ?? '') }}" placeholder="Masukkan Nama Kegiatan" required>
                         </div>
                         
                         <div class="form-row">
                             <div class="col-md-6 mb-3">
                                 <label for="letter_number" class="font-weight-bold">Nomor Surat</label>
-                                <input type="text" class="form-control" id="letter_number" name="letter_number" value="{{ old('letter_number', $activity->letter_number ?? '') }}" placeholder="Masukkan Nomor Surat (Jika ada)">
+                                <input type="text" class="form-control" id="letter_number" name="letter_number" value="{{ old('letter_number', $activity->letter_number ?? '') }}" placeholder="Masukkan Nomor Surat">
                             </div>
                             <!-- Organizer (External Only) -->
                             <div class="col-md-6 mb-3" id="organizer_wrapper" style="display: none;">
                                 <label for="organizer_name" class="font-weight-bold">Instansi Penyelenggara</label>
-                                <input type="text" class="form-control bg-white" id="organizer_name" name="organizer_name" value="{{ old('organizer_name', $activity->organizer_name ?? '') }}" placeholder="Contoh: Kementerian Kesehatan">
+                                <input type="text" class="form-control bg-white" id="organizer_name" name="organizer_name" value="{{ old('organizer_name', $activity->organizer_name ?? '') }}" placeholder="Masukkan Nama Instansi">
                             </div>
                         </div>
                     </div>
@@ -375,9 +372,9 @@
                              <div class="col-md-4 mb-3">
                                 <label for="location_type" class="font-weight-bold">Tipe Lokasi <span class="text-danger">*</span></label>
                                 <select class="form-control select2" id="location_type" name="location_type" onchange="updateLocationInput()" required>
-                                    <option value="offline" {{ (old('location_type', $activity->location_type ?? '') == 'offline') ? 'selected' : '' }}>Offline (Tatap Muka)</option>
-                                    <option value="online" {{ (old('location_type', $activity->location_type ?? '') == 'online') ? 'selected' : '' }}>Online (Dalam Jaringan)</option>
-                                    <option value="hybrid" {{ (old('location_type', $activity->location_type ?? '') == 'hybrid') ? 'selected' : '' }}>Hybrid (Kombinasi)</option>
+                                    <option value="offline" {{ (old('location_type', $activity->location_type ?? '') == 'offline') ? 'selected' : '' }}>Offline</option>
+                                    <option value="online" {{ (old('location_type', $activity->location_type ?? '') == 'online') ? 'selected' : '' }}>Online</option>
+                                    <option value="hybrid" {{ (old('location_type', $activity->location_type ?? '') == 'hybrid') ? 'selected' : '' }}>Hybrid</option>
                                 </select>
                              </div>
                              
@@ -385,7 +382,7 @@
                                  <!-- Location Input for Offline -->
                                  <div class="form-group mb-3" id="location_input_group">
                                     <label for="location" class="font-weight-bold">Nama Lokasi / Gedung</label>
-                                    <input type="text" class="form-control" id="location" name="location" value="{{ old('location', $activity->location ?? '') }}" placeholder="Contoh: Ruang Rapat Utama DJSN / Hotel Mulia">
+                                    <textarea class="form-control" id="location" name="location" rows="3" placeholder="Masukkan Nama Lokasi">{{ old('location', $activity->location ?? '') }}</textarea>
                                 </div>
 
                                 <!-- Online Inputs -->
@@ -460,6 +457,7 @@
 
                             <!-- External Input -->
                             <div id="pic_external_wrapper" style="display: none;">
+                                <label class="font-weight-bold">Nama PIC Eksternal</label>
                                 <input type="text" class="form-control" id="pic_external" name="pic_external" value="{{ (isset($activity) && $activity->type == 'external') ? ($activity->pic[0] ?? '') : '' }}" placeholder="Masukkan Nama PIC Eksternal">
                             </div>
 
@@ -531,9 +529,7 @@
                                                              <input type="checkbox" class="custom-control-input dewan-checkbox group-{{ $groupIndex }}" id="dewan_{{ $member->id }}" name="disposition_to[]" value="{{ $member->name }}" data-group-name="{{ $groupName }}" {{ in_array($member->name, $selectedDewan) ? 'checked' : '' }}>
                                                              <label class="custom-control-label" for="dewan_{{ $member->id }}">
                                                                  {{ $member->name }}
-                                                                 @if($groupName === 'Sekretariat DJSN')
-                                                                     <br><small class="text-muted">{{ $member->divisi }}</small>
-                                                                 @endif
+                                                                 <br><small class="text-muted">{{ $member->divisi }}</small>
                                                              </label>
                                                          </div>
                                                      </div>
@@ -573,6 +569,7 @@
 
             </div> <!-- col-lg-10 -->
         </div> <!-- row -->
+        </div> <!-- End #main_form_container -->
     </form>
 </div>
 
@@ -671,6 +668,21 @@
         const selectedRadio = document.querySelector('input[name="activity_type"]:checked');
         const type = selectedRadio ? selectedRadio.value : '';
         
+        // Update Toggle Styling
+        if(type === 'internal') {
+            $('#label_internal').addClass('active bg-primary text-white').removeClass('bg-white text-dark');
+            $('#label_external').removeClass('active bg-primary text-white').addClass('bg-white text-dark');
+            $('.slide-up-hint').hide();
+            $('#main_form_container').fadeIn();
+        } else if (type === 'external') {
+            $('#label_external').addClass('active bg-warning text-white').removeClass('bg-white text-dark');
+            $('#label_internal').removeClass('active bg-warning text-white').addClass('bg-white text-dark');
+            $('.slide-up-hint').hide();
+            $('#main_form_container').fadeIn();
+        } else {
+             $('#main_form_container').hide();
+        }
+
         // Shim for shim select just in case
         if(type) $('#activity_type').val(type);
 
@@ -708,7 +720,7 @@
             if(attachmentGroup) attachmentGroup.style.display = 'block';
             
             // UI Updates for External (No Smart Assist)
-            $('#smart_assist_title').html('<i class="fe fe-paperclip mr-2 text-secondary"></i>Upload Surat Undangan');
+            $('#smart_assist_title').html('<i class="fe fe-paperclip mr-2 text-warning"></i>Upload Surat Undangan');
             $('#smart_assist_desc').text('Upload surat undangan (PDF/Gambar) sebagai lampiran.');
             $('#ocr_loading').hide(); // Ensure loading is hidden
 

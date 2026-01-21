@@ -119,10 +119,15 @@
         border: 1px solid #e9ecef !important;
         background-color: #ffffff !important;
         min-height: 50px !important;
+        height: auto !important; /* Allow growth */
         border-radius: 12px !important;
-        padding: 8px 12px !important;
+        padding: 6px 15px !important; /* Adjusted padding */
         box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         transition: all 0.3s ease;
+        display: flex !important;
+        align-items: center !important;
+        flex-wrap: wrap; /* Allow wrapping */
+        line-height: 1.5 !important;
     }
     
     .narasumber-container .select2-container--bootstrap4.select2-container--focus .select2-selection--multiple {
@@ -212,33 +217,22 @@
             @method('PUT')
             <input type="hidden" name="activity_type" value="{{ $activity->type }}">
 
-            <!-- Sticky Header for Actions -->
-            <div class="row align-items-center mb-4 p-3 border-bottom sticky-action-header">
-                <div class="col">
-                    <h2 class="h4 font-weight-bold mb-0 text-dark">
+            <!-- Sticky Action Header (Minimalist) -->
+            <div class="row align-items-center mb-4 p-2 border-bottom sticky-action-header bg-white shadow-sm" style="position: sticky; top: 70px; z-index: 99; transition: top 0.3s;">
+                <div class="col-6 col-md">
+                    <h2 class="font-weight-bold mb-0 text-dark" style="font-size: clamp(1rem, 2vw, 1.25rem);">
                         Edit Kegiatan
                     </h2>
-                    <div class="d-flex align-items-center mt-1">
-                        @if($activity->type == 'external')
-                            <span class="badge badge-pill badge-info px-3 py-2 mr-2 text-white">Kegiatan Eksternal</span>
-                        @else
-                            <span class="badge badge-pill badge-primary px-3 py-2 mr-2" style="background-color: #004085;">Kegiatan Internal</span>
-                        @endif
-                         <span class="text-muted small">
-                             Update terakhir: {{ $activity->updated_at->diffForHumans() }}
-                             @if($activity->lastEditor)
-                                 oleh <span class="font-weight-bold">{{ $activity->lastEditor->name }}</span>
-                             @endif
-                         </span>
-                    </div>
                 </div>
-                <div class="col-auto">
-                    <a href="{{ route('activities.show', $activity->id) }}" class="btn btn-outline-secondary rounded-pill px-4 mr-2">
-                        <span class="fe fe-x mr-1"></span> Batal
-                    </a>
-                    <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">
-                        <span class="fe fe-save mr-1"></span> Simpan Perubahan
-                    </button>
+                <div class="col-6 col-md-auto text-right">
+                    <div class="d-flex justify-content-end">
+                        <a href="{{ route('activities.show', $activity->id) }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 mr-2">
+                            <i class="fe fe-x mr-1"></i> <span class="d-none d-sm-inline">Batal</span>
+                        </a>
+                        <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm">
+                            <i class="fe fe-save mr-1"></i> <span class="d-none d-sm-inline">Simpan</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -319,7 +313,7 @@
                                     
                                     <!-- Offline Input -->
                                     <div id="location_input_group" class="mb-2">
-                                        <input type="text" class="form-control" name="location" value="{{ old('location', $activity->location) }}" placeholder="Nama Lokasi / Gedung">
+                                        <textarea class="form-control" name="location" rows="3" placeholder="Nama Lokasi / Gedung">{{ old('location', $activity->location) }}</textarea>
                                     </div>
 
                                     <!-- Online Inputs -->
@@ -335,10 +329,10 @@
                                             <input type="text" class="form-control mb-2" name="meeting_link" value="{{ old('meeting_link', $activity->meeting_link) }}" placeholder="Link Meeting">
                                             <div class="form-row">
                                                 <div class="col">
-                                                    <input type="text" class="form-control" name="meeting_id" value="{{ old('meeting_id', $activity->meeting_id) }}" placeholder="Meeting ID">
+                                                    <input type="text" class="form-control mb-2" name="meeting_id" value="{{ old('meeting_id', $activity->meeting_id) }}" placeholder="Meeting ID">
                                                 </div>
                                                 <div class="col">
-                                                    <input type="text" class="form-control" name="passcode" value="{{ old('passcode', $activity->passcode) }}" placeholder="Passcode">
+                                                    <input type="text" class="form-control mb-2" name="passcode" value="{{ old('passcode', $activity->passcode) }}" placeholder="Passcode">
                                                 </div>
                                             </div>
                                         </div>
@@ -654,11 +648,12 @@
                                                      @php 
                                                          $selectedDewan = (isset($activity) && is_array($activity->disposition_to)) ? $activity->disposition_to : [];
                                                      @endphp
-                                                     <div class="col-12">
+                                                     <div class="col-md-6">
                                                          <div class="custom-control custom-checkbox mb-2">
                                                              <input type="checkbox" class="custom-control-input dewan-checkbox group-{{ $groupIndex }}" id="dewan_{{ $member->id }}" name="disposition_to[]" value="{{ $member->name }}" data-group-name="{{ $groupName }}" {{ in_array($member->name, $selectedDewan) ? 'checked' : '' }}>
-                                                             <label class="custom-control-label text-dark" for="dewan_{{ $member->id }}">
-                                                                 {{ $member->name }}
+                                                             <label class="custom-control-label" for="dewan_{{ $member->id }}">
+                                                                 <span class="d-block font-weight-bold text-dark">{{ $member->name }}</span>
+                                                                 <span class="d-block small text-muted lh-120">{{ $member->divisi }}</span>
                                                              </label>
                                                          </div>
                                                      </div>

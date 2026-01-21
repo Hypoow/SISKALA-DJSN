@@ -32,15 +32,62 @@
                             <div>
                                 <h4 class="font-weight-bold mb-1">{{ auth()->user()->name }}</h4>
                                 <div class="mb-1">
-                                    @if(auth()->user()->role === 'admin')
-                                        <span class="badge badge-role-admin px-3 py-2 rounded-pill">Admin</span>
-                                    @elseif(auth()->user()->role === 'Dewan')
-                                        <span class="badge badge-role-dewan px-3 py-2 rounded-pill">Dewan</span>
-                                    @elseif(auth()->user()->role === 'DJSN')
-                                        <span class="badge badge-role-djsn px-3 py-2 rounded-pill">DJSN</span>
-                                    @else
-                                        <span class="badge badge-role-user px-3 py-2 rounded-pill">User</span>
-                                    @endif
+                                    @php
+                                        $badgeClass = 'bg-secondary';
+                                        $textClass = 'text-dark';
+                                        $icon = 'fe-user';
+                                        $roleLabel = 'User';
+                                        
+                                        $userRole = auth()->user()->role;
+                                        
+                                        switch($userRole) {
+                                            case 'admin':
+                                                $badgeClass = 'bg-primary-soft'; 
+                                                $textClass = 'text-primary';
+                                                $icon = 'fe-shield';
+                                                $roleLabel = 'Admin';
+                                                break;
+                                            case 'DJSN':
+                                                $badgeClass = 'bg-success-soft';
+                                                $textClass = 'text-success';
+                                                $icon = 'fe-check-square';
+                                                $roleLabel = 'Sekretariat DJSN';
+                                                break;
+                                            case 'Tata Usaha':
+                                                $badgeClass = 'bg-info-soft'; 
+                                                $textClass = 'text-info';
+                                                $icon = 'fe-file-text';
+                                                $roleLabel = 'Tata Usaha';
+                                                break;
+                                            case 'Persidangan':
+                                                $badgeClass = 'bg-warning-soft';
+                                                $textClass = 'text-warning';
+                                                $icon = 'fe-users';
+                                                $roleLabel = 'Persidangan';
+                                                break;
+                                            case 'Bagian Umum':
+                                                $badgeClass = 'bg-danger-soft';
+                                                $textClass = 'text-danger';
+                                                $icon = 'fe-folder';
+                                                $roleLabel = 'Bagian Umum';
+                                                break;
+                                            case 'User':
+                                                $badgeClass = 'bg-secondary';
+                                                $textClass = 'text-dark';
+                                                $icon = 'fe-user';
+                                                $roleLabel = 'User';
+                                                break;
+                                            case 'Dewan':
+                                                $badgeClass = 'bg-dark text-white';
+                                                $textClass = 'text-white';
+                                                $icon = 'fe-star';
+                                                $roleLabel = 'Dewan';
+                                                break;
+                                        }
+                                    @endphp
+                                    <span class="badge badge-pill {{ $badgeClass }} {{ $textClass }} px-3 py-2 rounded-pill shadow-sm d-inline-flex align-items-center font-weight-bold small text-uppercase" style="font-size: 11px; letter-spacing: 0.5px;">
+                                        <i class="fe {{ $icon }} mr-2"></i> {{ $roleLabel }}
+                                    </span>
                                 </div>
                                 <small class="text-muted">{{ auth()->user()->email }}</small>
                             </div>
@@ -167,6 +214,13 @@
     .toggle-password {
         cursor: pointer;
     }
+    
+    /* Soft Backgrounds for Role Badges */
+    .bg-primary-soft { background-color: rgba(94, 114, 228, 0.15) !important; }
+    .bg-success-soft { background-color: rgba(45, 206, 137, 0.15) !important; }
+    .bg-info-soft { background-color: rgba(17, 205, 239, 0.15) !important; }
+    .bg-warning-soft { background-color: rgba(251, 99, 64, 0.15) !important; }
+    .bg-danger-soft { background-color: rgba(245, 54, 92, 0.15) !important; }
 </style>
 
 <script>

@@ -2,14 +2,25 @@
     <div class="card-header d-flex justify-content-between align-items-center">
         <strong class="card-title mb-0"><span class="fe fe-check-square mr-2"></span>Tindak Lanjut & Arahan</strong>
         @if(!$isEditing)
-        <button type="button" wire:click="$toggle('showForm')" class="btn btn-sm btn-outline-primary">
-            <i class="fe fe-plus mr-1"></i> Tambah Item
+        <button type="button" wire:click="$toggle('showForm')" class="btn btn-sm btn-outline-primary" wire:loading.attr="disabled" wire:target="$toggle('showForm')">
+            <span wire:loading.remove wire:target="$toggle('showForm')"><i class="fe fe-plus mr-1"></i> Tambah Item</span>
+            <span wire:loading wire:target="$toggle('showForm')"><span class="spinner-border spinner-border-sm mr-1" role="status" aria-hidden="true"></span> Memuat...</span>
         </button>
         @endif
     </div>
     <div class="card-body">
 
     <!-- Input Form (Visible if Adding or Editing) -->
+    <!-- Loading State for Form Toggle -->
+    <div wire:loading wire:target="showForm" class="w-100 mb-4">
+        <div class="card shadow-sm border-0 rounded-lg p-4 text-center">
+            <div class="spinner-border text-primary mb-2" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <p class="text-muted small mb-0">Memuat formulir...</p>
+        </div>
+    </div>
+
     @if($showForm || $isEditing)
     <div class="card shadow-lg mb-4 border-0 rounded-lg overflow-hidden fade-in" style="background: #ffffff;">
         <div class="card-header bg-white border-bottom-0 p-4 pb-0">
@@ -94,7 +105,10 @@
 
                     <div class="d-flex justify-content-end pt-3 mt-3 border-top">
                         <button type="button" wire:click="cancelEdit" class="btn btn-link text-muted mr-3">Batal</button>
-                        <button type="submit" class="btn btn-primary px-4 shadow-sm"><i class="fe fe-save mr-2"></i> Simpan</button>
+                        <button type="submit" class="btn btn-primary px-4 shadow-sm" wire:loading.attr="disabled" wire:target="update">
+                            <span wire:loading.remove wire:target="update"><i class="fe fe-save mr-2"></i> Simpan</span>
+                            <span wire:loading wire:target="update"><span class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>Menyimpan...</span>
+                        </button>
                     </div>
                 </form>
             @else
@@ -211,8 +225,9 @@
 
                     <div class="d-flex justify-content-end pt-3 mt-3 border-top">
                             <button type="button" wire:click="cancelEdit" class="btn btn-link text-muted mr-3">Batal</button>
-                            <button type="submit" class="btn btn-primary px-4 shadow-sm">
-                                <i class="fe fe-save mr-2"></i> Simpan
+                            <button type="submit" class="btn btn-primary px-4 shadow-sm" wire:loading.attr="disabled" wire:target="save">
+                                <span wire:loading.remove wire:target="save"><i class="fe fe-save mr-2"></i> Simpan</span>
+                                <span wire:loading wire:target="save"><span class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>Menyimpan...</span>
                             </button>
                     </div>
                 </form>
@@ -326,8 +341,9 @@
                         <td colspan="5" class="text-center py-5">
                             <i class="fe fe-clipboard text-muted display-4 mb-3 d-block" style="opacity: 0.5;"></i>
                             <h6 class="text-muted font-weight-bold">Belum ada tindak lanjut</h6>
-                            <button type="button" wire:click="$toggle('showForm')" class="btn btn-primary btn-sm mt-2">
-                                <i class="fe fe-plus mr-1"></i> Tambah Baru
+                            <button type="button" wire:click="$toggle('showForm')" class="btn btn-primary btn-sm mt-2" wire:loading.attr="disabled" wire:target="$toggle('showForm')">
+                                <span wire:loading.remove wire:target="$toggle('showForm')"><i class="fe fe-plus mr-1"></i> Tambah Baru</span>
+                                <span wire:loading wire:target="$toggle('showForm')"><span class="spinner-border spinner-border-sm mr-1" role="status" aria-hidden="true"></span> Memuat...</span>
                             </button>
                         </td>
                     </tr>

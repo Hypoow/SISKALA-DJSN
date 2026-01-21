@@ -13,10 +13,13 @@ class User extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable;
 
     const ROLES = [
-        'admin',
-        'user',
-        'Dewan',
-        'DJSN'
+        'admin', // Level 0 - Admin Utama
+        'DJSN', // Level 1 - Full Access
+        'Tata Usaha', // Level 2 - Manage Activities, Assignment
+        'Persidangan', // Level 3 - Minutes, Attendance, Follow-up
+        'Bagian Umum', // Level 4 - Documentation
+        'User', // Regular User
+        'Dewan', // Dewan Members
     ];
 
     /**
@@ -55,6 +58,26 @@ class User extends Authenticatable
 
     public function isAdmin()
     {
-        return $this->role === 'admin';
+        return in_array($this->role, ['admin', 'DJSN', 'Tata Usaha', 'Persidangan', 'Bagian Umum']);
+    }
+
+    public function getAdminLevel(): int
+    {
+        switch ($this->role) {
+            case 'admin': return 0;
+            case 'DJSN': return 1;
+            case 'Tata Usaha': return 2;
+            case 'Persidangan': return 3;
+            case 'Bagian Umum': return 4;
+            default: return 99;
+        }
+    }
+
+    public function hasRole($roles): bool
+    {
+        if (is_array($roles)) {
+            return in_array($this->role, $roles);
+        }
+        return $this->role === $roles;
     }
 }

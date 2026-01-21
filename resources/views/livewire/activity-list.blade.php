@@ -38,7 +38,7 @@
             </div>
             <div class="d-flex align-items-center">
                 <button @click="undoDelete()" class="btn btn-warning btn-sm font-weight-bold rounded-pill px-3 shadow-sm mr-3">
-                    <i class="fe fe-rotate-ccw mr-1"></i> UNDO
+                    <i class="fe fe-rotate-ccw mr-1"></i> Undo
                 </button>
                 <button @click="closeUndo()" class="btn btn-link text-white-50 p-0" title="Tutup & Hapus Permanen">
                     <i class="fe fe-x" style="font-size: 1.2rem;"></i>
@@ -122,12 +122,12 @@
                     <div class="col-md-3 mb-2 mb-md-0" x-data="{ open: false }" @click.away="open = false" style="position: relative; z-index: 1049; overflow: visible;">
                         <div class="position-relative">
                             <button type="button" @click="open = !open" class="form-control-premium shadow-sm text-left d-flex align-items-center justify-content-between" style="background-image: none; height: auto;">
-                                <span class="text-truncate" x-text="$wire.sortDirection === 'asc' ? 'Waktu: Terdekat (Awal - Akhir)' : 'Waktu: Terjauh (Akhir - Awal)'">Waktu: Terdekat (Awal - Akhir)</span>
+                                <span class="text-truncate" x-text="$wire.sortDirection === 'asc' ? 'Waktu Terdekat' : 'Waktu Terjauh'">Waktu Terdekat</span>
                                 <i class="fe fe-chevron-down ml-2 header-arrow" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
                             </button>
                             <div class="dropdown-menu-premium shadow-lg w-100" x-show="open" x-transition style="display: none; max-height: 250px; overflow-y: auto; position: absolute; top: 100%; left: 0; z-index: 1060;">
-                                <div class="dropdown-item-premium" :class="{ 'active': $wire.sortDirection === 'asc' }" @click="$wire.set('sortDirection', 'asc'); open = false">Waktu: Terdekat (Awal - Akhir)</div>
-                                <div class="dropdown-item-premium" :class="{ 'active': $wire.sortDirection === 'desc' }" @click="$wire.set('sortDirection', 'desc'); open = false">Waktu: Terjauh (Akhir - Awal)</div>
+                                <div class="dropdown-item-premium" :class="{ 'active': $wire.sortDirection === 'asc' }" @click="$wire.set('sortDirection', 'asc'); open = false">Waktu Terdekat</div>
+                                <div class="dropdown-item-premium" :class="{ 'active': $wire.sortDirection === 'desc' }" @click="$wire.set('sortDirection', 'desc'); open = false">Waktu Terjauh</div>
                             </div>
                         </div>
                     </div>

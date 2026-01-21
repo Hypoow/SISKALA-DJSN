@@ -171,16 +171,59 @@ class ActivityController extends Controller
     public function create(Request $request)
     {
         $date = $request->query('date');
-        // Fetch Dewan and DJSN users, then group them
-        $users = User::whereIn('role', ['Dewan', 'DJSN'])
-                     ->orderBy('order')
+        
+        // Fetch All Relevant Users for Disposition
+        // Roles: Dewan, DJSN, Tata Usaha, Persidangan, Bagian Umum
+        $targetRoles = ['Dewan', 'DJSN', 'Tata Usaha', 'Persidangan', 'Bagian Umum'];
+        
+        $users = User::whereIn('role', $targetRoles)
+                     ->orderBy('order') // Use the hierarchical order
                      ->get();
         
         $dewanUsers = $users->groupBy(function($user) {
-            if ($user->role === 'DJSN') {
-                return 'Sekretariat DJSN';
+            // Group 1: Dewan Specific Groups
+            if ($user->role === 'Dewan') {
+                $divisi = strtolower($user->divisi ?? '');
+                
+                if (str_contains($divisi, 'ketua djsn')) {
+                    return 'Ketua DJSN';
+                }
+                if (str_contains($divisi, 'pme') || str_contains($divisi, 'monitoring')) {
+                    return 'Komisi PME';
+                }
+                if (str_contains($divisi, 'komjakum') || str_contains($divisi, 'kebijakan')) {
+                    return 'Komisi Komjakum';
+                }
+                
+                // Dynamic Grouping
+                if (str_contains($divisi, 'komisi')) {
+                    return ucwords($user->divisi);
+                }
+
+                return 'Anggota Dewan Lainnya';
             }
-            return $user->divisi;
+            
+            // Group 2: Roles separation
+            if ($user->role === 'DJSN') return 'Sekretariat DJSN';
+            if (in_array($user->role, ['Tata Usaha', 'Persidangan', 'Bagian Umum'])) return $user->role;
+
+            return 'Sekretariat DJSN';
+        });
+
+        // Sort Groups: Ketua DJSN -> PME -> Komjakum -> Lainnya -> Sekretariat -> TU -> Persidangan -> Umum
+        $groupOrder = [
+            'Ketua DJSN' => 1,
+            'Komisi PME' => 2,
+            'Komisi Komjakum' => 3,
+            'Anggota Dewan Lainnya' => 4,
+            'Sekretariat DJSN' => 5,
+            'Tata Usaha' => 6,
+            'Persidangan' => 7,
+            'Bagian Umum' => 8
+        ];
+
+        $dewanUsers = $dewanUsers->sortBy(function($items, $key) use ($groupOrder) {
+             return $groupOrder[$key] ?? 99;
         });
 
         return view('activities.create', compact('date', 'dewanUsers'));
@@ -268,21 +311,91 @@ class ActivityController extends Controller
 
     public function show(Activity $activity)
     {
-        return view('activities.show', compact('activity'));
+        // Load users referenced in disposition_to to determine their groups
+        $dispoNames = $activity->disposition_to ?? [];
+        $dispositionUsers = User::whereIn('name', $dispoNames)->get();
+        
+        // Reuse the logic from create/edit
+        $groupedDisposition = $dispositionUsers->groupBy(function($user) {
+             if ($user->role === 'Dewan') {
+                $divisi = strtolower($user->divisi ?? '');
+                if (str_contains($divisi, 'ketua djsn')) return 'Ketua DJSN';
+                if (str_contains($divisi, 'pme') || str_contains($divisi, 'monitoring')) return 'Komisi PME';
+                if (str_contains($divisi, 'komjakum') || str_contains($divisi, 'kebijakan')) return 'Komisi Komjakum';
+                if (str_contains($divisi, 'komisi')) return ucwords($user->divisi);
+                return 'Anggota Dewan Lainnya';
+            }
+            if ($user->role === 'DJSN') return 'Sekretariat DJSN';
+            if (in_array($user->role, ['Tata Usaha', 'Persidangan', 'Bagian Umum'])) return $user->role;
+            return 'Sekretariat DJSN';
+        });
+
+        // Sort Groups
+        $groupOrder = [
+            'Ketua DJSN' => 1, 'Komisi PME' => 2, 'Komisi Komjakum' => 3, 'Anggota Dewan Lainnya' => 4,
+            'Sekretariat DJSN' => 5, 'Tata Usaha' => 6, 'Persidangan' => 7, 'Bagian Umum' => 8
+        ];
+        $groupedDisposition = $groupedDisposition->sortBy(function($items, $key) use ($groupOrder) {
+             return $groupOrder[$key] ?? 99;
+        });
+
+        return view('activities.show', compact('activity', 'groupedDisposition'));
     }
+
+
 
     public function edit(Activity $activity)
     {
-        // Fetch Dewan and DJSN users, then group them
-        $users = User::whereIn('role', ['Dewan', 'DJSN'])
+        $targetRoles = ['Dewan', 'DJSN', 'Tata Usaha', 'Persidangan', 'Bagian Umum'];
+        
+        $users = User::whereIn('role', $targetRoles)
                      ->orderBy('order')
                      ->get();
         
         $dewanUsers = $users->groupBy(function($user) {
-            if ($user->role === 'DJSN') {
-                return 'Sekretariat DJSN';
+             // Group 1: Dewan Specific Groups
+             if ($user->role === 'Dewan') {
+                $divisi = strtolower($user->divisi ?? '');
+                
+                if (str_contains($divisi, 'ketua djsn')) {
+                    return 'Ketua DJSN';
+                }
+                if (str_contains($divisi, 'pme') || str_contains($divisi, 'monitoring')) {
+                    return 'Komisi PME';
+                }
+                if (str_contains($divisi, 'komjakum') || str_contains($divisi, 'kebijakan')) {
+                    return 'Komisi Komjakum';
+                }
+
+                // Dynamic Grouping
+                if (str_contains($divisi, 'komisi')) {
+                    return ucwords($user->divisi);
+                }
+
+                return 'Anggota Dewan Lainnya';
             }
-            return $user->divisi;
+            
+            // Group 2: Roles separation
+            if ($user->role === 'DJSN') return 'Sekretariat DJSN';
+            if (in_array($user->role, ['Tata Usaha', 'Persidangan', 'Bagian Umum'])) return $user->role;
+
+            return 'Sekretariat DJSN';
+        });
+
+        // Sort Groups
+        $groupOrder = [
+            'Ketua DJSN' => 1,
+            'Komisi PME' => 2,
+            'Komisi Komjakum' => 3,
+            'Anggota Dewan Lainnya' => 4,
+            'Sekretariat DJSN' => 5,
+            'Tata Usaha' => 6,
+            'Persidangan' => 7,
+            'Bagian Umum' => 8
+        ];
+
+        $dewanUsers = $dewanUsers->sortBy(function($items, $key) use ($groupOrder) {
+             return $groupOrder[$key] ?? 99;
         });
 
         return view('activities.edit', compact('activity', 'dewanUsers'));

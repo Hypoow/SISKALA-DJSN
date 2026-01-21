@@ -13,7 +13,14 @@ class ManageTopics extends Component
     protected $paginationTheme = 'bootstrap';
 
     public $name, $color, $topic_id;
+    public $search = '';
     public $isEditing = false;
+    
+    // Reset page on search
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
 
     protected $rules = [
         'name' => 'required|min:2|unique:topics,name',
@@ -22,8 +29,14 @@ class ManageTopics extends Component
 
     public function render()
     {
+        $topics = Topic::orderBy('name', 'asc')
+            ->when($this->search, function($query) {
+                $query->where('name', 'like', '%' . $this->search . '%');
+            })
+            ->paginate(10);
+
         return view('livewire.manage-topics', [
-            'topics' => Topic::orderBy('created_at', 'desc')->paginate(10),
+            'topics' => $topics,
         ]);
     }
 
