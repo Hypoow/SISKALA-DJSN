@@ -67,7 +67,7 @@ class DemoActivitySeeder extends Seeder
                 'end_date' => '2025-12-20',
                 'start_time' => '08:30',
                 'end_time' => '12:00',
-                'pic' => ['Komisi Komjakum'],
+                'pic' => ['Komjakum'],
                 'status' => 0,
                 'invitation_status' => 1, // Disposed
                 'location' => 'Ballroom Hotel Mulia',
@@ -96,7 +96,7 @@ class DemoActivitySeeder extends Seeder
                 'end_date' => '2025-12-24',
                 'start_time' => '10:00',
                 'end_time' => '12:00',
-                'pic' => ['Ketua DJSN', 'Komisi Komjakum'],
+                'pic' => ['Ketua DJSN', 'Komjakum'],
                 'status' => 0,
                 'invitation_status' => 0, // Process Dispo
                 'location' => 'Gedung DPR RI',

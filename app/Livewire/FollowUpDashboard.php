@@ -17,6 +17,7 @@ class FollowUpDashboard extends Component
     public $month = '';
     public $topic;
     public $status = 'all';
+    public $pic = '';
     public $search;
 
     // UI Logic
@@ -24,18 +25,21 @@ class FollowUpDashboard extends Component
     public $progressNote = '';
 
     public $existingTopics = [];
+    public $existingPics = [];
 
     public function mount()
     {
         $this->year = Carbon::now()->year;
         $this->month = Carbon::now()->month;
-        $this->existingTopics = ActivityFollowup::distinct()->whereNotNull('topic')->pluck('topic')->toArray();
+        $this->existingTopics = \App\Models\Topic::orderBy('name')->pluck('name')->toArray();
+        $this->existingPics = ActivityFollowup::distinct()->whereNotNull('pic')->pluck('pic')->toArray();
     }
 
     public function updatedYear() { $this->resetPage(); }
     public function updatedMonth() { $this->resetPage(); }
     public function updatedTopic() { $this->resetPage(); }
     public function updatedStatus() { $this->resetPage(); }
+    public function updatedPic() { $this->resetPage(); }
     public function updatedSearch() { $this->resetPage(); }
 
     public function getListeners()
@@ -104,10 +108,23 @@ class FollowUpDashboard extends Component
     public function render()
     {
         // Refresh topics list on render to get new ones
-        $this->existingTopics = ActivityFollowup::distinct()->whereNotNull('topic')->pluck('topic')->toArray();
+        // Fetch from Topic Master Data
+        $this->existingTopics = \App\Models\Topic::orderBy('name')->pluck('name')->toArray();
+        $this->existingPics = ActivityFollowup::distinct()->whereNotNull('pic')->pluck('pic')->toArray();
 
         $query = Activity::query()
             ->with(['followups' => function($q) {
+                // Apply strict filtering to the eager loaded items
+                if ($this->status !== 'all') {
+                    $q->where('status', $this->status);
+                }
+                if ($this->topic) {
+                     $q->where('topic', $this->topic);
+                }
+                if ($this->pic && $this->pic !== 'all') {
+                     $q->where('pic', $this->pic);
+                }
+
                 $q->orderBy('pic', 'asc')
                   ->orderByRaw('CASE WHEN deadline IS NULL THEN 1 ELSE 0 END, deadline ASC')
                   ->orderBy('id', 'asc');
@@ -118,6 +135,9 @@ class FollowUpDashboard extends Component
                 }
                 if ($this->topic) {
                      $q->where('topic', $this->topic);
+                }
+                if ($this->pic && $this->pic !== 'all') {
+                     $q->where('pic', $this->pic);
                 }
                 if ($this->search) {
                      $q->where('instruction', 'like', '%' . $this->search . '%')
@@ -132,6 +152,12 @@ class FollowUpDashboard extends Component
         if ($this->month) {
              $query->whereMonth('start_date', $this->month);
         }
+
+        if ($this->pic && $this->pic !== 'all') {
+            $query->whereHas('followups', function ($q) {
+                $q->where('pic', $this->pic);
+            });
+        }
               
         if ($this->search) {
             $query->where(function($q) {
@@ -144,7 +170,7 @@ class FollowUpDashboard extends Component
         }
 
         // Order by Newest First (Activity Date)
-        $activities = $query->orderBy('start_date', 'desc')->paginate(50);
+        $activities = $query->orderBy('start_date', 'desc')->paginate(15);
         
         // Group by Month-Year
         $groupedActivities = $activities->getCollection()->groupBy(function($date) {
@@ -164,7 +190,8 @@ class FollowUpDashboard extends Component
         $stats = [
             'total' => (clone $baseStatsQuery)->count(),
             'completed' => (clone $baseStatsQuery)->where('status', 2)->count(),
-            'pending' => (clone $baseStatsQuery)->whereIn('status', [0, 1])->count(),
+            'progress' => (clone $baseStatsQuery)->where('status', 1)->count(),
+            'pending' => (clone $baseStatsQuery)->where('status', 0)->count(),
         ];
         
         $statusLabels = [

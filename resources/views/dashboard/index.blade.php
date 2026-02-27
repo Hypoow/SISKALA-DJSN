@@ -399,12 +399,18 @@ document.addEventListener('DOMContentLoaded', function() {
             if (Array.isArray(props.pic)) {
                 props.pic.forEach(function(p) {
                     var badgeClass = 'badge-info';
-                    if(p == 'Komjakum') badgeClass = 'badge-danger';
-                    else if(p == 'PME') badgeClass = 'badge-success';
-                    else if(p == 'Sekretariat DJSN') badgeClass = 'badge-secondary';
-                    else if(p == 'Ketua DJSN') badgeClass = 'badge-primary';
                     
-                    picHtml += '<span class="badge pill ' + badgeClass + ' mr-1 mb-1 px-2 py-1">' + p + '</span>';
+                    if(p.includes('Komjakum') || p.includes('Kebijakan')) badgeClass = 'badge-komjakum';
+                    else if(p.includes('PME') || p.includes('Monitoring')) badgeClass = 'badge-pme';
+                    else if(p.includes('Sekretariat')) badgeClass = 'badge-sekretariat';
+                    else if(p.includes('Ketua')) badgeClass = 'badge-ketua';
+                    else if(p.includes('Anggota')) badgeClass = 'badge-djsn';
+                    
+                    var tooltipContent = props.pic_details && props.pic_details[p] ? props.pic_details[p] : '';
+                    
+                    picHtml += '<span class="badge pill ' + badgeClass + ' mr-1 mb-1 px-2 py-1" ' + 
+                               'data-toggle="tooltip" data-html="true" data-placement="top" title="' + tooltipContent + '" ' +
+                               'style="cursor: help;">' + p + '</span>';
                 });
             } else {
                 picHtml = props.pic;
@@ -440,6 +446,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Show Modal
         $('#eventDetailModal').modal('show');
+        
+        // Re-init tooltips inside modal
+        setTimeout(function() {
+             $('[data-toggle="tooltip"]').tooltip('dispose');
+             $('[data-toggle="tooltip"]').tooltip({
+                 html: true
+             });
+        }, 300);
       },
       dateClick: function(info) {
         @if(Auth::user()->role === 'admin')

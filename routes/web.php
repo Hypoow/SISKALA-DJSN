@@ -41,9 +41,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/activities/past', [ActivityController::class, 'past'])->name('activities.past');
     Route::post('/activities/{activity}/upload-minutes', [ActivityController::class, 'uploadMinutes'])->name('activities.upload-minutes');
     Route::delete('/activities/{activity}/minutes', [ActivityController::class, 'deleteMinutes'])->name('activities.delete-minutes');
+    Route::post('/activities/{activity}/moms', [ActivityController::class, 'uploadMom'])->name('activities.upload-mom');
+    Route::delete('/activities/moms/{mom}', [ActivityController::class, 'deleteMom'])->name('activities.delete-mom');
     Route::post('/activities/{activity}/upload-assignment', [ActivityController::class, 'uploadAssignmentLetter'])->name('activities.upload-assignment');
     Route::delete('/activities/{activity}/assignment', [ActivityController::class, 'deleteAssignment'])->name('activities.delete-assignment');
     Route::put('/activities/{activity}/summary', [ActivityController::class, 'updateSummary'])->name('activities.update-summary');
+    Route::put('/activities/{activity}/additional-notes', [ActivityController::class, 'updateAdditionalNotes'])->name('activities.update-additional-notes');
     
     // Materials & Documentation
     Route::delete('/activities/{activity}/attachment', [ActivityController::class, 'deleteAttachment'])->name('activities.delete-attachment');
@@ -77,5 +80,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/', [MasterDataController::class, 'store'])->name('store');
         Route::put('/{user}', [MasterDataController::class, 'update'])->name('update');
         Route::delete('/{user}', [MasterDataController::class, 'destroy'])->name('destroy');
+        
+        // Master Staff Routes
+        Route::resource('staff', \App\Http\Controllers\MasterStaffController::class)->except(['create', 'show', 'edit']);
     });
 });

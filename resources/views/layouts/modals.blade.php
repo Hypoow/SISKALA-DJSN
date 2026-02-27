@@ -15,7 +15,7 @@
                 <span class="fe fe-box fe-24"></span>
               </div>
               <div class="col">
-                <small><strong>Selamat datang di Schedulo DJSN</strong></small>
+                <small><strong>Selamat datang di SISKALA</strong></small>
                 <div class="my-0 text-muted small">Sistem penjadwalan kegiatan</div>
                 <small class="badge badge-pill badge-light text-muted">Baru</small>
               </div>
@@ -59,6 +59,7 @@
     </div>
   </div>
 </div>
+
 
 
 

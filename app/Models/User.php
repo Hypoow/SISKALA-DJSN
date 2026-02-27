@@ -20,6 +20,7 @@ class User extends Authenticatable
         'Bagian Umum', // Level 4 - Documentation
         'User', // Regular User
         'Dewan', // Dewan Members
+        'TA', // Tenaga Ahli (Read Only if Tagged)
     ];
 
     /**
@@ -79,5 +80,52 @@ class User extends Authenticatable
             return in_array($this->role, $roles);
         }
         return $this->role === $roles;
+    }
+
+    // --- Role Helpers ---
+    public function isTataUsaha()
+    {
+        return $this->role === 'Tata Usaha';
+    }
+
+    public function isPersidangan()
+    {
+        return $this->role === 'Persidangan';
+    }
+
+    public function isTA()
+    {
+        return $this->role === 'TA';
+    }
+
+    public function isSuperAdmin()
+    {
+        return in_array($this->role, ['admin', 'DJSN']);
+    }
+
+    // --- Capability Helpers ---
+    
+    // Create/Edit/Delete Activities
+    public function canManageActivities()
+    {
+        return $this->isSuperAdmin() || $this->isTataUsaha();
+    }
+
+    // Upload Surat Tugas (Assignment Letter)
+    public function canUploadAssignment()
+    {
+        return $this->isSuperAdmin() || $this->isTataUsaha();
+    }
+
+    // Summary, Minutes, Materials, Activity Completion, Attendance
+    public function canManagePostActivity()
+    {
+        return $this->isSuperAdmin() || $this->isPersidangan();
+    }
+
+    // Follow-Ups (Tindak Lanjut)
+    public function canManageFollowUp()
+    {
+        return $this->isSuperAdmin() || $this->isPersidangan();
     }
 }

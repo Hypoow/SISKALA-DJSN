@@ -1,145 +1,177 @@
 <!doctype html>
 <html lang="id">
-  <head>
+<head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="Aplikasi Penjadwalan DJSN">
+    <meta name="description" content="Sistem Informasi Penjadwalan DJSN">
     <link rel="icon" href="{{ asset('images/logo.svg') }}">
-    <title>Masuk - Schedulo DJSN</title>
-    <!-- Fonts - Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Masuk - SISKALA</title>
+    <!-- Fonts - Plus Jakarta Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Icons -->
     <link rel="stylesheet" href="{{ asset('css/feather.css') }}">
     <style>
         :root {
             --primary-color: #2563eb;
             --primary-hover: #1d4ed8;
-            --text-dark: #1e293b;
-            --text-muted: #64748b;
+            --primary-soft: #eff6ff;
+            --text-main: #0f172a;
+            --text-secondary: #475569;
+            --border-color: #e2e8f0;
+            --surface-color: #ffffff;
+            --bg-color: #f8fafc;
         }
-        
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Plus Jakarta Sans', sans-serif;
             margin: 0;
             padding: 0;
             height: 100vh;
-            width: 100vw;
             display: flex;
-            align-items: center;
-            justify-content: center;
             overflow: hidden;
-            /* Mesh Gradient Background */
-            background-color: #f3f4f6;
-            background-image: 
-                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
-                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
-                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
-            background-size: 200% 200%;
-            animation: gradient-animation 15s ease infinite;
+            background-color: var(--surface-color);
         }
 
-        /* Dynamic Mesh Animation */
-        @keyframes gradient-animation {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        /* Overlay to lighten/soften for glass effect base */
-        body::before {
-            content: "";
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(255, 255, 255, 0.4); 
-            z-index: -1;
-        }
-
-        /* Glassmorphism Card */
-        .login-card {
-            background: rgba(255, 255, 255, 0.75);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            border-radius: 24px;
-            box-shadow: 
-                0 20px 25px -5px rgba(0, 0, 0, 0.05),
-                0 8px 10px -6px rgba(0, 0, 0, 0.01);
+        /* Split Layout */
+        .split-screen {
+            display: flex;
             width: 100%;
-            max-width: 440px;
-            padding: 3rem;
+            height: 100%;
+        }
+
+        /* Left Side - Visual/Branding */
+        .left-panel {
+            flex: 1;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
             position: relative;
-            z-index: 10;
-            transform: translateY(0);
-            animation: float-up 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            padding: 4rem;
+            overflow: hidden;
         }
 
-        @keyframes float-up {
-            from { opacity: 0; transform: translateY(40px); }
-            to { opacity: 1; transform: translateY(0); }
+        .left-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(37, 99, 235, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%);
+            z-index: 1;
         }
 
-        /* Logo Area */
-        .brand-section {
+        .visual-content {
+            position: relative;
+            z-index: 2;
             text-align: center;
-            margin-bottom: 2.5rem;
-        }
-        
-        .brand-logo {
-            height: 60px; /* Slightly larger for emphasis */
-            margin-bottom: 1.25rem;
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
+            max-width: 480px;
+            width: 100%;
         }
 
-        .app-name {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--text-dark);
-            letter-spacing: -0.5px;
-            margin: 0;
+        /* Branding Card for Logo Visibility */
+        .branding-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 3rem 2rem;
+            box-shadow: 
+                0 20px 25px -5px rgba(0, 0, 0, 0.1), 
+                0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: transform 0.3s ease;
         }
-        
-        .app-tagline {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            margin-top: 0.5rem;
+
+        .branding-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .brand-logo-large {
+            height: 100px;
+            margin-bottom: 1.5rem;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+            /* Removed float animation to keep it steady in card */
+        }
+
+        .app-title-large {
+            font-size: 3rem;
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: -0.02em;
+            background: linear-gradient(to right, #1e293b, #334155);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+        }
+
+        .app-tagline-large {
+            font-size: 1rem;
+            color: #475569;
+            margin-top: 0.75rem;
+            line-height: 1.5;
             font-weight: 500;
         }
 
-        /* Form Styling */
-        .form-group {
-            margin-bottom: 1.5rem;
+        /* Right Side - Login Form */
+        .right-panel {
+            flex: 1; /* Both take 50% */
+            max-width: 600px; /* Limit width on very large screens for better UX */
+            background-color: var(--surface-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 4rem;
             position: relative;
+        }
+
+        /* Mobile specific adjustments handled in media query below */
+
+        .form-container {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .form-header {
+            margin-bottom: 2.5rem;
+        }
+
+        .form-title {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 0 0 0.5rem 0;
+            letter-spacing: -0.01em;
+        }
+
+        .form-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
         }
 
         .form-label {
             display: block;
-            font-size: 0.85rem;
+            font-size: 0.875rem;
             font-weight: 600;
-            color: #334155;
+            color: var(--text-main);
             margin-bottom: 0.5rem;
         }
 
-        .input-wrapper {
+        .input-group {
             position: relative;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 1rem 1rem 1rem 2.8rem; /* Space for icon */
-            font-size: 0.95rem;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            background-color: #ffffff; /* Pure white input */
-            color: var(--text-dark);
-            transition: all 0.2s;
-            box-sizing: border-box;
-            font-family: inherit;
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
         }
 
         .input-icon {
@@ -149,168 +181,275 @@
             transform: translateY(-50%);
             color: #94a3b8;
             pointer-events: none;
+            transition: color 0.2s;
         }
 
-        /* Checkbox */
-        .checkbox-wrapper {
+        .form-control {
+            width: 100%;
+            padding: 0.875rem 1rem 0.875rem 2.75rem;
+            font-size: 0.95rem;
+            font-family: inherit;
+            color: var(--text-main);
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background-color: white;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-control:focus + .input-icon {
+            color: var(--primary-color);
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .checkbox-container {
             display: flex;
             align-items: center;
-            margin-bottom: 2rem;
-        }
-
-        .custom-checkbox {
-            width: 1rem;
-            height: 1rem;
-            border-radius: 4px;
-            border: 1px solid #cbd5e1;
-            margin-right: 0.75rem;
-            cursor: pointer;
-            position: relative;
-        }
-        
-        .checkbox-label {
-            font-size: 0.9rem;
-            color: var(--text-muted);
             cursor: pointer;
             user-select: none;
         }
 
-        /* Button */
-        .btn-submit {
+        .custom-checkbox {
+            appearance: none;
+            width: 1.1rem;
+            height: 1.1rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            margin-right: 0.5rem;
+            cursor: pointer;
+            position: relative;
+            background-color: white;
+            transition: all 0.2s;
+        }
+
+        .custom-checkbox:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .custom-checkbox:checked::after {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 2px;
+            width: 4px;
+            height: 8px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .checkbox-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .forgot-link {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .forgot-link:hover {
+            color: var(--primary-hover);
+            text-decoration: underline;
+        }
+
+        .btn-primary {
             display: block;
             width: 100%;
-            padding: 1rem;
-            background-color: var(--primary-color);
+            padding: 0.875rem;
+            background: linear-gradient(to right, var(--primary-color), var(--primary-hover));
             color: white;
             border: none;
             border-radius: 12px;
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+            position: relative; /* For loader if needed */
+            overflow: hidden;
         }
 
-        .btn-submit:hover {
-            background-color: var(--primary-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.4);
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 12px -1px rgba(37, 99, 235, 0.3);
         }
 
-        .btn-submit:active {
+        .btn-primary:active {
             transform: translateY(0);
         }
 
-        /* Footer */
-        .footer-text {
+        .footer {
+            margin-top: 3rem;
             text-align: center;
-            margin-top: 2rem;
             font-size: 0.8rem;
             color: #94a3b8;
         }
 
-        /* Alert Styling */
         .alert {
             padding: 1rem;
-            background: #fee2e2;
-            border-left: 4px solid #ef4444;
-            border-radius: 8px;
-            margin-bottom: 1.5rem;
+            background-color: #fef2f2;
+            border: 1px solid #fee2e2;
+            border-radius: 10px;
+            margin-bottom: 2rem;
             display: flex;
+            gap: 0.75rem;
             align-items: flex-start;
         }
+
         .alert-icon {
-             color: #ef4444;
-             margin-right: 0.75rem;
-             margin-top: 2px;
+            color: #ef4444;
+            flex-shrink: 0;
+            margin-top: 2px;
         }
-        .alert-content {
+
+        .alert-content strong {
+            display: block;
             color: #991b1b;
             font-size: 0.9rem;
+            margin-bottom: 0.25rem;
         }
-        .alert ul {
+        
+        .alert-content ul {
             margin: 0;
-            padding-left: 1rem;
+            padding-left: 1.25rem;
+            color: #b91c1c;
+            font-size: 0.85rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 900px) {
+            .split-screen {
+                flex-direction: column;
+            }
+            
+            .left-panel {
+                flex: 0 0 30%; /* 30% height on mobile */
+                padding: 2rem;
+            }
+            .brand-logo-large {
+                height: 60px;
+                margin-bottom: 1rem;
+            }
+            .app-title-large {
+                font-size: 2rem;
+            }
+            .app-tagline-large {
+                font-size: 0.9rem;
+                display: none; /* Hide tagline on very small screens to save space */
+            }
+
+            .right-panel {
+               flex: 1;
+               padding: 2rem;
+               max-width: 100%;
+               border-top-left-radius: 24px;
+               border-top-right-radius: 24px;
+               margin-top: -24px; /* Slight overlap */
+               background-color: var(--surface-color);
+               z-index: 10;
+            }
         }
     </style>
-  </head>
-  <body>
-    
-    <!-- Decorative Floating Blobs -->
-    <div style="position: absolute; top: 10%; left: 15%; width: 300px; height: 300px; background: rgba(59, 130, 246, 0.3); border-radius: 50%; filter: blur(80px); z-index: -1;"></div>
-    <div style="position: absolute; bottom: 15%; right: 15%; width: 350px; height: 350px; background: rgba(139, 92, 246, 0.25); border-radius: 50%; filter: blur(80px); z-index: -1;"></div>
-
-    <div class="login-card">
-        <div class="brand-section">
-            <img src="{{ asset('images/logo.svg') }}" alt="Logo" class="brand-logo">
-            <h1 class="app-name">Schedulo DJSN</h1>
-            <p class="app-tagline">Silakan masuk ke akun Anda</p>
+</head>
+<body>
+    <div class="split-screen">
+        <!-- Left Panel: Branding -->
+        <div class="left-panel">
+            <div class="visual-content">
+                <div class="branding-card">
+                    <img src="{{ asset('images/logo.svg') }}" alt="DJSN Logo" class="brand-logo-large">
+                    <h1 class="app-title-large">SISKALA</h1>
+                    <p class="app-tagline-large">Sistem Kelola Agenda, tindak Lanjut dan Administrasi<br>Dewan Jaminan Sosial Nasional</p>
+                </div>
+            </div>
         </div>
 
-        <form method="POST" action="{{ route('login') }}">
-            @csrf
-            
-            @if($errors->any())
-                <div class="alert">
-                    <div class="alert-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-alert-circle"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <!-- Right Panel: Login Form -->
+        <div class="right-panel">
+            <div class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Selamat Datang 👋</h2>
+                    <p class="form-subtitle">Masukkan email dan kata sandi untuk masuk.</p>
+                </div>
+
+                <form method="POST" action="{{ route('login') }}">
+                    @csrf
+                    
+                    @if($errors->any())
+                        <div class="alert">
+                            <i class="fe fe-alert-circle alert-icon"></i>
+                            <div class="alert-content">
+                                <strong>Login Gagal</strong>
+                                <ul>
+                                    @foreach($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
+                    @endif
+
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email</label>
+                        <div class="input-group">
+                            <i class="fe fe-mail input-icon"></i>
+                            <input type="email" id="email" name="email" class="form-control" placeholder="Masukkan Email" required autofocus value="{{ old('email') }}">
+                        </div>
                     </div>
-                    <div class="alert-content">
-                        <strong>Login Gagal</strong>
-                        <ul style="list-style: none; padding: 0; margin-top: 4px;">
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
+
+                    <div class="form-group">
+                        <label for="password" class="form-label">Password</label>
+                        <div class="input-group">
+                            <i class="fe fe-lock input-icon"></i>
+                            <input type="password" id="password" name="password" class="form-control" placeholder="Masukkan password" required>
+                        </div>
                     </div>
-                </div>
-            @endif
 
-            <div class="form-group">
-                <label for="email" class="form-label">Email</label>
-                <div class="input-wrapper">
-                    <span class="input-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                    </span>
-                    <input type="email" id="email" name="email" class="form-control" placeholder="example@gmail.com" required autofocus value="{{ old('email') }}">
-                </div>
+                    <div class="form-actions">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="showPassword" class="custom-checkbox">
+                            <span class="checkbox-label">Tampilkan Password</span>
+                        </label>
+                        <a href="{{ route('password.request') }}" class="forgot-link">Lupa Password?</a>
+                    </div>
+
+                    <button type="submit" class="btn-primary">
+                        Login
+                    </button>
+
+                    <div class="footer">
+                        &copy; {{ date('Y') }} Dewan Jaminan Sosial Nasional
+                    </div>
+                </form>
             </div>
-
-            <div class="form-group">
-                <label for="password" class="form-label">Password</label>
-                <div class="input-wrapper">
-                    <span class="input-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                    </span>
-                    <input type="password" id="password" name="password" class="form-control" placeholder="Masukkan Password" required>
-                </div>
-            </div>
-
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div class="checkbox-wrapper mb-0">
-                    <input type="checkbox" id="showPassword" class="custom-checkbox_input" style="margin-right: 8px;">
-                    <label for="showPassword" class="checkbox-label">Tampilkan Password</label>
-                </div>
-                <a href="{{ route('password.request') }}" class="text-primary small font-weight-bold" style="text-decoration: none;">Lupa Password?</a>
-                <br></br>
-            </div>
-
-            <button type="submit" class="btn-submit">
-                Masuk
-            </button>
-        </form>
-
-        <div class="footer-text">
-            &copy; {{ date('Y') }} Dewan Jaminan Sosial Nasional
         </div>
     </div>
 
+    <!-- Scripts -->
     <script src="{{ asset('js/jquery.min.js') }}"></script>
     <script>
         $(document).ready(function() {
+            // Toggle Password Visibility
             $('#showPassword').change(function() {
                 var input = $('#password');
-                if (this.checked) {
+                if ($(this).is(':checked')) {
                     input.attr('type', 'text');
                 } else {
                     input.attr('type', 'password');
@@ -318,5 +457,6 @@
             });
         });
     </script>
-  </body>
+</body>
 </html>
+

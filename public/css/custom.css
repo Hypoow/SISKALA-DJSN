@@ -736,3 +736,76 @@ body {
     color: #4B5563 !important;
     border: 1px solid #D1D5DB;
 }
+
+/* ===== SPECIFIC PIC BADGES ===== */
+.badge-komjakum {
+    background-color: #E0F2FE !important;
+    /* Light Sky */
+    color: #0369A1 !important;
+    border: 1px solid #BAE6FD;
+}
+
+.badge-pme {
+    background-color: #DCFCE7 !important;
+    /* Light Green */
+    color: #15803D !important;
+    border: 1px solid #BBF7D0;
+}
+
+.badge-sekretariat {
+    background-color: #FFEDD5 !important;
+    /* Light Orange */
+    color: #C2410C !important;
+    border: 1px solid #FED7AA;
+}
+
+.badge-djsn {
+    background-color: #E0E7FF !important;
+    /* Light Indigo */
+    color: #4338CA !important;
+    border: 1px solid #C7D2FE;
+}
+
+.badge-ketua {
+    background-color: #F3E8FF !important;
+    /* Light Purple */
+    color: #7E22CE !important;
+    border: 1px solid #E9D5FF;
+}
+
+/* ===== PREMIUM TOOLTIP STYLES ===== */
+.tooltip-inner {
+    background-color: #ffffff !important;
+    color: var(--primary-color) !important;
+    border: 1px solid rgba(15, 44, 89, 0.1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    padding: 10px 15px;
+    font-size: 0.8rem;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    white-space: nowrap;
+    /* Prevent wrapping */
+    max-width: none !important;
+    /* Allow growing */
+}
+
+.tooltip.bs-tooltip-top .arrow::before,
+.tooltip.bs-tooltip-auto[x-placement^="top"] .arrow::before {
+    border-top-color: #ffffff !important;
+}
+
+.tooltip.bs-tooltip-bottom .arrow::before,
+.tooltip.bs-tooltip-auto[x-placement^="bottom"] .arrow::before {
+    border-bottom-color: #ffffff !important;
+}
+
+.tooltip.bs-tooltip-left .arrow::before,
+.tooltip.bs-tooltip-auto[x-placement^="left"] .arrow::before {
+    border-left-color: #ffffff !important;
+}
+
+.tooltip.bs-tooltip-right .arrow::before,
+.tooltip.bs-tooltip-auto[x-placement^="right"] .arrow::before {
+    border-right-color: #ffffff !important;
+}

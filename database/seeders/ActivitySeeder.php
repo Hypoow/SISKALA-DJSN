@@ -33,7 +33,7 @@ class ActivitySeeder extends Seeder
             'Royanto Purba, S.T.'
         ];
 
-        $internalPics = ['Ketua DJSN', 'Komisi PME', 'Komisi Komjakum', 'Sekretariat DJSN'];
+        $internalPics = ['Ketua DJSN', 'Komisi PME', 'Komjakum', 'Sekretariat DJSN'];
 
         for ($i = 0; $i < 100; $i++) {
             $type = $faker->randomElement(['internal', 'external']);

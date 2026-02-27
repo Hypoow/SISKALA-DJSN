@@ -2,52 +2,68 @@
     <div>
     <!-- Stats Widgets -->
     <div class="row mb-4">
-        <div class="col-md-4 fade-in delay-1">
-            <div class="card shadow border-0">
+        <!-- Total -->
+        <div class="col-12 col-sm-6 col-xl-3 fade-in delay-1 mb-3 mb-xl-0">
+            <div class="card shadow border-0 h-100">
                 <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-3 text-center">
-                            <span class="circle circle-lg bg-primary">
-                                <i class="fe fe-list fe-24 text-white"></i>
-                            </span>
-                        </div>
-                        <div class="col">
-                            <h3 class="h2 mb-0 mt-2 font-bold">{{ $stats['total'] }}</h3>
+                    <div class="d-flex align-items-center">
+                        <span class="circle circle-lg bg-primary mr-3">
+                            <i class="fe fe-list fe-24 text-white"></i>
+                        </span>
+                        <div>
+                            <h3 class="h2 mb-0 font-bold text-dark">{{ $stats['total'] }}</h3>
                             <p class="text-muted mb-0">Total Tindak Lanjut</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4 fade-in delay-2">
-            <div class="card shadow border-0">
+
+        <!-- Selesai -->
+        <div class="col-12 col-sm-6 col-xl-3 fade-in delay-2 mb-3 mb-xl-0">
+            <div class="card shadow border-0 h-100">
                 <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-3 text-center">
-                            <span class="circle circle-lg bg-success">
-                                <i class="fe fe-check-circle fe-24 text-white"></i>
-                            </span>
-                        </div>
-                        <div class="col">
-                             <h3 class="h2 mb-0 mt-2 font-bold">{{ $stats['completed'] }}</h3>
+                    <div class="d-flex align-items-center">
+                        <span class="circle circle-lg bg-success mr-3">
+                            <i class="fe fe-check-circle fe-24 text-white"></i>
+                        </span>
+                        <div>
+                             <h3 class="h2 mb-0 font-bold text-dark">{{ $stats['completed'] }}</h3>
                             <p class="text-muted mb-0">Selesai</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4 fade-in delay-3">
-            <div class="card shadow border-0">
+
+        <!-- On Progress -->
+        <div class="col-12 col-sm-6 col-xl-3 fade-in delay-3 mb-3 mb-sm-0">
+            <div class="card shadow border-0 h-100">
                 <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-3 text-center">
-                            <span class="circle circle-lg bg-warning">
-                                <i class="fe fe-clock fe-24 text-white"></i>
-                            </span>
+                    <div class="d-flex align-items-center">
+                        <span class="circle circle-lg bg-warning mr-3">
+                            <i class="fe fe-loader fe-24 text-white"></i>
+                        </span>
+                        <div>
+                             <h3 class="h2 mb-0 font-bold text-dark">{{ $stats['progress'] }}</h3>
+                            <p class="text-muted mb-0">On Progress</p>
                         </div>
-                        <div class="col">
-                             <h3 class="h2 mb-0 mt-2 font-bold">{{ $stats['pending'] }}</h3>
-                            <p class="text-muted mb-0">Outstanding / Pending</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending -->
+        <div class="col-12 col-sm-6 col-xl-3 fade-in delay-4">
+            <div class="card shadow border-0 h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <span class="circle circle-lg bg-secondary mr-3">
+                            <i class="fe fe-clock fe-24 text-white"></i>
+                        </span>
+                        <div>
+                             <h3 class="h2 mb-0 font-bold text-dark">{{ $stats['pending'] }}</h3>
+                            <p class="text-muted mb-0">Pending</p>
                         </div>
                     </div>
                 </div>
@@ -62,6 +78,14 @@
                 <div>
                     <h5 class="card-title mb-1 text-white font-weight-bold text-uppercase" style="letter-spacing: 1px;">Monitoring Tindak Lanjut</h5>
                     <p class="mb-0 text-white-50 small">Pantau progres dan status arahan kegiatan</p>
+                </div>
+                <div style="width: 300px;">
+                    <div class="input-group input-group-merge input-group-premium bg-white shadow-sm" style="border-radius: 20px; overflow: hidden;">
+                        <input type="text" wire:model.live.debounce.300ms="search" class="form-control border-0 pl-4 py-2" placeholder="Cari..." style="font-size: 0.9rem;">
+                        <div class="input-group-append">
+                            <div class="input-group-text border-0 bg-white pr-4"><i class="fe fe-search text-muted"></i></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -113,8 +137,22 @@
                         </button>
                         <div class="dropdown-menu-premium shadow-lg w-100" x-show="open" x-transition style="display: none; max-height: 300px; overflow-y: auto; position: absolute; top: 100%; left: 0; z-index: 1060;">
                             <div class="dropdown-item-premium" :class="{ 'active': $wire.topic == '' }" @click="$wire.set('topic', ''); open = false">Semua Topik</div>
-                            @foreach(\App\Models\Topic::orderBy('name')->get() as $t)
-                                <div class="dropdown-item-premium" :class="{ 'active': $wire.topic == '{{ $t->name }}' }" @click="$wire.set('topic', '{{ $t->name }}'); open = false">{{ $t->name }}</div>
+                            @foreach($existingTopics as $t)
+                                <div class="dropdown-item-premium" :class="{ 'active': $wire.topic == '{{ $t }}' }" @click="$wire.set('topic', '{{ $t }}'); open = false">{{ $t }}</div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-2 mb-md-0" x-data="{ open: false }" @click.away="open = false" style="position: relative; z-index: 1048; overflow: visible;">
+                    <div class="position-relative">
+                        <button type="button" @click="open = !open" class="form-control-premium shadow-sm text-left d-flex align-items-center justify-content-between" style="background-image: none; height: auto;">
+                            <span class="text-truncate" x-text="$wire.pic ? $wire.pic : 'Semua PIC'">Semua PIC</span>
+                            <i class="fe fe-chevron-down ml-2 header-arrow" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
+                        </button>
+                        <div class="dropdown-menu-premium shadow-lg w-100" x-show="open" x-transition style="display: none; max-height: 300px; overflow-y: auto; position: absolute; top: 100%; left: 0; z-index: 1060;">
+                            <div class="dropdown-item-premium" :class="{ 'active': $wire.pic == '' }" @click="$wire.set('pic', ''); open = false">Semua PIC</div>
+                            @foreach($existingPics as $p)
+                                <div class="dropdown-item-premium" :class="{ 'active': $wire.pic == '{{ $p }}' }" @click="$wire.set('pic', '{{ $p }}'); open = false">{{ $p }}</div>
                             @endforeach
                         </div>
                     </div>
@@ -133,21 +171,14 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="input-group input-group-merge input-group-premium bg-white">
-                        <input type="text" wire:model.live.debounce.300ms="search" class="form-control border-0 pl-4 bg-transparent" placeholder="Cari Agenda atau PIC...">
-                        <div class="input-group-append">
-                            <div class="input-group-text border-0 bg-transparent pr-4"><i class="fe fe-search text-muted"></i></div>
-                        </div>
-                    </div>
-                </div>
+
             </div>
         </div>
 
         <!-- Data Table -->
         <div class="card-body p-0" style="position: relative; z-index: 1;">
             <div class="table-responsive">
-                <table class="table table-hover table-striped mb-0">
+                <table class="table table-striped table-custom-border mb-0">
                     <thead class="bg-light">
                         <tr>
                             <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 pl-4" style="width: 20%;">Agenda & Waktu</th>
@@ -176,19 +207,20 @@
                                 @endphp
 
                                 @if($followups->isEmpty())
-                                    <tr style="border-top: 2px solid #4a5155ff; border-bottom: 2px solid #4a5155ff;">
+                                    <tr style="border-top: 2px solid #6c757d;">
                                         <!-- Activity Info -->
                                         <td class="align-top pl-4 py-3" style="border-left: 4px solid {{ $activity->type == 'internal' ? '#004085' : '#17a2b8' }}; background-color: #fff; width: 20%; border-right: 2px solid #b8c2cc;">
                                             <div style="max-height: 200px; overflow-y: auto;">
-                                                <a href="{{ route('activities.show', $activity->id) }}" class="text-dark font-weight-bold text-decoration-none" title="Lihat Detail">{{ $activity->name }}</a><br>
-                                                <small class="text-muted"><i class="fe fe-clock mr-1"></i>{{ $activity->date_time->format('d M, H:i') }}</small>
-                                                
-                                                <div class="mt-2">
-                                                    @if($activity->type == 'internal')
-                                                        <span class="badge badge-primary px-1 py-1" style="font-size: 0.7em; background-color: #004085;">Internal</span>
-                                                    @else
-                                                        <span class="badge badge-info text-white px-1 py-1" style="font-size: 0.7em;">{{ $activity->organizer_name ?? 'Eksternal' }}</span>
-                                                    @endif
+                                                <!-- Row 1: Activity Name -->
+                                                <div class="mb-2">
+                                                    <a href="{{ route('activities.show', $activity->id) }}" class="text-dark font-weight-bold text-decoration-none" title="Lihat Detail">{{ $activity->name }}</a>
+                                                </div>
+
+                                                <!-- Row 2: Time -->
+                                                <div class="mb-2">
+                                                    <small class="text-muted font-weight-bold" style="font-size: 0.9em;">
+                                                        <i class="fe fe-clock mr-1"></i>{{ $activity->date_time->translatedFormat('d F, H:i') }}
+                                                    </small>
                                                 </div>
 
                                                 @php
@@ -196,38 +228,60 @@
                                                     $topicName = $firstWithTopic ? $firstWithTopic->topic : null;
                                                 @endphp
 
-                                                @if($topicName)
-                                                    <div class="mt-2">
+                                                <!-- Row 3: Topic & Type -->
+                                                <div class="d-flex align-items-center mb-2 flex-wrap">
+                                                    <!-- Topic -->
+                                                    @if($topicName)
                                                         @php $tColor = $this->getTopicColor($topicName); @endphp
-                                                        <span class="badge badge-pill px-2 py-1" style="background-color: {{ $tColor }}20; border: 1px solid {{ $tColor }}; color: {{ $tColor }}; font-weight: 600; font-size: 0.7em;">
+                                                        <span class="badge badge-pill px-2 py-1 mr-2 mb-1" style="background-color: {{ $tColor }}20; border: 1px solid {{ $tColor }}; color: {{ $tColor }}; font-weight: 600; font-size: 0.7em;">
                                                             <i class="fe fe-tag mr-1"></i>{{ $topicName }}
                                                         </span>
-                                                    </div>
-                                                @endif
+                                                    @else
+                                                        <span class="badge badge-pill badge-light px-2 py-1 mr-2 mb-1 text-muted border" style="font-size: 0.7em;">
+                                                            No Topic
+                                                        </span>
+                                                    @endif
 
-                                                @if($activity->minutes_path)
-                                                    <div class="mt-2">
-                                                        <a href="{{ Storage::url($activity->minutes_path) }}" target="_blank" class="text-primary small">
-                                                            <i class="fe fe-file-text mr-1"></i> Notulensi
-                                                        </a>
-                                                    </div>
-                                                @endif
+                                                    <span class="text-muted mr-2 mb-1" style="font-size: 0.8em;">-</span>
 
-                                                @if($activity->attachment_path)
-                                                    <div class="mt-1">
-                                                        <a href="{{ Storage::url($activity->attachment_path) }}" target="_blank" class="text-primary small">
-                                                            <i class="fe fe-paperclip mr-1"></i> Surat Undangan
-                                                        </a>
+                                                    <!-- Type -->
+                                                    <div class="mb-1">
+                                                        @if($activity->type == 'internal')
+                                                            <span class="badge badge-primary px-2 py-1" style="font-size: 0.7em; background-color: #004085;">Internal</span>
+                                                        @else
+                                                            <span class="badge badge-info text-white px-2 py-1" style="font-size: 0.7em;">{{ $activity->organizer_name ?? 'Eksternal' }}</span>
+                                                        @endif
                                                     </div>
-                                                @endif
+                                                </div>
 
-                                                @if($activity->assignment_letter_path)
-                                                    <div class="mt-1">
-                                                        <a href="{{ Storage::url($activity->assignment_letter_path) }}" target="_blank" class="text-primary small">
-                                                            <i class="fe fe-file-text mr-1"></i> Surat Tugas
-                                                        </a>
-                                                    </div>
-                                                @endif
+                                                    <!-- Attachments (Right) -->
+                                                <!-- Attachments (Row 4) -->
+                                                <div>
+                                                    @if($activity->minutes_path || $activity->attachment_path || $activity->assignment_letter_path)
+                                                        <div class="dropdown">
+                                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle py-1 px-2 btn-block text-left" type="button" data-toggle="dropdown" aria-expanded="false" style="font-size: 0.75em;">
+                                                                <i class="fe fe-paperclip mr-1"></i> Lampiran
+                                                            </button>
+                                                            <div class="dropdown-menu shadow-sm dropdown-menu-right">
+                                                                @if($activity->minutes_path)
+                                                                    <a class="dropdown-item small" href="{{ Storage::url($activity->minutes_path) }}" target="_blank">
+                                                                        <i class="fe fe-file-text mr-2 text-primary"></i> Notulensi
+                                                                    </a>
+                                                                @endif
+                                                                @if($activity->attachment_path)
+                                                                    <a class="dropdown-item small" href="{{ Storage::url($activity->attachment_path) }}" target="_blank">
+                                                                        <i class="fe fe-paperclip mr-2 text-primary"></i> Surat Undangan
+                                                                    </a>
+                                                                @endif
+                                                                @if($activity->assignment_letter_path)
+                                                                    <a class="dropdown-item small" href="{{ Storage::url($activity->assignment_letter_path) }}" target="_blank">
+                                                                        <i class="fe fe-file-text mr-2 text-primary"></i> Surat Tugas
+                                                                    </a>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    @endif
+                                                </div>
                                             </div>
                                         </td>
                                         <td colspan="5" class="text-center text-muted small font-italic py-3 align-middle">
@@ -237,20 +291,21 @@
                                 @else
                                     @foreach($followupsByPic as $pic => $items)
                                         @foreach($items as $item)
-                                            <tr id="followup-row-{{ $item->id }}" style="{{ ($loop->parent->first && $loop->first) ? 'border-top: 2px solid #66696aff;' : '' }} {{ ($loop->first && !$loop->parent->first) ? 'border-top: 2px solid #b8c2cc;' : '' }} {{ ($loop->parent->last && $loop->last) ? 'border-bottom: 2px solid #5b5f62ff;' : '' }}">
+                                            <tr id="followup-row-{{ $item->id }}" style="{{ ($loop->parent->first && $loop->first) ? 'border-top: 2px solid #6c757d;' : '' }}">
                                                 <!-- Activity Info (Rowspan for ALL followups) -->
                                                 @if($loop->parent->first && $loop->first)
                                                     <td rowspan="{{ $rowCount }}" class="align-top pl-4 py-3" style="border-left: 2px solid {{ $activity->type == 'internal' ? '#004085' : '#17a2b8' }}; background-color: #fff; width: 20%; border-right: 2px solid rgba(184, 194, 204, 1);">
                                                         <div style="max-height: 200px; overflow-y: auto;">
-                                                            <a href="{{ route('activities.show', $activity->id) }}" class="text-dark font-weight-bold text-decoration-none" title="Lihat Detail">{{ $activity->name }}</a><br>
-                                                            <small class="text-muted"><i class="fe fe-clock mr-1"></i>{{ $activity->date_time->format('d M, H:i') }}</small>
-                                                            
-                                                            <div class="mt-2">
-                                                                @if($activity->type == 'internal')
-                                                                    <span class="badge badge-primary px-1 py-1" style="font-size: 0.7em; background-color: #004085;">Internal</span>
-                                                                @else
-                                                                    <span class="badge badge-info text-white px-1 py-1" style="font-size: 0.7em;">{{ $activity->organizer_name ?? 'Eksternal' }}</span>
-                                                                @endif
+                                                            <!-- Row 1: Activity Name -->
+                                                            <div class="mb-2">
+                                                                <a href="{{ route('activities.show', $activity->id) }}" class="text-dark font-weight-bold text-decoration-none" title="Lihat Detail">{{ $activity->name }}</a>
+                                                            </div>
+
+                                                            <!-- Row 2: Time -->
+                                                            <div class="mb-2">
+                                                                <small class="text-muted font-weight-bold" style="font-size: 0.9em;">
+                                                                    <i class="fe fe-clock mr-1"></i>{{ $activity->date_time->translatedFormat('d F, H:i') }}
+                                                                </small>
                                                             </div>
 
                                                             @php
@@ -258,38 +313,59 @@
                                                                 $topicName = $firstWithTopic ? $firstWithTopic->topic : null;
                                                             @endphp
 
-                                                            @if($topicName)
-                                                                <div class="mt-2">
+                                                            <!-- Row 3: Topic & Type -->
+                                                            <div class="d-flex align-items-center mb-2 flex-wrap">
+                                                                <!-- Topic -->
+                                                                @if($topicName)
                                                                     @php $tColor = $this->getTopicColor($topicName); @endphp
-                                                                    <span class="badge badge-pill px-2 py-1" style="background-color: {{ $tColor }}20; border: 1px solid {{ $tColor }}; color: {{ $tColor }}; font-weight: 600; font-size: 0.7em;">
+                                                                    <span class="badge badge-pill px-2 py-1 mr-2 mb-1" style="background-color: {{ $tColor }}20; border: 1px solid {{ $tColor }}; color: {{ $tColor }}; font-weight: 600; font-size: 0.7em;">
                                                                         <i class="fe fe-tag mr-1"></i>{{ $topicName }}
                                                                     </span>
-                                                                </div>
-                                                            @endif
+                                                                @else
+                                                                    <span class="badge badge-pill badge-light px-2 py-1 mr-2 mb-1 text-muted border" style="font-size: 0.7em;">
+                                                                        No Topic
+                                                                    </span>
+                                                                @endif
 
-                                                            @if($activity->minutes_path)
-                                                                <div class="mt-2">
-                                                                    <a href="{{ Storage::url($activity->minutes_path) }}" target="_blank" class="text-primary small">
-                                                                        <i class="fe fe-file-text mr-1"></i> Notulensi
-                                                                    </a>
-                                                                </div>
-                                                            @endif
+                                                                <span class="text-muted mr-2 mb-1" style="font-size: 0.8em;">-</span>
 
-                                                            @if($activity->attachment_path)
-                                                                <div class="mt-1">
-                                                                    <a href="{{ Storage::url($activity->attachment_path) }}" target="_blank" class="text-primary small">
-                                                                        <i class="fe fe-paperclip mr-1"></i> Surat Undangan
-                                                                    </a>
+                                                                <!-- Type -->
+                                                                <div class="mb-1">
+                                                                    @if($activity->type == 'internal')
+                                                                        <span class="badge badge-primary px-2 py-1" style="font-size: 0.7em; background-color: #004085;">Internal</span>
+                                                                    @else
+                                                                        <span class="badge badge-info text-white px-2 py-1" style="font-size: 0.7em;">{{ $activity->organizer_name ?? 'Eksternal' }}</span>
+                                                                    @endif
                                                                 </div>
-                                                            @endif
+                                                            </div>
 
-                                                            @if($activity->assignment_letter_path)
-                                                                <div class="mt-1">
-                                                                    <a href="{{ Storage::url($activity->assignment_letter_path) }}" target="_blank" class="text-primary small">
-                                                                        <i class="fe fe-file-text mr-1"></i> Surat Tugas
-                                                                    </a>
-                                                                </div>
-                                                            @endif
+                                                            <!-- Attachments (Row 4) -->
+                                                            <div>
+                                                                @if($activity->minutes_path || $activity->attachment_path || $activity->assignment_letter_path)
+                                                                    <div class="dropdown">
+                                                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle py-1 px-2 btn-block text-left" type="button" data-toggle="dropdown" aria-expanded="false" style="font-size: 0.75em;">
+                                                                            <i class="fe fe-paperclip mr-1"></i> Lampiran
+                                                                        </button>
+                                                                        <div class="dropdown-menu shadow-sm dropdown-menu-right">
+                                                                            @if($activity->minutes_path)
+                                                                                <a class="dropdown-item small" href="{{ Storage::url($activity->minutes_path) }}" target="_blank">
+                                                                                    <i class="fe fe-file-text mr-2 text-primary"></i> Notulensi
+                                                                                </a>
+                                                                            @endif
+                                                                            @if($activity->attachment_path)
+                                                                                <a class="dropdown-item small" href="{{ Storage::url($activity->attachment_path) }}" target="_blank">
+                                                                                    <i class="fe fe-paperclip mr-2 text-primary"></i> Surat Undangan
+                                                                                </a>
+                                                                            @endif
+                                                                            @if($activity->assignment_letter_path)
+                                                                                <a class="dropdown-item small" href="{{ Storage::url($activity->assignment_letter_path) }}" target="_blank">
+                                                                                    <i class="fe fe-file-text mr-2 text-primary"></i> Surat Tugas
+                                                                                </a>
+                                                                            @endif
+                                                                        </div>
+                                                                    </div>
+                                                                @endif
+                                                            </div>
                                                         </div>
                                                     </td>
                                                 @endif
@@ -298,8 +374,19 @@
                                                 @if($loop->first)
                                                     <td rowspan="{{ $items->count() }}" class="align-top py-3 text-center" style="border-right: 1px solid #e9ecef;">
                                                         @if($pic)
-                                                            <span class="badge badge-pill badge-{{ $this->getPicColor($pic) }} px-2 mb-1" style="white-space: normal; line-height: 1.4; display: inline-block;">
-                                                                {{ $pic }}
+                                                            @php
+                                                                $displayName = $pic;
+                                                                if ($pic === 'Komisi Komjakum') {
+                                                                    $displayName = 'Komjakum';
+                                                                }
+                                                            @endphp
+                                                            <span class="badge badge-pill badge-{{ $this->getPicColor($pic) }} px-2 mb-1" 
+                                                                  style="white-space: normal; line-height: 1.4; display: inline-block; cursor: help; user-select: none; -webkit-user-select: none;"
+                                                                  data-toggle="tooltip" 
+                                                                  data-placement="top" 
+                                                                  data-offset="0, 5"
+                                                                  title="{{ $activity->getDispositionGroupMembers($pic) }}">
+                                                                {{ $displayName }}
                                                             </span>
                                                         @else
                                                             <span class="text-muted small">-</span>
@@ -390,6 +477,14 @@
 
     <!-- Styles for Highlight Animation -->
     <style>
+        .table-custom-border th,
+        .table-custom-border td {
+            border: 1px solid #adb5bd !important;
+        }
+        .table-custom-border thead th {
+            border-bottom: 2px solid #6c757d !important;
+        }
+        
         @keyframes kf-highlight {
             0% { background-color: #fff3cd; } /* Warning color light */
             50% { background-color: #fff3cd; }
@@ -404,6 +499,23 @@
     <!-- Scripts for Auto-Refresh and Highlight -->
     <script>
         document.addEventListener('livewire:initialized', () => {
+            // Re-init tooltips safely
+            const initTooltips = () => {
+                 $('[data-toggle="tooltip"]').tooltip('dispose'); 
+                 $('[data-toggle="tooltip"]').tooltip({
+                     html: true,
+                     container: 'body'
+                 });
+            };
+            initTooltips();
+            
+            // Re-init on Livewire updates
+            Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
+                 succeed(({ snapshot, effect }) => {
+                     setTimeout(() => { initTooltips(); }, 100);
+                 });
+            });
+
             let lastActive = Date.now();
             const updateLastActive = () => { lastActive = Date.now(); };
             ['mousemove', 'click', 'scroll', 'keydown', 'touchstart'].forEach(evt => 
@@ -439,5 +551,12 @@
             }
         });
     </script>
+    
+    <style>
+        /* Fix for tooltip flickering: prevent tooltip from capturing mouse events */
+        .tooltip {
+            pointer-events: none !important;
+        }
+    </style>
     </div>
 </div>

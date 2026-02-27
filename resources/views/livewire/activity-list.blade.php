@@ -49,7 +49,7 @@
 
     <div>
         <!-- Urgent Activities Alert -->
-        @if($this->urgentActivities->isNotEmpty() && auth()->check() && auth()->user()->isAdmin())
+        @if($this->urgentActivities->isNotEmpty() && auth()->user()->canManageActivities())
             <div class="alert alert-warning shadow-sm border-0 rounded-lg mb-4 mx-1" role="alert" style="background: linear-gradient(to right, #fff3cd, #fff8e1); border-left: 5px solid #ffc107 !important;">
                 <div class="d-flex align-items-start">
                     <div class="mr-3 mt-1">
@@ -87,7 +87,7 @@
                         <h5 class="card-title mb-1 text-white font-weight-bold text-uppercase" style="letter-spacing: 1px;">Daftar Kegiatan</h5>
                         <p class="mb-0 text-white-50 small">Kelola jadwal kegiatan (Internal & Eksternal)</p>
                     </div>
-                    @if(auth()->check() && auth()->user()->isAdmin())
+                    @if(auth()->user()->canManageActivities())
                         <a href="{{ route('activities.create') }}" class="btn btn-light shadow-sm text-primary font-weight-bold rounded-pill px-4">
                             <i class="fe fe-plus-circle mr-2"></i>Tambah Kegiatan
                         </a>
@@ -149,7 +149,7 @@
 
             <div class="card-body p-0">
                 <!-- Bulk Actions -->
-                @if(auth()->check() && auth()->user()->isAdmin())
+                @if(auth()->user()->canManageActivities())
                     <div class="col-12 p-0" 
                          x-data="{ count: @entangle('selected').live }" 
                          x-show="count && count.length > 0" 
@@ -170,10 +170,10 @@
 
                 <!-- Table -->
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0">
+                    <table class="table mb-0">
                         <thead class="bg-light">
                             <tr>
-                                @if(auth()->check() && auth()->user()->isAdmin())
+                                @if(auth()->user()->canManageActivities())
                                 <th class="pl-4 align-middle" style="width: 5%;">
                                     <div class="custom-control custom-checkbox">
                                         <input type="checkbox" class="custom-control-input" id="selectAllActivity" wire:model.live="selectAll">
@@ -186,22 +186,22 @@
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Status Pelaksanaan</th>
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Status Undangan</th>
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Surat Undangan</th>
-                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Tipe & Lokasi</th>
+                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">PIC & Lokasi</th>
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($groupedActivities as $month => $activities)
+                            @forelse($groupedActivities as $month => $monthActivities)
                                 <tr class="bg-light">
-                                    <td colspan="{{ auth()->check() && auth()->user()->isAdmin() ? 7 : 6 }}" class="py-2 pl-4">
+                                    <td colspan="{{ auth()->user()->canManageActivities() ? 7 : 6 }}" class="py-2 pl-4">
                                         <h6 class="mb-0 text-primary font-weight-bold text-uppercase" style="letter-spacing: 1px; font-size: 0.8rem;">
                                             <i class="fe fe-calendar mr-2"></i>{{ $month }}
                                         </h6>
                                     </td>
                                 </tr>
-                                @foreach($activities as $activity)
+                                @foreach($monthActivities as $activity)
                                 <tr style="border-left: 4px solid {{ $activity->type == 'internal' ? '#004085' : '#17a2b8' }};">
-                                    @if(auth()->check() && auth()->user()->isAdmin())
+                                    @if(auth()->user()->canManageActivities())
                                     <td class="pl-4 align-middle">
                                         <div class="custom-control custom-checkbox">
                                             <input type="checkbox" class="custom-control-input" id="check_{{ $activity->id }}" value="{{ $activity->id }}" wire:model.live="selected">
@@ -269,10 +269,20 @@
                                     </td>
                                     <td class="align-middle text-center">
                                         <div class="mb-1">
-                                            @if($activity->type == 'internal')
-                                                <span class="badge badge-primary px-3" style="background-color: #004085;">Internal</span>
+                                            @php $groups = $activity->disposition_groups; @endphp
+                                            @if(!empty($groups))
+                                                @foreach($groups as $group)
+                                                    <span class="badge badge-{{ $this->getPicColor($group) }} px-2 mb-1" 
+                                                          style="font-size: 0.7rem; cursor: help; user-select: none; -webkit-user-select: none;" 
+                                                          data-toggle="tooltip" 
+                                                          data-placement="top" 
+                                                          data-offset="0, 5"
+                                                          title="{{ $activity->getDispositionGroupMembers($group) }}">
+                                                          {{ $group }}
+                                                    </span>
+                                                @endforeach
                                             @else
-                                                <span class="badge badge-info text-white px-3">Eksternal</span>
+                                                <span class="text-muted small">-</span>
                                             @endif
                                         </div>
                                         <div>
@@ -288,7 +298,7 @@
                                                 <a class="dropdown-item" href="{{ route('activities.show', $activity->id) }}">
                                                     <i class="fe fe-eye mr-2 text-primary"></i> Detail
                                                 </a>
-                                                @if(auth()->check() && auth()->user()->isAdmin())
+                                                @if(auth()->user()->canManageActivities())
                                                 <a class="dropdown-item" href="{{ route('activities.edit', $activity->id) }}">
                                                     <i class="fe fe-edit mr-2 text-warning"></i> Edit
                                                 </a>
@@ -304,7 +314,7 @@
                                 @endforeach
                             @empty
                                 <tr>
-                                    <td colspan="{{ auth()->check() && auth()->user()->isAdmin() ? 7 : 6 }}" class="text-center py-5">
+                                    <td colspan="{{ auth()->user()->canManageActivities() ? 7 : 6 }}" class="text-center py-5">
                                         <div class="d-flex flex-column align-items-center justify-content-center">
                                             <div class="bg-light rounded-circle p-4 mb-3">
                                                 <i class="fe fe-calendar text-muted display-4"></i>
@@ -320,16 +330,40 @@
                 </div>
                 
                 <div class="p-3 border-top bg-light">
-                     <!-- Pagination or Footer info if needed -->
-                     <small class="text-muted text-center d-block">Menampilkan daftar kegiatan berdasarkan jadwal terbaru.</small>
+                     {{ $activities->links() }}
                 </div>
             </div>
         </div>
     </div>
-</div>
+
 
 <script>
     document.addEventListener('livewire:initialized', () => {
+        // Function to re-init tooltips safely
+        const initTooltips = () => {
+             // Dispose existing to prevent duplicates/memory leaks
+             $('[data-toggle="tooltip"]').tooltip('dispose'); 
+             // Re-initialize with HTML enabled
+             $('[data-toggle="tooltip"]').tooltip({
+                 html: true,
+                 container: 'body'
+             });
+        };
+
+        // Init on load
+        initTooltips();
+
+        // Init on ANY Livewire message processed (covers refreshes, updates, pagination)
+        Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
+            succeed(({ snapshot, effect }) => {
+                // Wait for DOM to update
+                setTimeout(() => {
+                    initTooltips();
+                }, 100);
+            });
+        });
+
+        // Auto Refresh Logic
         let lastActive = Date.now();
         const updateLastActive = () => { lastActive = Date.now(); };
         ['mousemove', 'click', 'scroll', 'keydown', 'touchstart'].forEach(evt => 
@@ -343,3 +377,11 @@
         }, 5000);
     });
 </script>
+
+<style>
+    /* Fix for tooltip flickering: prevent tooltip from capturing mouse events */
+    .tooltip {
+        pointer-events: none !important;
+    }
+</style>
+</div>

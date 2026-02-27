@@ -60,19 +60,21 @@
         <!-- Toolbar -->
         <div class="bg-light border-bottom p-3" style="position: relative; z-index: 100; overflow: visible;">
              <div class="row align-items-center" style="overflow: visible;">
-                 <div class="col-md-3 mb-2 mb-md-0">
+                 <!-- Search: 3 Cols on XL, 2.5 Cols? Let's try 3 -->
+                 <div class="col-12 col-md-3 col-xl-3 mb-0">
                      <div class="input-group input-group-merge input-group-premium bg-white">
-                         <input type="text" class="form-control border-0 pl-4 bg-transparent" wire:model.live.debounce.300ms="search" placeholder="Cari kegiatan...">
+                         <input type="text" class="form-control border-0 pl-4 bg-transparent" wire:model.live.debounce.300ms="search" placeholder="Cari...">
                          <div class="input-group-append">
                              <div class="input-group-text border-0 bg-transparent pr-4"><i class="fe fe-search text-muted"></i></div>
                          </div>
                      </div>
                  </div>
-                 <div class="col-md-2 mb-2 mb-md-0" x-data="{ open: false }" @click.away="open = false">
+
+                 <!-- Year: 1 Col -->
+                 <div class="col-6 col-md-1 col-xl-1 mb-0 pr-1 pl-1" x-data="{ open: false }" @click.away="open = false">
                     <div class="position-relative">
-                        <button type="button" @click="open = !open" class="form-control-premium shadow-sm text-left d-flex align-items-center justify-content-between" style="background-image: none; height: auto;">
+                        <button type="button" @click="open = !open" class="form-control-premium shadow-sm text-center px-1" style="background-image: none; height: auto;">
                             <span class="text-truncate" x-text="$wire.year"></span>
-                            <i class="fe fe-chevron-down ml-2 header-arrow" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
                         </button>
                          <div class="dropdown-menu-premium shadow-lg w-100" x-show="open" x-transition style="display: none; max-height: 250px; overflow-y: auto;">
                              @foreach(range(date('Y'), 2023) as $y)
@@ -81,14 +83,16 @@
                          </div>
                     </div>
                  </div>
-                <div class="col-md-2 mb-2 mb-md-0" x-data="{ open: false, getMonthName(m) { return m ? ['', 'Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][m] : 'Semua Bulan'; } }" @click.away="open = false" style="position: relative; z-index: 1050; overflow: visible;">
+
+                 <!-- Month: 2 Cols -->
+                <div class="col-6 col-md-2 col-xl-2 mb-0 pl-1 pr-1" x-data="{ open: false, getMonthName(m) { return m ? ['', 'Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'][m] : 'Bulan'; } }" @click.away="open = false" style="position: relative; z-index: 1050; overflow: visible;">
                      <div class="position-relative">
-                        <button type="button" @click="open = !open" class="form-control-premium shadow-sm text-left d-flex align-items-center justify-content-between" style="background-image: none; height: auto;">
-                            <span class="text-truncate" x-text="getMonthName($wire.month)">Semua Bulan</span>
-                            <i class="fe fe-chevron-down ml-2 header-arrow" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
+                        <button type="button" @click="open = !open" class="form-control-premium shadow-sm text-left d-flex align-items-center justify-content-between px-3" style="background-image: none; height: auto;">
+                            <span class="text-truncate" x-text="getMonthName($wire.month)">Bulan</span>
+                            <i class="fe fe-chevron-down ml-1 header-arrow" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
                         </button>
                         <div class="dropdown-menu-premium shadow-lg w-100" x-show="open" x-transition style="display: none; max-height: 400px; overflow-y: auto; position: absolute; top: 100%; left: 0; z-index: 1060;">
-                            <div class="dropdown-item-premium" :class="{ 'active': $wire.month == '' }" @click="$wire.set('month', ''); open = false">Semua Bulan</div>
+                            <div class="dropdown-item-premium" :class="{ 'active': $wire.month == '' }" @click="$wire.set('month', ''); open = false">Semua</div>
                             <div class="dropdown-item-premium" :class="{ 'active': $wire.month == '1' }" @click="$wire.set('month', '1'); open = false">Januari</div>
                             <div class="dropdown-item-premium" :class="{ 'active': $wire.month == '2' }" @click="$wire.set('month', '2'); open = false">Februari</div>
                             <div class="dropdown-item-premium" :class="{ 'active': $wire.month == '3' }" @click="$wire.set('month', '3'); open = false">Maret</div>
@@ -104,32 +108,52 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-2.5 mb-2 mb-md-0" x-data="{ open: false }" @click.away="open = false">
+
+                 <!-- Type: 2 Cols -->
+                 <div class="col-6 col-md-2 col-xl-2 mb-0 pl-1 pr-1" x-data="{ open: false }" @click.away="open = false">
                     <div class="position-relative">
-                        <button type="button" @click="open = !open" class="form-control-premium shadow-sm text-left d-flex align-items-center justify-content-between" style="background-image: none; height: auto;">
-                             <span class="text-truncate" x-text="$wire.type === 'external' ? 'Eksternal' : ($wire.type === 'internal' ? 'Internal' : 'Semua Tipe Kegiatan')">Semua Tipe Kegiatan</span>
-                            <i class="fe fe-chevron-down ml-2 header-arrow" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
+                        <button type="button" @click="open = !open" class="form-control-premium shadow-sm text-left d-flex align-items-center justify-content-between px-3" style="background-image: none; height: auto;">
+                             <span class="text-truncate" x-text="$wire.type === 'external' ? 'Eksternal' : ($wire.type === 'internal' ? 'Internal' : 'Tipe')">Tipe</span>
+                            <i class="fe fe-chevron-down ml-1 header-arrow" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
                         </button>
                         <div class="dropdown-menu-premium shadow-lg w-100" x-show="open" x-transition style="display: none;">
-                             <div class="dropdown-item-premium" :class="{ 'active': $wire.type === '' }" @click="$wire.set('type', ''); open = false">Semua Tipe Kegiatan</div>
+                             <div class="dropdown-item-premium" :class="{ 'active': $wire.type === '' }" @click="$wire.set('type', ''); open = false">Semua</div>
                              <div class="dropdown-item-premium" :class="{ 'active': $wire.type === 'internal' }" @click="$wire.set('type', 'internal'); open = false">Internal</div>
                              <div class="dropdown-item-premium" :class="{ 'active': $wire.type === 'external' }" @click="$wire.set('type', 'external'); open = false">Eksternal</div>
                         </div>
                     </div>
                 </div>
-              <div class="col-md-3 mb-2 mb-md-0" x-data="{ open: false }" @click.away="open = false">
-                     <div class="position-relative">
-                        <button type="button" @click="open = !open" class="form-control-premium shadow-sm text-left d-flex align-items-center justify-content-between" style="background-image: none; height: auto;">
-                            <span class="text-truncate" x-text="$wire.sortDirection === 'desc' ? 'Terbaru' : 'Terlama'">Terbaru</span>
-                            <i class="fe fe-chevron-down ml-2 header-arrow" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
+
+                <!-- PIC: 2 Cols -->
+                <div class="col-12 col-md-2 col-xl-2 mb-0 pl-1 pr-1" x-data="{ open: false }" @click.away="open = false" style="position: relative; z-index: 1040;">
+                    <div class="position-relative">
+                        <button type="button" @click="open = !open" class="form-control-premium shadow-sm text-left d-flex align-items-center justify-content-between px-3" style="background-image: none; height: auto;">
+                            <span class="text-truncate" x-text="$wire.pic ? $wire.pic : 'PIC'">PIC</span>
+                            <i class="fe fe-chevron-down ml-1 header-arrow" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
                         </button>
-                        <div class="dropdown-menu-premium shadow-lg w-100" x-show="open" x-transition style="display: none;">
-                             <div class="dropdown-item-premium" :class="{ 'active': $wire.sortDirection === 'desc' }" @click="$wire.set('sortDirection', 'desc'); open = false">Terbaru</div>
-                             <div class="dropdown-item-premium" :class="{ 'active': $wire.sortDirection === 'asc' }" @click="$wire.set('sortDirection', 'asc'); open = false">Terlama</div>
-                        </div>
+                         <div class="dropdown-menu-premium shadow-lg w-100" x-show="open" x-transition style="display: none; max-height: 250px; overflow-y: auto;">
+                             <div class="dropdown-item-premium" :class="{ 'active': $wire.pic === '' }" @click="$wire.set('pic', ''); open = false">Semua PIC</div>
+                             @foreach(\App\Models\Activity::INTERNAL_PICS as $opt)
+                                <div class="dropdown-item-premium" :class="{ 'active': $wire.pic === '{{ $opt }}' }" @click="$wire.set('pic', '{{ $opt }}'); open = false">{{ $opt }}</div>
+                             @endforeach
+                         </div>
                     </div>
-              </div>
-         </div>
+                 </div>
+
+                 <!-- Sort: 2 Cols -->
+               <div class="col-6 col-md-2 col-xl-2 mb-0 pl-1" x-data="{ open: false }" @click.away="open = false">
+                      <div class="position-relative">
+                         <button type="button" @click="open = !open" class="form-control-premium shadow-sm text-left d-flex align-items-center justify-content-between px-3" style="background-image: none; height: auto;">
+                             <span class="text-truncate" x-text="$wire.sortDirection === 'desc' ? 'Terbaru' : 'Terlama'">Terbaru</span>
+                             <i class="fe fe-chevron-down ml-1 header-arrow" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
+                         </button>
+                         <div class="dropdown-menu-premium shadow-lg w-100" x-show="open" x-transition style="display: none;">
+                              <div class="dropdown-item-premium" :class="{ 'active': $wire.sortDirection === 'desc' }" @click="$wire.set('sortDirection', 'desc'); open = false">Terbaru</div>
+                              <div class="dropdown-item-premium" :class="{ 'active': $wire.sortDirection === 'asc' }" @click="$wire.set('sortDirection', 'asc'); open = false">Terlama</div>
+                         </div>
+                     </div>
+               </div>
+          </div>
         </div>
 
         @if (session()->has('success_upload'))
@@ -163,7 +187,7 @@
 
              <!-- Table -->
              <div class="table-responsive">
-                 <table class="table table-hover mb-0">
+                 <table class="table mb-0">
                      <thead class="bg-light">
                          <tr>
                              @if(auth()->check() && auth()->user()->isAdmin())
@@ -188,7 +212,7 @@
                          </tr>
                      </thead>
                      <tbody>
-                        @forelse($groupedActivities as $month => $activities)
+                        @forelse($groupedActivities as $month => $monthActivities)
                             <tr class="bg-light">
                                 <td colspan="{{ auth()->check() && auth()->user()->isAdmin() ? 7 : 6 }}" class="py-2 pl-4">
                                     <h6 class="mb-0 text-primary font-weight-bold text-uppercase" style="letter-spacing: 1px; font-size: 0.8rem;">
@@ -196,7 +220,7 @@
                                     </h6>
                                 </td>
                             </tr>
-                            @foreach($activities as $activity)
+                            @foreach($monthActivities as $activity)
                                 <tr style="border-left: 4px solid {{ $activity->type == 'internal' ? '#004085' : '#17a2b8' }};" wire:key="row-{{ $activity->id }}">
                                     @if(auth()->check() && auth()->user()->isAdmin())
                                     <td class="pl-4 align-middle">
@@ -222,7 +246,66 @@
                                         <a href="{{ route('activities.show', $activity->id) }}" class="text-dark font-weight-bold mb-1 d-block text-decoration-none h6">
                                             {{ $activity->name }}
                                         </a>
-                                        <small class="text-muted"><i class="fe fe-map-pin mr-1"></i>{{ $activity->location_type == 'online' ? 'Online' : $activity->location }}</small>
+                                        <small class="text-muted d-block mb-1"><i class="fe fe-map-pin mr-1"></i>{{ $activity->location_type == 'online' ? 'Online' : $activity->location }}</small>
+                                        
+                                        {{-- PIC Badges --}}
+                                        @if($activity->pic)
+                                            <div class="d-flex flex-wrap mt-1">
+                                                @php
+                                                    $pics = is_array($activity->pic) ? $activity->pic : [$activity->pic];
+                                                    
+                                                    // Mapping matching App\Livewire\ActivityList::getPicColor
+                                                    $classMap = [
+                                                        'Ketua DJSN' => 'badge-ketua',
+                                                        'Komisi PME' => 'badge-pme',
+                                                        'Komjakum' => 'badge-komjakum',
+                                                        'Sekretariat DJSN' => 'badge-sekretariat',
+                                                        'Anggota DJSN' => 'badge-djsn'
+                                                    ];
+
+                                                    // Priority Sort
+                                                    $priority = [
+                                                        'Ketua DJSN' => 1,
+                                                        'Komisi PME' => 2,
+                                                        'Komjakum' => 3,
+                                                        'Komisi Komjakum' => 3, // Legacy support
+                                                        'Sekretariat DJSN' => 4
+                                                    ];
+
+                                                    usort($pics, function($a, $b) use ($priority) {
+                                                        $pa = $priority[$a] ?? 99;
+                                                        $pb = $priority[$b] ?? 99;
+                                                        return $pa <=> $pb;
+                                                    });
+                                                @endphp
+                                                @foreach($pics as $picName)
+                                                    @php
+                                                        $badgeClass = 'badge-primary'; // Fallback
+                                                        foreach ($classMap as $key => $cls) {
+                                                            if (str_contains(strtoupper($picName), strtoupper($key)) || 
+                                                                (str_contains($picName, 'PME') && $key == 'Komisi PME') ||
+                                                                (str_contains($picName, 'Komjakum') && $key == 'Komjakum')
+                                                            ) {
+                                                                $badgeClass = $cls;
+                                                                break;
+                                                            }
+                                                        }
+                                                        // Fallback specific checks if needed (copied from ActivityList logic)
+                                                        if (str_contains(strtoupper($picName), 'PME')) $badgeClass = 'badge-pme';
+                                                        if (str_contains(strtoupper($picName), 'KOMJAKUM')) $badgeClass = 'badge-komjakum';
+                                                        if (str_contains(strtoupper($picName), 'SEKRETARIAT')) $badgeClass = 'badge-sekretariat';
+
+                                                        $displayName = $picName;
+                                                        if ($picName === 'Komisi Komjakum') {
+                                                            $displayName = 'Komjakum';
+                                                        }
+                                                    @endphp
+                                                    <span class="badge badge-pill {{ $badgeClass }} mr-1 mb-1 px-2" style="font-size: 0.65rem;">
+                                                        {{ $displayName }}
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        @endif
                                     </td>
                                     <td class="align-middle text-center">
                                          @switch($activity->status)
@@ -234,60 +317,43 @@
 
                                         <div class="mt-2">
                                             @if(!empty($activity->summary_content) && trim(strip_tags($activity->summary_content)) != '')
-                                                <small class="text-success font-weight-bold" title="Hasil Rapat Tersedia">
-                                                    <i class="fe fe-check-circle mr-1"></i>Ringkasan Rapat Terisi
+                                                <small class="text-success font-weight-bold" 
+                                                    style="cursor: pointer;" wire:click="openSummaryModal({{ $activity->id }})" title="Klik untuk lihat ringkasan">
+                                                    <span wire:loading.remove wire:target="openSummaryModal({{ $activity->id }})"><i class="fe fe-check-circle mr-1"></i></span>
+                                                    <span wire:loading wire:target="openSummaryModal({{ $activity->id }})" class="spinner-border spinner-border-sm mr-1" role="status" aria-hidden="true"></span>
+                                                    Ringkasan Rapat Terisi
                                                 </small>
                                             @else
-                                                <small class="text-muted" title="Belum ada ringkasan hasil rapat">
-                                                    <i class="fe fe-minus-circle mr-1"></i>Ringkasan Rapat Belum Diisi
+                                                <small class="text-muted" 
+                                                    @if(auth()->user()->canManagePostActivity())
+                                                        style="cursor: pointer;" wire:click="openSummaryModal({{ $activity->id }})" title="Klik untuk isi ringkasan"
+                                                    @endif>
+                                                    <span wire:loading.remove wire:target="openSummaryModal({{ $activity->id }})"><i class="fe fe-edit-2 mr-1"></i></span>
+                                                    <span wire:loading wire:target="openSummaryModal({{ $activity->id }})" class="spinner-border spinner-border-sm mr-1" role="status" aria-hidden="true"></span>
+                                                    Ringkasan Rapat Belum Diisi
                                                 </small>
                                             @endif
                                         </div>
                                     </td>
                                     <td class="align-middle text-center" style="min-width: 170px;">
-                                        @if($activity->minutes_path)
-                                            <div class="btn-group shadow-sm rounded-pill">
-                                                <a href="{{ Storage::url($activity->minutes_path) }}" target="_blank" class="btn btn-sm btn-outline-primary border-0 bg-white d-flex align-items-center justify-content-center" title="Lihat Notulensi">
-                                                    <i class="fe fe-eye mr-2"></i> Notulensi
-                                                </a>
-                                                @if(auth()->check() && auth()->user()->isAdmin())
-                                                <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle dropdown-toggle-split border-0 bg-white" data-toggle="dropdown">
-                                                    <span class="sr-only">Toggle Dropdown</span>
-                                                </button>
-                                                <div class="dropdown-menu dropdown-menu-right">
-                                                    <a class="dropdown-item" href="javascript:void(0)" onclick="document.getElementById('minutes_{{ $activity->id }}').click()">
-                                                        <i class="fe fe-upload mr-2"></i> Ganti File
-                                                    </a>
-                                                    <div class="dropdown-divider"></div>
-                                                    <a class="dropdown-item text-danger" href="javascript:void(0)" onclick="confirmDeleteFile('minutes', {{ $activity->id }})">
-                                                        <i class="fe fe-trash-2 mr-2"></i> Hapus File
-                                                    </a>
-                                                </div>
+                                        <!-- MoM (Minutes of Meeting) Button -->
+                                        <div class="mb-2">
+                                            <button wire:click="openMomModal({{ $activity->id }})" wire:loading.attr="disabled" class="btn btn-sm btn-outline-primary rounded-pill shadow-sm px-3 w-100 d-flex align-items-center justify-content-center text-nowrap">
+                                                <span wire:loading.remove wire:target="openMomModal({{ $activity->id }})"><i class="fe fe-file-text mr-2"></i></span>
+                                                <span wire:loading wire:target="openMomModal({{ $activity->id }})" class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>
+                                                MoM
+                                                @if($activity->moms->count() > 0)
+                                                    <span class="badge badge-primary ml-2">{{ $activity->moms->count() }}</span>
                                                 @endif
-                                            </div>
-                                            @if(auth()->check() && auth()->user()->isAdmin())
-                                                <input type="file" id="minutes_{{ $activity->id }}" wire:model.live="minutesFiles.{{ $activity->id }}" class="d-none" accept="application/pdf">
-                                                <div wire:loading wire:target="minutesFiles.{{ $activity->id }}" class="text-center mt-1">
-                                                     <small class="text-muted"><span class="spinner-border spinner-border-sm"></span></small>
-                                                </div>
-                                            @endif
-                                        @else
-                                            @if(auth()->check() && auth()->user()->isAdmin())
-                                            <input type="file" id="minutes_{{ $activity->id }}" wire:model.live="minutesFiles.{{ $activity->id }}" class="d-none" accept="application/pdf">
-                                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill w-100 border-dashed d-flex align-items-center justify-content-center" onclick="document.getElementById('minutes_{{ $activity->id }}').click()">
-                                                <span wire:loading.remove wire:target="minutesFiles.{{ $activity->id }}" class="d-flex align-items-center"><i class="fe fe-upload-cloud mr-2"></i> Notulensi</span>
-                                                <span wire:loading wire:target="minutesFiles.{{ $activity->id }}"><span class="spinner-border spinner-border-sm text-secondary"></span></span>
                                             </button>
-                                            @else
-                                            <span class="text-muted small font-italic">-</span>
-                                            @endif
-                                        @endif
-                                        @error("minutesFiles.{$activity->id}") <span class="d-block text-danger small mt-1">{{ $message }}</span> @enderror
+                                        </div>
                                         
                                         <!-- Materials Button -->
-                                        <div class="mt-2">
-                                            <button wire:click="openMaterialModal({{ $activity->id }})" class="btn btn-sm btn-outline-info rounded-pill shadow-sm px-3 w-100 d-flex align-items-center justify-content-center text-nowrap">
-                                                <i class="fe fe-folder mr-2"></i> Bahan Materi 
+                                        <div>
+                                            <button wire:click="openMaterialModal({{ $activity->id }})" wire:loading.attr="disabled" class="btn btn-sm btn-outline-info rounded-pill shadow-sm px-3 w-100 d-flex align-items-center justify-content-center text-nowrap">
+                                                <span wire:loading.remove wire:target="openMaterialModal({{ $activity->id }})"><i class="fe fe-folder mr-2"></i></span>
+                                                <span wire:loading wire:target="openMaterialModal({{ $activity->id }})" class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>
+                                                Bahan Materi 
                                                 @if($activity->materials->count() > 0)
                                                     <span class="badge badge-info ml-2">{{ $activity->materials->count() }}</span>
                                                 @endif
@@ -295,32 +361,39 @@
                                         </div>
                                     </td>
                                     <td class="align-middle text-center" style="min-width: 140px;">
-                                        <button class="btn btn-sm btn-outline-light border text-dark shadow-sm px-3 py-2 text-left" wire:click="openAssignmentModal({{ $activity->id }})" wire:loading.attr="disabled" style="min-width: 140px;">
-                                            <div class="d-flex align-items-center mb-1">
-                                                 @if(!empty($activity->attendance_list))
-                                                    <i class="fe fe-check-circle text-success mr-2"></i>
-                                                @else
-                                                    <i class="fe fe-minus text-muted mr-2"></i>
+                                        <button class="btn btn-sm btn-outline-light border text-dark shadow-sm px-3 py-2 text-left" wire:click="openAssignmentModal({{ $activity->id }})" wire:loading.attr="disabled" style="min-width: 140px; position: relative;">
+                                            <div wire:loading.remove wire:target="openAssignmentModal({{ $activity->id }})">
+                                                <div class="d-flex align-items-center mb-1">
+                                                     @if(!empty($activity->attendance_list))
+                                                        <i class="fe fe-check-circle text-success mr-2"></i>
+                                                    @else
+                                                        <i class="fe fe-minus text-muted mr-2"></i>
+                                                    @endif
+                                                     <span class="small font-weight-bold">Kehadiran</span>
+                                                </div>
+                                                
+                                                @if(!auth()->check() || !auth()->user()->hasRole('Dewan'))
+                                                <div class="d-flex align-items-center">
+                                                    @if($activity->assignment_letter_path)
+                                                        <i class="fe fe-check-circle text-success mr-2"></i>
+                                                    @else
+                                                        <i class="fe fe-minus text-muted mr-2"></i>
+                                                    @endif
+                                                     <span class="small font-weight-bold">Surat Tugas</span>
+                                                </div>
                                                 @endif
-                                                 <span class="small font-weight-bold">Kehadiran</span>
                                             </div>
-                                            
-                                            @if(!auth()->check() || !auth()->user()->hasRole('Dewan'))
-                                            <div class="d-flex align-items-center">
-                                                @if($activity->assignment_letter_path)
-                                                    <i class="fe fe-check-circle text-success mr-2"></i>
-                                                @else
-                                                    <i class="fe fe-minus text-muted mr-2"></i>
-                                                @endif
-                                                 <span class="small font-weight-bold">Surat Tugas</span>
+                                            <div wire:loading wire:target="openAssignmentModal({{ $activity->id }})" class="w-100 text-center py-2">
+                                                 <span class="spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></span>
+                                                 <span class="d-block small text-muted mt-1">Loading...</span>
                                             </div>
-                                            @endif
                                         </button>
                                     </td>
                                     <td class="align-middle text-center" style="min-width: 140px;">
                                         @php $docCount = $activity->documentations->count(); @endphp
                                         <button class="btn btn-sm {{ $docCount > 0 ? 'btn-outline-primary' : 'btn-outline-secondary' }} rounded-pill shadow-sm px-3" wire:click="openDocumentationModal({{ $activity->id }})" wire:loading.attr="disabled">
-                                            <i class="fe fe-image mr-1"></i>
+                                            <span wire:loading.remove wire:target="openDocumentationModal({{ $activity->id }})"><i class="fe fe-image mr-1"></i></span>
+                                            <span wire:loading wire:target="openDocumentationModal({{ $activity->id }})" class="spinner-border spinner-border-sm mr-1" role="status" aria-hidden="true"></span>
                                             @if(auth()->check() && auth()->user()->isAdmin())
                                                 {{ $docCount > 0 ? $docCount.' Foto' : 'Upload' }}
                                             @else
@@ -337,7 +410,7 @@
                                                 <a class="dropdown-item" href="{{ route('activities.show', $activity->id) }}">
                                                     <i class="fe fe-eye mr-2 text-primary"></i> Detail
                                                 </a>
-                                                @if(auth()->check() && auth()->user()->isAdmin())
+                                                @if(auth()->user()->canManageActivities())
                                                 <a class="dropdown-item" href="{{ route('activities.edit', $activity->id) }}">
                                                     <i class="fe fe-edit mr-2 text-warning"></i> Edit
                                                 </a>
@@ -366,6 +439,9 @@
                         @endforelse
                      </tbody>
                  </table>
+             </div>
+             <div class="p-3">
+                 {{ $activities->links() }}
              </div>
         </div>
     </div>
@@ -424,6 +500,10 @@
                 title = 'Hapus Foto?';
                 text = 'Foto dokumentasi akan dihapus permanen.';
                 method = 'deleteDocumentationFile';
+            } else if (type === 'mom') {
+                title = 'Hapus MoM?';
+                text = 'File MoM akan dihapus permanen.';
+                method = 'deleteMom';
             }
 
             Swal.fire({
@@ -463,11 +543,22 @@
             $('#materialModal').modal('hide');
         });
 
+        window.addEventListener('open-mom-modal', event => {
+            $('#momModal').modal('show');
+        });
+        
+        window.addEventListener('close-mom-modal', event => {
+            $('#momModal').modal('hide');
+        });
+
         document.addEventListener('livewire:initialized', () => {
              $('#assignmentModal').on('hidden.bs.modal', function () {
                 @this.call('closeModalState');
             });
             $('#materialModal').on('hidden.bs.modal', function () {
+                @this.call('closeModalState');
+            });
+            $('#momModal').on('hidden.bs.modal', function () {
                 @this.call('closeModalState');
             });
             $('#documentationModal').on('hidden.bs.modal', function () {
@@ -483,11 +574,62 @@
                     showConfirmButton: false
                 });
             });
+
+            function initStaffSelect2() {
+                if ($('.select2-staff-sekretariat').length > 0) {
+                     $('.select2-staff-sekretariat').select2({
+                        theme: 'bootstrap4',
+                        placeholder: 'Cari atau Ketik Nama Sekretariat...',
+                        allowClear: true,
+                        tags: true,
+                        dropdownParent: $('#wrapper-sekretariat')
+                    }).on('change', function (e) {
+                        var data = $(this).val();
+                        @this.set('selectedSekretariat', data);
+                    });
+                }
+
+                if ($('.select2-staff-ta').length > 0) {
+                    $('.select2-staff-ta').select2({
+                        theme: 'bootstrap4',
+                        placeholder: 'Cari atau Ketik Nama Tenaga Ahli...',
+                        allowClear: true,
+                        tags: true,
+                        dropdownParent: $('#wrapper-ta')
+                    }).on('change', function (e) {
+                        var data = $(this).val();
+                        @this.set('selectedTA', data);
+                    });
+                }
+            }
+
+            // Init on load (in case logic changes and it's visible)
+            initStaffSelect2();
+
+            window.addEventListener('open-assignment-modal', event => {
+                $('#assignmentModal').modal('show');
+                // Re-init select2 after modal shows/DOM updates
+                setTimeout(() => {
+                    initStaffSelect2();
+                    
+                    // Also trigger update if data was sent (optional, usually handled by update-staff-select but that might run before init)
+                    // If we have data in the component, we might want to sync. 
+                    // But typically update-staff-select is dispatched AFTER open-assignment-modal.
+                }, 100); 
+            });
+
+            window.addEventListener('update-staff-select', event => {
+                 // Wait for init
+                 setTimeout(() => {
+                    $('.select2-staff-sekretariat').val(event.detail.sekretariat).trigger('change');
+                    $('.select2-staff-ta').val(event.detail.ta).trigger('change');
+                 }, 150);
+            });
         });
     </script>
 
     <!-- Material Management Modal -->
-    <div wire:ignore.self class="modal fade" id="materialModal" tabindex="-1" role="dialog" aria-labelledby="materialModalLabel" aria-hidden="true">
+    <div wire:ignore.self class="modal fade" id="materialModal" tabindex="-1" role="dialog" aria-labelledby="materialModalLabel" aria-hidden="true" style="z-index: 10000 !important;">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -507,6 +649,7 @@
                     @endif
 
                     <!-- Add New Material Form -->
+                    @if(auth()->user()->canManagePostActivity())
                     <div class="card bg-light mb-4">
                         <div class="card-body">
                             <h6 class="font-weight-bold mb-3">Tambah Materi Baru</h6>
@@ -543,11 +686,12 @@
                             </form>
                         </div>
                     </div>
+                    @endif
 
                     <!-- Material List -->
                     <h6 class="font-weight-bold mb-3">Daftar Materi Tersimpan</h6>
                     <div class="table-responsive">
-                        <table class="table table-hover align-items-center">
+                        <table class="table align-items-center">
                             <thead class="thead-light">
                                 <tr>
                                     <th>Judul Materi</th>
@@ -590,7 +734,7 @@
                                             </a>
                                         </td>
                                         <td>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDeleteFile('material', {{ $material->id }})">
+                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDeleteFile('material', {{ $material->id }})" {{ !auth()->user()->canManagePostActivity() ? 'disabled' : '' }}>
                                                 <i class="fe fe-trash"></i>
                                             </button>
                                         </td>
@@ -610,8 +754,135 @@
             </div>
         </div>
     </div>
+
+    <!-- MoM Management Modal -->
+    <div wire:ignore.self class="modal fade" id="momModal" tabindex="-1" role="dialog" aria-labelledby="momModalLabel" aria-hidden="true" style="z-index: 10000 !important;">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="momModalLabel">Kelola MoM (Notulensi) Kegiatan</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    @if (session()->has('success_mom'))
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            {{ session('success_mom') }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    @endif
+
+                    <!-- Add New MoM Form -->
+                    @if(auth()->user()->canManagePostActivity())
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h6 class="font-weight-bold mb-3">Tambah MoM Baru</h6>
+                            <form wire:submit.prevent="saveMom">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Judul MoM</label>
+                                            <input type="text" wire:model="newMomTitle" class="form-control" placeholder="Contoh: Notulensi Rapat Internal">
+                                            @error('newMomTitle') <span class="text-danger small">{{ $message }}</span> @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>File MoM (Max 20MB)</label>
+                                            <div class="custom-file">
+                                                <input type="file" wire:model="newMomFile" class="custom-file-input" id="momFile">
+                                                <label class="custom-file-label" for="momFile">
+                                                    {{ $newMomFile ? $newMomFile->getClientOriginalName() : 'Pilih file...' }}
+                                                </label>
+                                            </div>
+                                            @error('newMomFile') <span class="text-danger small">{{ $message }}</span> @enderror
+                                            <div wire:loading wire:target="newMomFile" class="text-xs text-muted mt-1">
+                                                Uploading...
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <button type="submit" class="btn btn-primary btn-sm" wire:loading.attr="disabled">
+                                        <i class="fe fe-plus"></i> Tambahkan
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    @endif
+
+                    <!-- MoM List -->
+                    <h6 class="font-weight-bold mb-3">Daftar MoM Tersimpan</h6>
+                    <div class="table-responsive">
+                        <table class="table align-items-center">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Judul MoM</th>
+                                    <th>File</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($momList as $mom)
+                                    <tr>
+                                        <td class="font-weight-bold text-dark">{{ $mom->title }}</td>
+                                        <td>
+                                            @php
+                                                $ext = strtolower(pathinfo($mom->file_path, PATHINFO_EXTENSION));
+                                                $icon = 'fe-file';
+                                                $color = 'text-secondary';
+                                                
+                                                if(in_array($ext, ['ppt', 'pptx'])) {
+                                                    $icon = 'fe-monitor';
+                                                    $color = 'text-warning';
+                                                } elseif(in_array($ext, ['doc', 'docx'])) {
+                                                    $icon = 'fe-file-text';
+                                                    $color = 'text-primary';
+                                                } elseif($ext == 'pdf') {
+                                                    $icon = 'fe-file';
+                                                    $color = 'text-danger';
+                                                } elseif(in_array($ext, ['xls', 'xlsx', 'csv'])) {
+                                                    $icon = 'fe-bar-chart-2';
+                                                    $color = 'text-success';
+                                                }
+                                            @endphp
+                                            <a href="{{ Storage::url($mom->file_path) }}" target="_blank" class="d-flex align-items-center text-dark text-decoration-none">
+                                                <div class="avatar avatar-sm mr-2 {{ $color }} bg-light rounded">
+                                                    <i class="fe {{ $icon }} font-weight-bold" style="font-size: 1.2rem;"></i>
+                                                </div>
+                                                <div>
+                                                    <span class="d-block font-weight-bold small text-truncate" style="max-width: 200px;">{{ basename($mom->file_path) }}</span>
+                                                    <span class="badge badge-light border text-uppercase" style="font-size: 10px;">{{ $ext }}</span>
+                                                </div>
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDeleteFile('mom', {{ $mom->id }})" {{ !auth()->user()->canManagePostActivity() ? 'disabled' : '' }}>
+                                                <i class="fe fe-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="3" class="text-center text-muted py-4">
+                                            <i class="fe fe-file-text display-4 mb-3 d-block"></i>
+                                            Belum ada MoM yang diupload.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Assignment & Validation Modal -->
-    <div wire:ignore.self class="modal fade" id="assignmentModal" tabindex="-1" role="dialog" aria-labelledby="assignmentModalLabel" aria-hidden="true">
+    <div wire:ignore.self class="modal fade" id="assignmentModal" tabindex="-1" role="dialog" aria-labelledby="assignmentModalLabel" aria-hidden="true" style="z-index: 10000 !important;">
         <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
             <div class="modal-content">
                 @if($activeActivityId && $activeActivity = \App\Models\Activity::find($activeActivityId))
@@ -678,9 +949,10 @@
                                                 <h6 class="font-weight-bold text-primary border-bottom pb-2">{{ $division }}</h6>
                                             </div>
                                             @foreach($filteredUsers as $user)
-                                                <div class="col-md-6 mb-2">
+                                                <div class="col-md-6 mb-2" wire:key="attendance-user-{{ $user->id }}">
                                                     <div class="custom-control custom-checkbox image-checkbox h-100">
-                                                        <input type="checkbox" class="custom-control-input" id="attendee_{{ $user->id }}" value="{{ $user->name }}" wire:model="attendanceData" {{ auth()->check() && !auth()->user()->isAdmin() ? 'disabled' : '' }}>
+
+                                                    <input type="checkbox" class="custom-control-input" id="attendee_{{ $user->id }}" value="{{ $user->name }}" wire:model.live="attendanceData" {{ !auth()->user()->canManagePostActivity() ? 'disabled' : '' }}>
                                                         <label class="custom-control-label p-2 border rounded w-100 bg-white shadow-sm h-100 d-flex flex-column justify-content-center" for="attendee_{{ $user->id }}">
                                                             <span class="d-flex align-items-center">
                                                                 <span class="font-weight-bold text-dark">{{ $user->name }}</span>
@@ -688,24 +960,25 @@
                                                         </label>
                                                     </div>
                                                     
-                                                    {{-- Special Handling for Imron Rosadi Representative --}}
-                                                    @if($user->name === 'Imron Rosadi' || str_contains($user->name, 'Sekretaris DJSN'))
+                                                    {{-- Handling for Sekretariat DJSN Representative (Only for Sekretaris DJSN / Imron Rosadi) --}}
+                                                    @if($user->name === 'Imron Rosadi')
                                                         @php
                                                             $isInputPresent = in_array($user->name, $attendanceData);
                                                             $repValue = $attendanceDetails[$user->id]['representative'] ?? '';
                                                             $isAdmin = auth()->check() && auth()->user()->isAdmin();
-                                                            // Show if: (Admin AND Present) OR (Non-Admin AND Present AND Has Value)
-                                                            $showRepInput = ($isAdmin && $isInputPresent) || (!$isAdmin && $isInputPresent && !empty($repValue));
+                                                            // Show if: (Admin) OR (Has Value)
+                                                            // Independent of 'Hadir' checkbox
+                                                            $showRepInput = ($isAdmin) || (!empty($repValue));
                                                         @endphp
                                                         @if($showRepInput)
-                                                        <div class="mt-1 ml-4 fade-in">
+                                                        <div class="mt-2 fade-in">
                                                             <div class="input-group input-group-sm shadow-sm rounded">
                                                                 <div class="input-group-prepend">
                                                                     <span class="input-group-text bg-light border-0"><small class="font-weight-bold">Diwakili:</small></span>
                                                                 </div>
                                                                 <input type="text" 
                                                                     class="form-control border-0 bg-light" 
-                                                                    placeholder="{{ $isAdmin ? 'Nama Perwakilan (jika tidak hadir)...' : '' }}" 
+                                                                    placeholder="{{ $isAdmin ? 'Isi Nama Perwakilan...' : '' }}" 
                                                                     wire:model="attendanceDetails.{{ $user->id }}.representative"
                                                                     {{ !$isAdmin ? 'readonly' : '' }}>
                                                             </div>
@@ -723,15 +996,86 @@
                                         </div>
                                     @endif
                                 </div>
-                            @else
-                                <p class="text-center text-muted font-italic my-4">Tidak ada data disposisi untuk kegiatan ini.</p>
+                            @endif
+                            {{-- Manual Staff Input Section --}}
+                            @if(auth()->user()->canManagePostActivity())
+                            <div class="row mt-5">
+                                <div class="col-12">
+                                    <div class="bg-light p-3 rounded border border-light">
+                                        <h6 class="font-weight-bold text-dark border-bottom pb-2 mb-3">
+                                            <i class="fe fe-user-plus mr-2 text-primary"></i>Staf Pendamping
+                                        </h6>
+
+                                        <div class="form-group mb-3" wire:ignore id="wrapper-sekretariat" style="position: relative;">
+                                            <label class="small font-weight-bold text-primary mb-2">
+                                                <i class="fe fe-users mr-1"></i> Sekretariat DJSN
+                                            </label>
+                                            <select class="form-control select2-staff-sekretariat shadow-sm" multiple="multiple" style="width: 100%;">
+                                                @foreach($staffSekretariat as $staff)
+                                                    <option value="{{ $staff->name }}">{{ $staff->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group mb-0" wire:ignore id="wrapper-ta" style="position: relative;">
+                                            <label class="small font-weight-bold text-info mb-2">
+                                                <i class="fe fe-briefcase mr-1"></i> Tenaga Ahli (TA)
+                                            </label>
+                                            <select class="form-control select2-staff-ta shadow-sm" multiple="multiple" style="width: 100%;">
+                                                @foreach($staffTA as $staff)
+                                                    <option value="{{ $staff->name }}">{{ $staff->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+
+                            {{-- Read-Only Manual Staff List for Non-Managers --}}
+                            @if(!auth()->user()->canManagePostActivity() && (!empty($selectedSekretariat) || !empty($selectedTA)))
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <div class="bg-white p-3 rounded border shadow-sm">
+                                        <h6 class="font-weight-bold text-dark border-bottom pb-2 mb-3">
+                                            <i class="fe fe-users mr-2 text-muted"></i>Staf Pendamping
+                                        </h6>
+                                        
+                                        @if(!empty($selectedSekretariat))
+                                            <div class="mb-3">
+                                                <small class="font-weight-bold text-primary text-uppercase" style="letter-spacing: 0.5px;">Sekretariat DJSN</small>
+                                                <ul class="list-unstyled mt-2 mb-0">
+                                                    @foreach($selectedSekretariat as $name)
+                                                        <li class="d-flex align-items-center mb-1">
+                                                            <i class="fe fe-check-circle text-success mr-2"></i> {{ $name }}
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            </div>
+                                        @endif
+                                        
+                                        @if(!empty($selectedTA))
+                                            <div class="mb-0">
+                                                <small class="font-weight-bold text-info text-uppercase" style="letter-spacing: 0.5px;">Tenaga Ahli</small>
+                                                <ul class="list-unstyled mt-2 mb-0">
+                                                    @foreach($selectedTA as $name)
+                                                        <li class="d-flex align-items-center mb-1">
+                                                            <i class="fe fe-check-circle text-success mr-2"></i> {{ $name }}
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
                             @endif
                             
                             @if(session()->has('success_attendance'))
                                 <div class="alert alert-success mt-3 small">{{ session('success_attendance') }}</div>
                             @endif
 
-                            @if(auth()->check() && auth()->user()->isAdmin())
+                            @if(auth()->user()->canManagePostActivity())
                             <div class="mt-4 text-right">
                                 <button type="button" class="btn btn-primary rounded-pill px-4" wire:click="saveAttendance" wire:loading.attr="disabled">
                                     <i class="fe fe-save mr-2"></i>Simpan Kehadiran
@@ -752,7 +1096,7 @@
                                         <a href="{{ Storage::url($activeActivity->assignment_letter_path) }}" target="_blank" class="btn btn-outline-primary">
                                             <i class="fe fe-download mr-2"></i>Download / Lihat
                                         </a>
-                                        @if(auth()->check() && auth()->user()->isAdmin())
+                                        @if(auth()->user()->canUploadAssignment())
                                         <button class="btn btn-outline-danger" onclick="confirmModalDelete('assignment')">
                                             <i class="fe fe-trash-2 mr-2"></i>Hapus
                                         </button>
@@ -767,7 +1111,7 @@
                                     </div>
                                 @endif
                                 
-                                @if(auth()->check() && auth()->user()->isAdmin())
+                                @if(auth()->user()->canUploadAssignment())
                                 <div class="w-100 d-flex justify-content-center mb-3">
                                     <div class="custom-file w-100">
                                         <input type="file" wire:model="newAssignmentFile" class="custom-file-input" id="newAssignmentFile" accept="application/pdf">
@@ -800,7 +1144,7 @@
                                             @endif
                                         </div>
                                         
-                                        @if(auth()->check() && auth()->user()->isAdmin())
+                                        @if(auth()->user()->canManageActivities())
                                             <div class="d-flex align-items-center">
                                                 @if($activeActivity->attachment_path)
                                                     <button class="btn btn-xs btn-link text-danger p-0 ml-2" title="Hapus Surat Undangan" onclick="confirmModalDelete('attachment')">
@@ -829,7 +1173,7 @@
                                             @endif
                                         </div>
 
-                                        @if(auth()->check() && auth()->user()->isAdmin())
+                                        @if(auth()->user()->canManagePostActivity())
                                             <div class="d-flex align-items-center">
                                                 @if($activeActivity->minutes_path)
                                                     <button class="btn btn-xs btn-link text-danger p-0 ml-2" title="Hapus Notulensi" onclick="confirmModalDelete('minutes')">
@@ -868,7 +1212,7 @@
     </div>
 
     <!-- Documentation Modal -->
-    <div wire:ignore.self class="modal fade" id="documentationModal" tabindex="-1" role="dialog" aria-labelledby="docModalLabel" aria-hidden="true">
+    <div wire:ignore.self class="modal fade" id="documentationModal" tabindex="-1" role="dialog" aria-labelledby="docModalLabel" aria-hidden="true" style="z-index: 10000 !important;">
         <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
             <div class="modal-content">
                 @if($activeActivityId && $activeActivity = \App\Models\Activity::find($activeActivityId))
@@ -884,7 +1228,7 @@
                      <div class="d-flex justify-content-between align-items-center mb-4">
                         <div>
                              <h6 class="font-weight-bold mb-1">{{ $activeActivity->name }}</h6>
-                             <small class="text-muted">Total: {{ $activeActivity->documentations->count() }} Foto</small>
+                             <small class="text-muted">Total: {{ $activeActivity->documentations->count() }} Foto  (maks 4 foto)</small>
                         </div>
                         @if(auth()->check() && auth()->user()->isAdmin())
                         <div>
@@ -911,7 +1255,7 @@
                      <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 text-center">
                         @forelse($activeActivity->documentations as $doc)
                             <div class="col mb-4">
-                                <div class="card h-100 shadow-sm border-0 overflow-hidden group-hover-zoom">
+                                <div class="card h-100 shadow-sm border-0 overflow-hidden">
                                     <div class="position-relative" style="height: 200px; background-color: #f8f9fa;">
                                         <img src="{{ Storage::url($doc->file_path) }}" class="w-100 h-100" style="object-fit: cover; cursor: pointer;" onclick="window.open('{{ Storage::url($doc->file_path) }}', '_blank')">
                                         <div class="position-absolute p-2 w-100 d-flex justify-content-between align-items-start fixed-top bg-gradient-top">
@@ -945,6 +1289,69 @@
             </div>
         </div>
     </div>
+    
+    <!-- Summary Editor Modal -->
+    <div wire:ignore.self class="modal fade" id="summaryEditorModal" tabindex="-1" role="dialog" aria-labelledby="summaryEditorModalLabel" aria-hidden="true" style="z-index: 10000 !important;">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title font-weight-bold" id="summaryEditorModalLabel">
+                        <i class="fe fe-file-text mr-2 text-primary"></i>Ringkasan Rapat
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-4">
+                    @if(auth()->user()->canManagePostActivity())
+                        <form wire:submit.prevent="saveSummary">
+                            <div class="form-group mb-4" wire:ignore>
+                                <label class="font-weight-bold text-dark mb-2">Isi Ringkasan Rapat</label>
+                                
+                                <!-- Quill Editor Container -->
+                                <div id="summary-editor" style="height: 300px; background: white;"></div>
+                                
+                                <!-- Hidden Input for Data Binding -->
+                                <input type="hidden" id="summary_content_input" wire:model="summaryContent">
+                                
+                                <small class="text-muted mt-2 d-block">
+                                    <i class="fe fe-info mr-1"></i> Tuliskan poin-poin penting hasil pertemuan.
+                                </small>
+                            </div>
+                            @error('summaryContent') <span class="text-danger small mt-1">{{ $message }}</span> @enderror
+                            
+                            <div class="d-flex justify-content-end">
+                                <button type="button" class="btn btn-secondary rounded-pill px-4 mr-2" data-dismiss="modal">Batal</button>
+                                <button type="button" class="btn btn-primary rounded-pill px-4 shadow-sm" wire:loading.attr="disabled" onclick="syncQuillContent(); @this.call('saveSummary');">
+                                    <span wire:loading.remove wire:target="saveSummary"><i class="fe fe-save mr-2"></i>Simpan</span>
+                                    <span wire:loading wire:target="saveSummary"><span class="spinner-border spinner-border-sm mr-2"></span>Menyimpan...</span>
+                                </button>
+                            </div>
+                        </form>
+                    @else
+                        <!-- Read Only View -->
+                        <div class="markdown-content border p-3 rounded bg-white" style="min-height: 200px; max-height: 60vh; overflow-y: auto;">
+                            {!! $summaryContent !!}
+                        </div>
+                        <div class="mt-3 text-right">
+                            <button type="button" class="btn btn-secondary rounded-pill px-4" data-dismiss="modal">Tutup</button>
+                        </div>
+                        
+                        {{-- Dummy editor container to prevent JS error if script tries to init it --}}
+                        <div id="summary-editor" style="display: none;"></div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <style>
+        /* Fix for tooltip flickering: prevent tooltip from capturing mouse events */
+        .tooltip {
+            pointer-events: none !important;
+        }
+    </style>
 </div>
 
 
@@ -960,6 +1367,30 @@
     });
 
     document.addEventListener('livewire:initialized', () => {
+        // Function to re-init tooltips safely
+        const initTooltips = () => {
+             // Dispose existing to prevent duplicates/memory leaks
+             $('[data-toggle="tooltip"]').tooltip('dispose'); 
+             // Re-initialize with HTML enabled
+             $('[data-toggle="tooltip"]').tooltip({
+                 html: true,
+                 container: 'body'
+             });
+        };
+
+        // Init on load
+        initTooltips();
+
+        // Init on ANY Livewire message processed (covers refreshes, updates, pagination)
+        Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
+            succeed(({ snapshot, effect }) => {
+                // Wait for DOM to update
+                setTimeout(() => {
+                    initTooltips();
+                }, 100);
+            });
+        });
+
         let lastActive = Date.now();
         const updateLastActive = () => { lastActive = Date.now(); };
         ['mousemove', 'click', 'scroll', 'keydown', 'touchstart'].forEach(evt => 
@@ -973,3 +1404,52 @@
         }, 5000);
     });
 </script>
+
+@push('styles')
+<link rel="stylesheet" href="{{ asset('tinydash/css/quill.snow.css') }}">
+<style>
+    .ql-container { font-family: inherit; font-size: 0.9rem; }
+    .ql-editor { min-height: 200px; }
+    
+    /* Fix Z-Index for SweetAlert2 over Modals */
+    .swal2-container {
+        z-index: 20000 !important;
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script src="{{ asset('tinydash/js/quill.min.js') }}"></script>
+<script>
+    document.addEventListener('livewire:initialized', () => {
+        var quill = new Quill('#summary-editor', {
+            theme: 'snow',
+            placeholder: 'Ketik ringkasan hasil rapat di sini...',
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['clean']
+                ]
+            }
+        });
+
+        window.addEventListener('open-summary-modal', event => {
+            let content = event.detail.content !== undefined ? event.detail.content : (event.detail[0] ? event.detail[0].content : ''); 
+            quill.root.innerHTML = content || '';
+            $('#summaryEditorModal').modal('show');
+        });
+
+        window.addEventListener('close-summary-modal', event => {
+            $('#summaryEditorModal').modal('hide');
+        });
+        
+        window.syncQuillContent = function() {
+            @this.set('summaryContent', quill.root.innerHTML);
+        }
+    });
+</script>
+@endpush
+
+ 

@@ -37,22 +37,28 @@ class MasterDataController extends Controller
 
         // Grouping Logic (Identical to ActivityController + Admin/User fallback)
         $groupedUsers = $users->groupBy(function($user) {
-             if ($user->role === 'Dewan') {
+             if (in_array($user->role, ['Dewan', 'TA', 'Persidangan'])) {
                 $divisi = strtolower($user->divisi ?? '');
+                
+                // Specific Commissions
                 if (str_contains($divisi, 'ketua djsn')) return 'Ketua DJSN';
                 if (str_contains($divisi, 'pme') || str_contains($divisi, 'monitoring')) return 'Komisi PME';
-                if (str_contains($divisi, 'komjakum') || str_contains($divisi, 'kebijakan')) return 'Komisi Komjakum';
+                if (str_contains($divisi, 'komjakum') || str_contains($divisi, 'kebijakan')) return 'Komjakum';
                 
                 // Dynamic Grouping for other Commissions
                 if (str_contains($divisi, 'komisi')) {
-                    // Return the proper case name of the division (e.g., "Komisi X")
                     return ucwords($user->divisi);
                 }
                 
-                return 'Anggota Dewan Lainnya';
+                // Fallbacks if Divisi doesn't match Commission logic
+                if ($user->role === 'Dewan') return 'Anggota Dewan Lainnya';
+                // If Persidangan/TA doesn't match above, fall through to separate group?
+                // Or maybe 'Sekretariat DJSN' if they are staff?
             }
+
             if ($user->role === 'admin') return 'Admin Utama';
             if ($user->role === 'DJSN') return 'Sekretariat DJSN'; // Generic Label for specific role
+            if ($user->role === 'Persidangan') return 'Persidangan'; // Fallback for General Persidangan
             
             // Fallback for others by Role Name
             return $user->role;
@@ -63,7 +69,7 @@ class MasterDataController extends Controller
             'Admin Utama' => 0,
             'Ketua DJSN' => 1,
             'Komisi PME' => 2,
-            'Komisi Komjakum' => 3,
+            'Komjakum' => 3,
             'Anggota Dewan Lainnya' => 4,
             'Sekretariat DJSN' => 5, // Access Level 1
             'Tata Usaha' => 6,

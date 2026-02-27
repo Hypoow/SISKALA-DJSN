@@ -20,6 +20,20 @@
                 </div>
             </div>
 
+            <!-- Navigation Tabs -->
+            <ul class="nav nav-pills nav-fill flex-column flex-sm-row mb-4 bg-white rounded shadow-sm p-2">
+                <li class="nav-item">
+                    <a class="nav-link mb-sm-3 mb-md-0 active font-weight-bold shadow-sm" href="{{ route('master-data.index') }}">
+                        <i class="fe fe-users mr-2"></i>Data Pengguna
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link mb-sm-3 mb-md-0 font-weight-bold text-muted" href="{{ route('master-data.staff.index') }}">
+                        <i class="fe fe-briefcase mr-2"></i>Data Staf Pendamping
+                    </a>
+                </li>
+            </ul>
+
             <!-- Card Table -->
             <div class="card shadow-sm border-0 rounded-lg overflow-hidden mb-5">
                 <!-- Card Header -->

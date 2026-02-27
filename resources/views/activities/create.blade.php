@@ -58,23 +58,23 @@
     
     /* Active States */
     .type-card-input:checked + .type-card-label .type-card.internal {
-        border-color: #007bff;
+        border-color: #004085;
         background-color: #f8f9fa;
         box-shadow: 0 0 0 4px rgba(0,123,255,0.1);
     }
     .type-card-input:checked + .type-card-label .type-card.internal .type-card-icon,
     .type-card-input:checked + .type-card-label .type-card.internal .type-card-title {
-        color: #007bff;
+        color: #004085;
     }
 
     .type-card-input:checked + .type-card-label .type-card.external {
-        border-color: #fd7e14;
+        border-color: #17a2b8;
         background-color: #fffbf7;
         box-shadow: 0 0 0 4px rgba(253,126,20,0.1);
     }
     .type-card-input:checked + .type-card-label .type-card.external .type-card-icon,
     .type-card-input:checked + .type-card-label .type-card.external .type-card-title {
-        color: #fd7e14;
+        color: #17a2b8;
     }
 
     /* Smart Assist Upload */
@@ -521,6 +521,7 @@
                                              <div class="card-body py-2">
                                                  <div class="row">
                                                      @foreach($members as $member)
+                                                     @if(!in_array($member->role, ['Dewan', 'DJSN'])) @continue @endif
                                                      @php 
                                                          $selectedDewan = (isset($activity) && is_array($activity->disposition_to)) ? $activity->disposition_to : [];
                                                      @endphp

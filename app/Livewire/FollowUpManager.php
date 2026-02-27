@@ -71,6 +71,11 @@ class FollowUpManager extends Component
 
     public function save()
     {
+        if (!Auth::user()->canManageFollowUp()) {
+            $this->addError('authorization', 'Anda tidak memiliki akses untuk menambah tindak lanjut.');
+            return;
+        }
+
         $this->validate([
             'topic' => 'required|string',
             'selectedPic' => 'required|string',
@@ -106,6 +111,10 @@ class FollowUpManager extends Component
 
     public function edit($id)
     {
+        if (!Auth::user()->canManageFollowUp()) {
+            return;
+        }
+
         $item = ActivityFollowup::findOrFail($id);
         $this->editingId = $id;
         $this->isEditing = true;
@@ -123,6 +132,11 @@ class FollowUpManager extends Component
 
     public function update()
     {
+        if (!Auth::user()->canManageFollowUp()) {
+            $this->addError('authorization', 'Anda tidak memiliki akses untuk mengupdate tindak lanjut.');
+            return;
+        }
+
         $this->validate([
             'editTopic' => 'required|string',
             'editPic' => 'required|string',
@@ -152,16 +166,60 @@ class FollowUpManager extends Component
 
     public function delete($id)
     {
+        if (!Auth::user()->canManageFollowUp()) {
+            return;
+        }
+
         ActivityFollowup::destroy($id);
+    }
+
+    public function updateStatus($id, $status)
+    {
+        if (!Auth::user()->canManageFollowUp()) {
+            $this->addError('authorization', 'Anda tidak memiliki akses untuk mengubah status.');
+            return;
+        }
+
+        $item = ActivityFollowup::find($id);
+        if ($item) {
+            $item->update(['status' => $status]);
+            $this->dispatch('show-alert', type: 'success', message: 'Status berhasil diperbarui.');
+        }
+    }
+
+    public $filterStatus = 'all';
+
+    public function setFilter($status)
+    {
+        $this->filterStatus = $status;
     }
 
     public function render()
     {
+        // Calculate Stats for this Activity
+        $allFollowups = $this->activity->followups;
+        $stats = [
+            'completed' => $allFollowups->where('status', 2)->count(),
+            'progress' => $allFollowups->where('status', 1)->count(),
+            'pending' => $allFollowups->where('status', 0)->count(),
+        ];
+
+        // Apply Filter
+        $query = $this->activity->followups()
+            ->orderByRaw('deadline IS NULL, deadline ASC')
+            ->orderBy('created_at', 'desc');
+
+        if ($this->filterStatus === 'completed') {
+            $query->where('status', 2);
+        } elseif ($this->filterStatus === 'progress') {
+            $query->where('status', 1);
+        } elseif ($this->filterStatus === 'pending') {
+            $query->where('status', 0);
+        }
+
         return view('livewire.follow-up-manager', [
-            'followups' => $this->activity->followups()
-                ->orderByRaw('deadline IS NULL, deadline ASC')
-                ->orderBy('created_at', 'desc')
-                ->get()
+            'followups' => $query->get(),
+            'stats' => $stats
         ]);
     }
 }

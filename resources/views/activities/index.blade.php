@@ -5,8 +5,7 @@
 @section('content')
 <div class="row justify-content-center">
     <div class="col-12">
-        <h2 class="mb-2 page-title">Daftar Kegiatan</h2>
-        <p class="card-text">Daftar semua kegiatan eksternal dan internal.</p>
+
         
         <livewire:activity-list />
 

@@ -14,7 +14,9 @@ class DashboardController extends Controller
         $currentYear = now()->year;
 
         $user = auth()->user();
-        $query = Activity::whereMonth('start_date', $currentMonth)->whereYear('start_date', $currentYear);
+        $query = Activity::visibleToUser($user)
+                         ->whereMonth('start_date', $currentMonth)
+                         ->whereYear('start_date', $currentYear);
 
         // If Dewan, technically they see all, but maybe highlight theirs? 
         // For stats, let's just show ALL activities for now as "Overview", 
@@ -26,7 +28,7 @@ class DashboardController extends Controller
         $externalActivities = (clone $query)->where('type', 'external')->count();
         
         // Today's Activities
-        $todayActivities = Activity::whereDate('start_date', now()->today())->count();
+        $todayActivities = Activity::visibleToUser($user)->whereDate('start_date', now()->today())->count();
 
         return view('dashboard.index', compact('totalActivities', 'internalActivities', 'externalActivities', 'todayActivities'));
     }
@@ -57,7 +59,10 @@ class DashboardController extends Controller
                     'meeting_link' => $activity->meeting_link,
                     'meeting_id' => $activity->meeting_id,
                     'passcode' => $activity->passcode,
-                    'pic' => $activity->pic,
+                    'pic' => $activity->disposition_groups ?? $activity->pic, // Prefer computed groups
+                    'pic_details' => collect($activity->disposition_groups)->mapWithKeys(function ($group) use ($activity) {
+                        return [$group => $activity->getDispositionGroupMembers($group)];
+                    })->toArray(),
                     'description' => $activity->dispo_note ?? '-',
                     'status' => $activity->status,
                     'organizer_name' => $activity->organizer_name,

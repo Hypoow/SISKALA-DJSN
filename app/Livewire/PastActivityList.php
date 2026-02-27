@@ -18,6 +18,8 @@ class PastActivityList extends Component
     // New Filters
     public $month = '';
     public $year;
+    public $pic; // New Property
+    public $sortField = 'start_date';
 
     // Bulk Delete
     public $selected = [];
@@ -42,6 +44,9 @@ class PastActivityList extends Component
     {
         $this->year = date('Y');
         $this->month = date('n');
+
+        // Auto-cleanup trash (force delete soft-deleted items immediately on load)
+        Activity::pruneTrash(0);
     }
 
     public function updatedMonth()
@@ -57,7 +62,12 @@ class PastActivityList extends Component
     public function updatedSelectAll($value)
     {
         if ($value) {
-            $query = Activity::where('start_date', '<', now()->startOfDay())
+            $query = Activity::query();
+             // if (auth()->check()) {
+             //   $query->visibleToUser(auth()->user()); // Removed per user request
+             // }
+
+            $query->where('start_date', '<', now()->startOfDay())
                              ->orderBy('start_date', $this->sortDirection)
                              ->orderBy('start_time', 'desc');
 
@@ -215,12 +225,43 @@ class PastActivityList extends Component
     public $activeActivityId = null;
     public $attendanceData = [];
     public $attendanceDetails = []; // New Property
+    public $selectedSekretariat = []; // Manual Staff input
+    public $selectedTA = []; // Manual Staff input
     public $documentationPhotos = [];
     public $maxPhotos = 4;
     public $newAssignmentFile = null;
     public $newAttachmentFile = null; 
     public $isModalOpen = false;
     public $activeTab = 'attendance'; 
+
+    // Summary Editor
+    public $summaryActivityId = null;
+    public $summaryContent = '';
+
+    public function openSummaryModal($id)
+    {
+        $this->isModalOpen = true;
+        $this->summaryActivityId = $id;
+        $activity = Activity::find($id);
+        $this->summaryContent = $activity->summary_content ?? '';
+        $this->dispatch('open-summary-modal', content: $this->summaryContent);
+    }
+
+    public function saveSummary()
+    {
+        $this->validate([
+             'summaryContent' => 'nullable|string'
+        ]);
+
+        if ($this->summaryActivityId) {
+            $activity = Activity::find($this->summaryActivityId);
+            $activity->update(['summary_content' => $this->summaryContent]);
+            
+            $this->dispatch('alert', type: 'success', message: 'Ringkasan Rapat berhasil disimpan.');
+            $this->dispatch('close-summary-modal');
+            $this->isModalOpen = false;
+        }
+    } 
 
     public function closeModalState()
     {
@@ -233,12 +274,60 @@ class PastActivityList extends Component
         $this->activeActivityId = $id;
         $activity = Activity::find($id);
         
-        $this->attendanceData = $activity->attendance_list ?? []; 
+        $currentAttendance = $activity->attendance_list ?? [];
         $this->attendanceDetails = $activity->attendance_details ?? []; // Load details
+        
+        // Split attendance into System Users (Checkboxes) and Staff (Select2)
+        // System Users: Dewan & Imron Rosadi (Sekretariat)
+        // We need to keep System Users in $this->attendanceData for checkboxes to work
+        
+        // 1. Identify System Users names
+        $systemUserNames = \App\Models\User::whereIn('role', ['Dewan'])
+                            ->orWhere('name', 'Imron Rosadi')
+                            ->pluck('name')
+                            ->toArray();
+                            
+        // 2. Identify Staff names
+        $staffSekretariatNames = \App\Models\Staff::where('type', 'sekretariat')->pluck('name')->toArray();
+        $staffTANames = \App\Models\Staff::where('type', 'ta')->pluck('name')->toArray();
+
+        $this->attendanceData = [];
+        $this->selectedSekretariat = [];
+        $this->selectedTA = [];
+
+        foreach ($currentAttendance as $name) {
+            if (in_array($name, $systemUserNames)) {
+                $this->attendanceData[] = $name;
+            } elseif (in_array($name, $staffSekretariatNames)) {
+                $this->selectedSekretariat[] = $name;
+            } elseif (in_array($name, $staffTANames)) {
+                $this->selectedTA[] = $name;
+            } else {
+                // Unknown/External or removed user? Keep in attendanceData just in case so it's not lost?
+                // Or maybe assume it's a checkbox user we missed?
+                // Let's check if it matches ANY User, if so keep in attendanceData
+                $isUser = \App\Models\User::where('name', $name)->exists();
+                if ($isUser) {
+                     $this->attendanceData[] = $name;
+                } else {
+                    // Fallback: put in Manual Sekretariat or just leave it?
+                    // Safe bet: Put in attendanceData (checkboxes) if it might be a user, 
+                    // but if it's not in the view's list it won't show boxed.
+                    // Let's assume standard behavior.
+                }
+            }
+        }
+        
         $this->newAssignmentFile = null; 
         $this->newAttachmentFile = null; 
         $this->activeTab = 'attendance';
         $this->dispatch('open-assignment-modal');
+        
+        // Dispatch event to update Select2
+        $this->dispatch('update-staff-select', 
+            sekretariat: $this->selectedSekretariat, 
+            ta: $this->selectedTA
+        );
     }
 
     public function saveAttendance()
@@ -246,8 +335,17 @@ class PastActivityList extends Component
         if (!$this->activeActivityId) return;
 
         $activity = Activity::find($this->activeActivityId);
+        
+        // Merge Checkboxes + Manual Inputs
+        $finalList = array_merge(
+            $this->attendanceData, 
+            $this->selectedSekretariat, 
+            $this->selectedTA
+        );
+        $finalList = array_unique($finalList); // Prevent duplicates
+
         $activity->update([
-            'attendance_list' => $this->attendanceData,
+            'attendance_list' => array_values($finalList),
             'attendance_details' => $this->attendanceDetails // Save details
         ]);
         
@@ -402,6 +500,69 @@ class PastActivityList extends Component
         }
     }
 
+    // MoM Management (Minutes of Meeting)
+    public $momList = [];
+    public $newMomTitle = '';
+    public $newMomFile = null;
+
+    public function openMomModal($id)
+    {
+        $this->isModalOpen = true;
+        $this->activeActivityId = $id;
+        $this->loadMoms($id);
+        $this->newMomTitle = '';
+        $this->newMomFile = null;
+        $this->dispatch('open-mom-modal');
+    }
+
+    public function loadMoms($id)
+    {
+        $activity = Activity::find($id);
+        $this->momList = $activity ? $activity->moms()->get() : [];
+    }
+
+    public function saveMom()
+    {
+        $this->validate([
+            'newMomTitle' => 'required|string|max:255',
+            'newMomFile' => 'required|file|mimes:pdf,doc,docx|max:20480', // 20MB
+        ]);
+
+        if ($this->activeActivityId) {
+            $originalName = $this->newMomFile->getClientOriginalName();
+            $path = $this->newMomFile->storeAs("activity_moms/{$this->activeActivityId}", $originalName, 'public');
+            
+            \App\Models\ActivityMom::create([
+                'activity_id' => $this->activeActivityId,
+                'title' => $this->newMomTitle,
+                'file_path' => $path
+            ]);
+
+            // Clean up temp file
+            if (file_exists($this->newMomFile->getRealPath())) {
+                @unlink($this->newMomFile->getRealPath());
+            }
+
+            $this->dispatch('alert', type: 'success', message: 'MoM berhasil ditambahkan.');
+            
+            // Reset fields and reload
+            $this->newMomTitle = '';
+            $this->newMomFile = null;
+            $this->loadMoms($this->activeActivityId);
+        }
+    }
+
+    public function deleteMom($momId)
+    {
+        $mom = \App\Models\ActivityMom::find($momId);
+        if ($mom) {
+            Storage::disk('public')->delete($mom->file_path);
+            $mom->delete();
+            $this->dispatch('alert', type: 'success', message: 'MoM berhasil dihapus.');
+            $this->loadMoms($this->activeActivityId);
+        }
+    }
+
     public function openDocumentationModal($id)
     {
         $this->isModalOpen = true;
@@ -458,7 +619,16 @@ class PastActivityList extends Component
 
     public function render()
     {
-        $query = Activity::where('start_date', '<', now()->startOfDay());
+        $query = Activity::query();
+        
+        // Eager load relationships to fix N+1
+        $query->with(['materials', 'moms', 'documentations']);
+        
+        // if (auth()->check()) {
+        //    $query->visibleToUser(auth()->user()); // Removed per user request
+        // }
+
+        $query->where('start_date', '<', now()->startOfDay());
 
         // Apply Year Filter
         if ($this->year) {
@@ -483,18 +653,25 @@ class PastActivityList extends Component
                   ->orWhere('location', 'like', "%{$this->search}%");
             });
         }
+        
+        if ($this->pic) {
+            $query->where(function($q) {
+                // If it is stored as JSON array ["Sekretariat DJSN"]
+                $q->whereJsonContains('pic', $this->pic)
+                  // Or if it was stored as string "Sekretariat DJSN"
+                  ->orWhere('pic', 'like', "%{$this->pic}%");
+            });
+        }
 
-        $activities = $query->get();
+        // Use pagination
+        $activities = $query->paginate(15);
 
-        $groupedActivities = $activities->groupBy(function($item) {
+        // Group the records on the current page
+        $groupedActivities = $activities->getCollection()->groupBy(function($item) {
             return $item->date_time->isoFormat('MMMM Y');
         });
 
-        $activities = $query->get();
-
-        $groupedActivities = $activities->groupBy(function($item) {
-            return $item->date_time->isoFormat('MMMM Y');
-        });
+        // ... (Dewan Users logic remains same)
 
         // Fetch Dewan Users
         $dewanUsersRaw = \App\Models\User::where('role', 'Dewan')
@@ -509,8 +686,9 @@ class PastActivityList extends Component
 
         // Custom Grouping Logic
         $dewanUsers = $dewanUsersRaw->groupBy(function ($user) {
-            $divisi = strtoupper($user->divisi);
+            $divisi = strtoupper($user->divisi ?? '');
             $name = strtoupper($user->name);
+            $role = strtoupper($user->role);
 
             if ($divisi == 'KETUA DJSN') {
                 return 'Ketua DJSN';
@@ -521,18 +699,24 @@ class PastActivityList extends Component
             }
 
             if (str_contains($divisi, 'KOMJAKUM')) {
-                return 'Komisi Komjakum';
+                return 'Komjakum';
             }
 
             if (str_contains($divisi, 'SEKRETARI') || $name == 'IMRON ROSADI') {
-                return 'Sekretariat DJSN';
+                return 'Sekretaris DJSN';
+            }
+            
+            if ($role == 'TA') {
+                 // Should have been caught by PME/KOMJAKUM check above if divisi is set correctly
+                 // If not, fallback
+                 return 'Tenaga Ahli Lainnya';
             }
 
-            return 'Lainnya'; // Fallback
+            return 'Anggota Dewan Lainnya'; // Fallback
         });
 
         // Define specific order for groups
-        $groupOrder = ['Ketua DJSN', 'Komisi PME', 'Komisi Komjakum', 'Sekretariat DJSN'];
+        $groupOrder = ['Ketua DJSN', 'Komisi PME', 'Komjakum', 'Sekretaris DJSN', 'Tenaga Ahli Lainnya'];
         $dewanUsers = $dewanUsers->sortBy(function ($users, $key) use ($groupOrder) {
             $index = array_search($key, $groupOrder);
             return $index === false ? 999 : $index;
@@ -540,7 +724,10 @@ class PastActivityList extends Component
 
         return view('livewire.past-activity-list', [
             'groupedActivities' => $groupedActivities,
-            'dewanUsers' => $dewanUsers
+            'activities' => $activities, // Pass paginator
+            'dewanUsers' => $dewanUsers,
+            'staffSekretariat' => \App\Models\Staff::where('type', 'sekretariat')->orderBy('name')->get(),
+            'staffTA' => \App\Models\Staff::where('type', 'ta')->orderBy('name')->get()
         ]);
     }
 }

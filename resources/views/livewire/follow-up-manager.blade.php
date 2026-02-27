@@ -1,7 +1,7 @@
 <div class="card shadow mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
         <strong class="card-title mb-0"><span class="fe fe-check-square mr-2"></span>Tindak Lanjut & Arahan</strong>
-        @if(!$isEditing)
+        @if(!$isEditing && auth()->user()->canManageFollowUp())
         <button type="button" wire:click="$toggle('showForm')" class="btn btn-sm btn-outline-primary" wire:loading.attr="disabled" wire:target="$toggle('showForm')">
             <span wire:loading.remove wire:target="$toggle('showForm')"><i class="fe fe-plus mr-1"></i> Tambah Item</span>
             <span wire:loading wire:target="$toggle('showForm')"><span class="spinner-border spinner-border-sm mr-1" role="status" aria-hidden="true"></span> Memuat...</span>
@@ -74,7 +74,7 @@
                                         <option value="{{ $editPic }}">{{ $editPic }}</option>
                                         <option value="Ketua DJSN" data-color="#8B5CF6">Ketua DJSN</option>
                                         <option value="Komisi PME" data-color="#28a745">Komisi PME</option>
-                                        <option value="Komisi Komjakum" data-color="#007bff">Komisi Komjakum</option>
+                                        <option value="Komjakum" data-color="#007bff">Komjakum</option>
                                         <option value="Sekretariat DJSN" data-color="#F97316">Sekretariat DJSN</option>
                                     </select>
                                 </div>
@@ -171,7 +171,7 @@
                                     <option></option>
                                     <option value="Ketua DJSN" data-color="#8B5CF6">Ketua DJSN</option>
                                     <option value="Komisi PME" data-color="#28a745">Komisi PME</option>
-                                    <option value="Komisi Komjakum" data-color="#007bff">Komisi Komjakum</option>
+                                    <option value="Komjakum" data-color="#007bff">Komjakum</option>
                                     <option value="Sekretariat DJSN" data-color="#F97316">Sekretariat DJSN</option>
                                 </select>
                             </div>
@@ -190,7 +190,7 @@
                                     <div class="card-body p-3">
                                         <div class="d-flex align-items-start">
                                             <div class="flex-grow-1">
-                                                <textarea wire:model="instructionRows.{{ $index }}.text" class="form-control border-0 p-0 shadow-none text-dark" rows="2" placeholder="Tulis arahan detail di sini..." style="resize: none; font-size: 1rem; background: transparent;"></textarea>
+                                                <textarea wire:model="instructionRows.{{ $index }}.text" class="form-control border-0 p-0 shadow-none text-dark" rows="3" placeholder="Tulis arahan detail di sini..." style="resize: vertical; font-size: 1rem; background: transparent; min-height: 80px;"></textarea>
                                                 @error("instructionRows.{$index}.text") <span class="text-danger small d-block mt-1">{{ $message }}</span> @enderror
                                             </div>
                                             
@@ -315,11 +315,36 @@
                                     if($item->status == 2) { $statusClass = 'success'; $statusLabel = 'Selesai'; }
                                     if($item->status == 3) { $statusClass = 'danger'; $statusLabel = 'Batal'; }
                                 @endphp
-                                <span class="badge badge-{{ $statusClass }}">{{ $statusLabel }}</span>
+
+                                @if(auth()->user()->canManageFollowUp())
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-{{ $statusClass }} dropdown-toggle shadow-sm px-3" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="min-width: 100px;">
+                                            {{ $statusLabel }}
+                                        </button>
+                                        <div class="dropdown-menu shadow-lg border-0">
+                                            <a class="dropdown-item d-flex align-items-center" href="#" wire:click.prevent="updateStatus({{ $item->id }}, 0)">
+                                                <span class="badge badge-secondary mr-2" style="width: 10px; height: 10px; border-radius: 50%; padding: 0;">&nbsp;</span> Pending
+                                            </a>
+                                            <a class="dropdown-item d-flex align-items-center" href="#" wire:click.prevent="updateStatus({{ $item->id }}, 1)">
+                                                <span class="badge badge-warning mr-2" style="width: 10px; height: 10px; border-radius: 50%; padding: 0;">&nbsp;</span> Progress
+                                            </a>
+                                            <a class="dropdown-item d-flex align-items-center" href="#" wire:click.prevent="updateStatus({{ $item->id }}, 2)">
+                                                <span class="badge badge-success mr-2" style="width: 10px; height: 10px; border-radius: 50%; padding: 0;">&nbsp;</span> Selesai
+                                            </a>
+                                            <div class="dropdown-divider"></div>
+                                            <a class="dropdown-item d-flex align-items-center text-danger" href="#" wire:click.prevent="updateStatus({{ $item->id }}, 3)">
+                                                <span class="badge badge-danger mr-2" style="width: 10px; height: 10px; border-radius: 50%; padding: 0;">&nbsp;</span> Batal
+                                            </a>
+                                        </div>
+                                    </div>
+                                @else
+                                    <span class="badge badge-{{ $statusClass }} px-3 py-2">{{ $statusLabel }}</span>
+                                @endif
                             </td>
 
                             <!-- Actions -->
                             <td class="align-top py-3 text-center">
+                                @if(auth()->user()->canManageFollowUp())
                                 <div class="dropdown">
                                     <button class="btn btn-sm btn-icon btn-light shadow-sm" type="button" data-toggle="dropdown">
                                         <i class="fe fe-more-vertical"></i>
@@ -333,6 +358,7 @@
                                         </a>
                                     </div>
                                 </div>
+                                @endif
                             </td>
                         </tr>
                     @endforeach
@@ -341,10 +367,12 @@
                         <td colspan="5" class="text-center py-5">
                             <i class="fe fe-clipboard text-muted display-4 mb-3 d-block" style="opacity: 0.5;"></i>
                             <h6 class="text-muted font-weight-bold">Belum ada tindak lanjut</h6>
+                            @if(auth()->user()->canManageFollowUp())
                             <button type="button" wire:click="$toggle('showForm')" class="btn btn-primary btn-sm mt-2" wire:loading.attr="disabled" wire:target="$toggle('showForm')">
                                 <span wire:loading.remove wire:target="$toggle('showForm')"><i class="fe fe-plus mr-1"></i> Tambah Baru</span>
                                 <span wire:loading wire:target="$toggle('showForm')"><span class="spinner-border spinner-border-sm mr-1" role="status" aria-hidden="true"></span> Memuat...</span>
                             </button>
+                            @endif
                         </td>
                     </tr>
                 @endforelse
@@ -388,11 +416,18 @@
             text: "Data yang dihapus tidak dapat dikembalikan!",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#6c757d',
             confirmButtonText: 'Ya, Hapus!',
             cancelButtonText: 'Batal',
-            reverseButtons: true
+            reverseButtons: true,
+            buttonsStyling: false,
+            customClass: {
+                confirmButton: 'btn btn-danger shadow-sm mx-1',
+                cancelButton: 'btn btn-light shadow-sm text-dark mx-1',
+                popup: 'rounded-lg border-0 shadow-lg',
+                title: 'text-dark font-weight-bold h5 pt-3',
+                htmlContainer: 'text-muted small pb-2',
+                icon: 'mx-auto mb-3'
+            }
         }).then((result) => {
             if (result.isConfirmed) {
                 @this.call('delete', id);

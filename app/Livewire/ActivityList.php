@@ -10,10 +10,39 @@ class ActivityList extends Component
 {
     use WithPagination;
 
+    public function getPicColor($picName)
+    {
+        // Define specific colors for known Commissions
+        $map = [
+            'Komjakum' => 'komjakum',
+            'Komisi PME' => 'pme',
+            'PME' => 'pme',
+            'Sekretariat DJSN' => 'sekretariat',
+            'Anggota DJSN' => 'djsn',
+            'Ketua DJSN' => 'ketua',
+        ];
+
+        if (str_contains(strtoupper($picName), 'PME')) {
+            return 'pme';
+        }
+
+        if (isset($map[$picName])) {
+            return $map[$picName];
+        }
+
+        return 'primary'; // Default fallback
+    }
+
     public $search = '';
     public $type = '';
 
     public $sortDirection = 'asc';
+
+    public function mount()
+    {
+        // Auto-cleanup trash (force delete soft-deleted items immediately on load)
+        Activity::pruneTrash(0);
+    }
 
     public function getUrgentActivitiesProperty()
     {
@@ -143,7 +172,7 @@ class ActivityList extends Component
         
         // Apply Visibility Scope
         if (auth()->check()) {
-            $query->visibleToUser(auth()->user());
+            // $query->visibleToUser(auth()->user()); // Removed per user request: lists show all
         }
 
         $query->where('start_date', '>=', now()->startOfDay())
@@ -162,12 +191,15 @@ class ActivityList extends Component
             });
         }
 
-        $activities = $query->get();
+        // Use pagination instead of getting all records
+        $activities = $query->paginate(15);
 
-        $groupedActivities = $activities->groupBy(function($item) {
+        // Group the records on the current page
+        $groupedActivities = $activities->getCollection()->groupBy(function($item) {
             return $item->start_date->isoFormat('MMMM Y');
         });
 
-        return view('livewire.activity-list', compact('groupedActivities'));
+        // Pass both the paginated object (for links) and the grouped collection (for display)
+        return view('livewire.activity-list', compact('groupedActivities', 'activities'));
     }
 }

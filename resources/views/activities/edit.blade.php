@@ -490,24 +490,7 @@
                                     </div>
                                 </div>
                                 
-                                <!-- 2. Notulensi -->
-                                <div class="list-group-item">
-                                    <div class="form-group mb-2">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <label class="small text-muted font-weight-bold mb-0">Notulensi</label>
-                                            @if($activity->minutes_path)
-                                                <div>
-                                                    <a href="{{ Storage::url($activity->minutes_path) }}" target="_blank" class="badge badge-success text-white mr-1"><i class="fe fe-eye"></i> Lihat</a>
-                                                    <button type="button" class="btn badge badge-danger text-white border-0" onclick="confirmDelete('{{ route('activities.delete-minutes', $activity->id) }}')"><i class="fe fe-trash-2"></i></button>
-                                                </div>
-                                            @endif
-                                        </div>
-                                        <div class="custom-file">
-                                            <input type="file" class="custom-file-input" id="minutes_path" name="minutes_path" accept="application/pdf">
-                                            <label class="custom-file-label text-truncate" for="minutes_path">{{ $activity->minutes_path ? basename($activity->minutes_path) : 'Ganti/Upload File...' }}</label>
-                                        </div>
-                                    </div>
-                                </div>
+
     
                                 <!-- 3. Surat Tugas -->
                                 <div class="list-group-item">
@@ -529,6 +512,49 @@
                                 </div>
     
                             </div>
+                        </div>
+                    </div>
+
+
+                    <!-- MoM (Minutes of Meeting) List & Upload -->
+                    <div class="card mb-4">
+                        <div class="card-header d-flex align-items-center">
+                            <div class="icon-shape bg-light text-primary rounded-circle mr-3">
+                                <i class="fe fe-file-text"></i>
+                            </div>
+                            <strong class="card-title">MoM (Minutes of Meeting)</strong>
+                        </div>
+                        <div class="card-body p-0">
+                             <div class="list-group list-group-flush mb-3">
+                                @forelse($activity->moms as $mom)
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span class="text-truncate mr-2" style="max-width: 200px;" title="{{ $mom->title }}">{{ $mom->title }}</span>
+                                        <div>
+                                            <a href="{{ Storage::url($mom->file_path) }}" target="_blank" class="badge badge-info text-white mr-1"><i class="fe fe-download"></i></a>
+                                            <button type="button" class="btn badge badge-danger text-white border-0" onclick="confirmDelete('{{ route('activities.delete-mom', $mom->id) }}')"><i class="fe fe-trash-2"></i></button>
+                                        </div>
+                                    </div>
+                                @empty
+                                <br>
+                                    <div class="list-group-item text-center text-muted small">Belum ada MoM</div>
+                                @endforelse
+                             </div>
+                             
+                             <div class="p-3 border-top">
+                                <button type="button" class="btn btn-sm btn-outline-primary btn-block" data-toggle="collapse" data-target="#collapseMom">
+                                    <i class="fe fe-plus"></i> Tambah MoM
+                                </button>
+                                <div class="collapse mt-3" id="collapseMom">
+                                    <div class="form-group">
+                                        <input type="text" id="mom_title" class="form-control form-control-sm mb-2" placeholder="Judul MoM">
+                                        <div class="custom-file">
+                                            <input type="file" class="custom-file-input" id="mom_file">
+                                            <label class="custom-file-label" text-truncate>Pilih File...</label>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-primary mt-3 btn-block" onclick="uploadMom()">Upload</button>
+                                    </div>
+                                </div>
+                             </div>
                         </div>
                     </div>
 
@@ -645,6 +671,7 @@
                                              <div class="card-body py-2">
                                                  <div class="row">
                                                      @foreach($members as $member)
+                                                     @if(!in_array($member->role, ['Dewan', 'DJSN'])) @continue @endif
                                                      @php 
                                                          $selectedDewan = (isset($activity) && is_array($activity->disposition_to)) ? $activity->disposition_to : [];
                                                      @endphp
@@ -710,6 +737,12 @@
         <form id="docUploadForm" method="POST" action="{{ route('activities.upload-documentation', $activity->id) }}" enctype="multipart/form-data" style="display: none;">
             @csrf
             <input type="file" name="file_path[]" id="hidden_doc_file" multiple>
+        </form>
+
+        <form id="momUploadForm" method="POST" action="{{ route('activities.upload-mom', $activity->id) }}" enctype="multipart/form-data" style="display: none;">
+            @csrf
+            <input type="text" name="title" id="hidden_mom_title">
+            <input type="file" name="file_path" id="hidden_mom_file">
         </form>
     </div>
 </div>
@@ -791,6 +824,25 @@
         theme: 'snow',
         modules: { toolbar: [ ['bold', 'italic', 'underline'], [{ 'list': 'ordered'}, { 'list': 'bullet' }] ] }
     });
+
+    // MoM Upload
+    function uploadMom() {
+        var title = $('#mom_title').val();
+        var file = $('#mom_file')[0].files[0];
+        
+        if(!title || !file) {
+            Swal.fire('Error', 'Mohon isi Judul MoM dan pilih file.', 'error');
+            return;
+        }
+        
+        $('#hidden_mom_title').val(title);
+        var fileInput = $('#mom_file').clone();
+        fileInput.attr('id', 'hidden_mom_file');
+        fileInput.attr('name', 'file_path');
+        $('#hidden_mom_file').replaceWith(fileInput);
+        
+        $('#momUploadForm').submit();
+    }
 
     // Handle Form Submit
     $('#editForm').on('submit', function() {

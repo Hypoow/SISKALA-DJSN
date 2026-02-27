@@ -75,6 +75,11 @@ class Activity extends Model
         return $this->hasMany(ActivityMaterial::class);
     }
 
+    public function moms()
+    {
+        return $this->hasMany(ActivityMom::class);
+    }
+
     protected static function booted()
     {
         // Use forceDeleting so files are only removed when permanently deleted
@@ -104,10 +109,24 @@ class Activity extends Model
                 }
             }
 
+            // Delete MoMs
+            foreach ($activity->moms as $mom) {
+                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($mom->file_path)) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($mom->file_path);
+                }
+            }
+
             // Delete Documentation Photos
             foreach ($activity->documentations as $doc) {
                 if (\Illuminate\Support\Facades\Storage::disk('public')->exists($doc->file_path)) {
                     \Illuminate\Support\Facades\Storage::disk('public')->delete($doc->file_path);
+                }
+            }
+
+            // Delete MoMs
+            foreach ($activity->moms as $mom) {
+                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($mom->file_path)) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($mom->file_path);
                 }
             }
         });
@@ -132,8 +151,6 @@ class Activity extends Model
         return \Carbon\Carbon::parse($this->start_date->format('Y-m-d') . ' ' . $this->start_time);
     }
     
-    // Council Members List
-    // Council Structure
     public const COUNCIL_STRUCTURE = [
         'Ketua DJSN' => [
             'Nunung Nuryartono'
@@ -147,7 +164,7 @@ class Activity extends Model
             'Syamsul Hidayat Pasaribu',
             'Hermansyah'
         ],
-        'Komisi Komjakum' => [
+        'Komjakum' => [
             'Paulus Agung Pambudhi',
             'Agus Taufiqurrohman',
             'Kunta Wibawa Dasa Nugraha',
@@ -161,11 +178,66 @@ class Activity extends Model
         ]
     ];
 
+    /**
+     * Get disposition groups based on selected names
+     */
+    public function getDispositionGroupsAttribute()
+    {
+        $selectedNames = $this->disposition_to ?? [];
+        if (empty($selectedNames)) return [];
+
+        $groups = [];
+        
+        foreach (self::COUNCIL_STRUCTURE as $groupName => $members) {
+            // Check if ANY member of this group is in the selected names
+            // Or should it be ALL? Usually "Disposisi to Komisi X" implies at least one member.
+            // Let's check intersection.
+            if (count(array_intersect($members, $selectedNames)) > 0) {
+                $groups[] = $groupName;
+            }
+        }
+
+        // If no group found (maybe manual names), return them or a generic label?
+        // For now, let's just return the groups found. 
+        // If "Sekretariat" is selected, it might just be individual staff, but usually they have a group.
+        
+        return array_unique($groups);
+    }
+
+    /**
+     * Get list of members in a specific group that are in the disposition list.
+     * Used for tooltips.
+     */
+    public function getDispositionGroupMembers($groupName)
+    {
+        $allSelected = $this->disposition_to ?? [];
+        if (empty($allSelected) || !isset(self::COUNCIL_STRUCTURE[$groupName])) {
+            return ''; // No members or invalid group
+        }
+
+        $groupMembers = self::COUNCIL_STRUCTURE[$groupName];
+        $foundMembers = array_intersect($groupMembers, $allSelected);
+
+        if (empty($foundMembers)) return '';
+
+        if ($groupName === 'Ketua DJSN' || count($foundMembers) === 1) {
+            return reset($foundMembers);
+        }
+
+        $html = "<div class='text-left pl-1'>";
+        foreach ($foundMembers as $member) {
+            $html .= "&bull; " . $member . "<br>";
+        }
+        $html .= "</div>";
+
+        return $html;
+    }
+
     // Internal PIC Options
     public const INTERNAL_PICS = [
         'Ketua DJSN',
         'Komisi PME',
-        'Komisi Komjakum',
+        'Komjakum',
         'Sekretariat DJSN'
     ];
 
@@ -199,16 +271,37 @@ class Activity extends Model
             return $query; // Admin sees all
         }
 
-        if (in_array($user->role, ['Dewan', 'DJSN'])) {
-            // Dewan/DJSN only see if they are in disposition_to OR are the PIC
+        if (in_array($user->role, ['Dewan', 'DJSN', 'TA', 'User'])) {
+            // Dewan/DJSN/TA/User see if:
+            // 1. They are explicitly in disposition_to (Legacy or specific assignment)
+            // 2. They are the PIC
+            // 3. A Dewan member from their Commission/Division is in disposition_to (New Requirement)
+            
             return $query->where(function($q) use ($user) {
-                // Check JSON disposition_to for User Name
+                // 1. Direct Disposition
                 $q->whereJsonContains('disposition_to', $user->name)
-                  // Or checks if they are in PIC array (internal users might be listed there too)
-                  ->orWhereJsonContains('pic', $user->name)
-                  // Also check 'Komisi' mapping if needed? User mainly said "targeted for dispo". 
-                  // Let's stick to explicit name match for now as per "disposisi pada kegiatan".
-                  ;
+                  // 2. Direct PIC
+                  ->orWhereJsonContains('pic', $user->name);
+                  
+                // 3. Commission Match for TA/User/Dewan
+                // Identify User's Commission based on Divisi
+                $userDivisi = strtoupper($user->divisi ?? '');
+                $commissionMembers = [];
+
+                if (str_contains($userDivisi, 'PME')) {
+                    $commissionMembers = self::COUNCIL_STRUCTURE['Komisi PME'] ?? [];
+                } elseif (str_contains($userDivisi, 'KOMJAKUM')) {
+                    $commissionMembers = self::COUNCIL_STRUCTURE['Komjakum'] ?? [];
+                } elseif ($userDivisi == 'KETUA DJSN' || str_contains($userDivisi, 'KETUA')) {
+                     $commissionMembers = self::COUNCIL_STRUCTURE['Ketua DJSN'] ?? [];
+                }
+                
+                // If user belongs to a known commission, check if ANY of that commission's members are in disposition_to
+                if (!empty($commissionMembers)) {
+                    foreach ($commissionMembers as $member) {
+                        $q->orWhereJsonContains('disposition_to', $member);
+                    }
+                }
             });
         }
 
@@ -221,6 +314,30 @@ class Activity extends Model
     public function followups()
     {
         return $this->hasMany(ActivityFollowup::class);
+    }
+
+    /**
+     * Prune soft deleted activities older than specified minutes.
+     * 
+     * @param int $minutes
+     * @return int Number of deleted records
+     */
+    public static function pruneTrash($minutes = 60)
+    {
+        $cutoff = now()->subMinutes($minutes);
+        
+        // Find trashed items older than cutoff
+        $trashed = static::onlyTrashed()
+                         ->where('deleted_at', '<', $cutoff)
+                         ->get();
+                         
+        $count = 0;
+        foreach ($trashed as $activity) {
+            $activity->forceDelete();
+            $count++;
+        }
+        
+        return $count;
     }
 }
 

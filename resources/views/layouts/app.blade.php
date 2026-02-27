@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="Schedulo DJSN">
+    <meta name="description" content="SISKALA">
     <meta name="author" content="">
     <link rel="icon" href="{{ asset('assets/images/logo.svg') }}">
-    <title>@yield('title', 'Schedulo DJSN')</title>
+    <title>@yield('title', 'SISKALA')</title>
     <!-- Simple bar CSS -->
     <!-- Simple bar CSS removed -->
     <!-- Fonts CSS -->
@@ -277,6 +277,93 @@
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
         }
+
+        /* Premium Alert Styling */
+        .alert-premium {
+            border: 0;
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            position: relative;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            backdrop-filter: blur(10px);
+            margin-bottom: 1.5rem;
+        }
+
+        .alert-premium-danger {
+            background-color: rgba(254, 226, 226, 0.9); /* Red-100 with opacity */
+            border-left: 5px solid #ef4444; /* Red-500 */
+            color: #991b1b; /* Red-800 */
+        }
+
+        .alert-premium .alert-icon-wrapper {
+            margin-right: 1rem;
+            padding-top: 2px;
+            color: #ef4444;
+        }
+
+        .alert-premium .alert-content {
+            flex: 1;
+        }
+
+        .alert-premium .alert-heading {
+            font-size: 1.05rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+
+        .alert-premium .alert-list {
+            list-style-type: none;
+            padding-left: 0 !important;
+        }
+
+        .alert-premium .alert-list li {
+            position: relative;
+            padding-left: 1.25rem;
+            margin-bottom: 0.25rem;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .alert-premium .alert-list li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #ef4444;
+            font-weight: bold;
+        }
+
+        .alert-premium .close {
+            opacity: 0.6;
+            color: #991b1b;
+            text-shadow: none;
+            padding: 1.2rem;
+            transition: opacity 0.2s;
+        }
+
+        .alert-premium .close:hover {
+            opacity: 1;
+        }
+
+        /* SweetAlert2 Custom Styling */
+        div:where(.swal2-container) div:where(.swal2-toast) {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+            border-radius: 12px !important;
+            padding: 0.75rem 1rem !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+        
+        div:where(.swal2-toast) .swal2-icon {
+            margin: 0 0.5rem 0 0 !important;
+            transform: scale(0.8);
+        }
+
+        div:where(.swal2-html-container) {
+            margin: 0 !important;
+            font-size: 0.95rem !important;
+            font-weight: 500 !important;
+            color: #1f2937 !important;
+        }
     </style>
     @stack('styles')
     <script>
@@ -337,12 +424,14 @@
 
 
           @if ($errors->any())
-              <div class="alert alert-glass alert-glass-danger alert-dismissible fade show" role="alert">
-                  <div class="d-flex align-items-center">
-                      <span class="fe fe-alert-triangle fe-24 mr-3"></span>
-                      <div>
-                          <strong class="d-block mb-1">Perhatian!</strong>
-                          <ul class="mb-0 pl-3">
+              <div class="alert alert-premium alert-premium-danger alert-dismissible fade show" role="alert">
+                  <div class="d-flex align-items-start">
+                      <div class="alert-icon-wrapper">
+                          <span class="fe fe-alert-triangle fe-24"></span>
+                      </div>
+                      <div class="alert-content">
+                          <strong class="d-block mb-1 alert-heading">Perhatian!</strong>
+                          <ul class="mb-0 pl-3 alert-list">
                               @foreach ($errors->all() as $error)
                                   <li>{{ $error }}</li>
                               @endforeach
@@ -429,4 +518,5 @@
     @stack('scripts')
   </body>
 </html>
+
 

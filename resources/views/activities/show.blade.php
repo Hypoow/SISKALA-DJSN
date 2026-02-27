@@ -24,7 +24,7 @@
                     <a href="{{ $backUrl }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 mr-2">
                         <i class="fe fe-arrow-left mr-1"></i> <span class="d-none d-sm-inline">Kembali</span>
                     </a>
-                    @if(auth()->check() && auth()->user()->isAdmin())
+                    @if(auth()->user()->canManageActivities())
                         <a href="{{ route('activities.edit', $activity->id) }}" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm">
                             <i class="fe fe-edit mr-1"></i> <span class="d-none d-sm-inline">Edit</span>
                         </a>
@@ -61,21 +61,23 @@
                         <!-- Status & Update Info (Moved from Header) -->
                         <div class="form-group row">
                             <label class="col-sm-3 col-form-label text-muted font-weight-bold">Status</label>
-                            <div class="col-sm-9 d-flex align-items-center flex-wrap">
-                                @if($activity->type == 'external')
-                                    <span class="badge badge-pill badge-info px-3 py-2 mr-2 mb-2 text-white">Kegiatan Eksternal</span>
-                                @else
-                                    <span class="badge badge-pill badge-primary px-3 py-2 mr-2 mb-2" style="background-color: #004085;">Kegiatan Internal</span>
-                                @endif
+                            <div class="col-sm-9">
+                                <div class="d-flex align-items-center flex-wrap mb-1">
+                                    @if($activity->type == 'external')
+                                        <span class="badge badge-pill badge-info px-3 py-2 mr-2 mb-2 text-white">Kegiatan Eksternal</span>
+                                    @else
+                                        <span class="badge badge-pill badge-primary px-3 py-2 mr-2 mb-2" style="background-color: #004085;">Kegiatan Internal</span>
+                                    @endif
+                                    
+                                    @switch($activity->status)
+                                        @case(0) <span class="badge badge-pill badge-success mr-2 mb-2">On Schedule</span> @break
+                                        @case(1) <span class="badge badge-pill badge-secondary mr-2 mb-2">Reschedule</span> @break
+                                        @case(2) <span class="badge badge-pill badge-warning mr-2 mb-2">Belum ada Disposisi</span> @break
+                                        @case(3) <span class="badge badge-pill badge-danger mr-2 mb-2">Tidak Dilaksanakan</span> @break
+                                    @endswitch
+                                </div>
                                 
-                                @switch($activity->status)
-                                    @case(0) <span class="badge badge-pill badge-success mr-2 mb-2">On Schedule</span> @break
-                                    @case(1) <span class="badge badge-pill badge-secondary mr-2 mb-2">Reschedule</span> @break
-                                    @case(2) <span class="badge badge-pill badge-warning mr-2 mb-2">Belum ada Disposisi</span> @break
-                                    @case(3) <span class="badge badge-pill badge-danger mr-2 mb-2">Tidak Dilaksanakan</span> @break
-                                @endswitch
-
-                                <span class="text-muted small mb-2 d-inline-block">
+                                <span class="text-muted small d-block">
                                     <i class="fe fe-clock mr-1"></i>Updated {{ $activity->updated_at->diffForHumans() }}
                                     @if($activity->lastEditor)
                                          by <strong>{{ $activity->lastEditor->name }}</strong>
@@ -226,8 +228,13 @@
                                             } elseif ($pic == 'Ketua DJSN') {
                                                 $badgeClass = 'badge-ketua';
                                             }
+
+                                            $displayName = $pic;
+                                            if ($pic === 'Komisi Komjakum') {
+                                                $displayName = 'Komjakum';
+                                            }
                                         @endphp
-                                        <span class="badge {{ $badgeClass }} mr-1 mb-1">{{ $pic }}</span>
+                                        <span class="badge {{ $badgeClass }} mr-1 mb-1">{{ $displayName }}</span>
                                     @endforeach
                                 @endif
                             </div>
@@ -246,7 +253,7 @@
                             </div>
                             <strong class="card-title mb-0">Hasil Rapat Secara Singkat</strong>
                         </div>
-                        @if(auth()->check() && (auth()->user()->isAdmin() || auth()->user()->role === 'Sekretariat DJSN'))
+                        @if(auth()->user()->canManagePostActivity())
                             @if(!empty($activity->summary_content) && trim(strip_tags($activity->summary_content)) != '')
                                 <button type="button" class="btn btn-sm btn-outline-primary rounded-pill" data-toggle="modal" data-target="#summaryModal">
                                     <span class="fe fe-edit"></span> Edit
@@ -260,7 +267,7 @@
                         @else
                             <div class="text-center py-4">
                                 <p class="text-muted mb-3">Belum ada hasil rapat singkat.</p>
-                                @if(auth()->check() && (auth()->user()->isAdmin() || auth()->user()->role === 'Sekretariat DJSN'))
+                                @if(auth()->user()->canManagePostActivity())
                                     <button type="button" class="btn btn-primary rounded-pill" data-toggle="modal" data-target="#summaryModal">
                                         <span class="fe fe-plus"></span> Tambahkan Hasil Rapat
                                     </button>
@@ -311,27 +318,31 @@
                                 </div>
                             </div>
                             
-                            <!-- 2. Notulensi -->
+                            <!-- 2. MoM (Minutes of Meeting) -->
                             <div class="list-group-item p-3">
-                                <div class="row align-items-center">
-                                    <div class="col-auto">
+                                <div class="row align-items-start">
+                                    <div class="col-auto mt-1">
                                         <span class="avatar avatar-sm bg-light text-primary rounded-circle">
                                             <i class="fe fe-file-text"></i>
                                         </span>
                                     </div>
                                     <div class="col pl-0">
-                                        <small class="text-muted d-block mb-0 font-weight-bold uppercase-label">Notulensi</small>
-                                        @if($activity->minutes_path)
-                                            <a href="{{ Storage::url($activity->minutes_path) }}" target="_blank" class="font-weight-bold text-dark d-block text-truncate" style="max-width: 250px;">{{ basename($activity->minutes_path) }}</a>
+                                        <small class="text-muted d-block mb-1 font-weight-bold uppercase-label">MoM (Minutes of Meeting)</small>
+                                        @if($activity->moms && $activity->moms->count() > 0)
+                                            <ul class="list-unstyled mb-0">
+                                                @foreach($activity->moms as $mom)
+                                                    <li class="mb-2 d-flex justify-content-between align-items-center bg-light p-2 rounded">
+                                                        <a href="{{ Storage::url($mom->file_path) }}" target="_blank" class="text-dark font-weight-bold text-truncate" style="max-width: 200px;">
+                                                            {{ $mom->title ?? basename($mom->file_path) }}
+                                                        </a>
+                                                        <a href="{{ Storage::url($mom->file_path) }}" target="_blank" class="text-primary"><i class="fe fe-download"></i></a>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
                                         @else
                                             <span class="text-muted font-italic small">-</span>
                                         @endif
                                     </div>
-                                     @if($activity->minutes_path)
-                                        <div class="col-auto">
-                                            <a href="{{ Storage::url($activity->minutes_path) }}" target="_blank" class="btn btn-sm btn-outline-primary rounded-circle"><i class="fe fe-download"></i></a>
-                                        </div>
-                                    @endif
                                 </div>
                             </div>
 
@@ -487,6 +498,7 @@
                                         <div class="mb-1 font-weight-bold text-dark">{{ $groupName }}</div>
                                         <ul class="list-unstyled mb-0 text-muted small">
                                             @foreach($users as $user)
+                                                @continue(!$user->hasRole('Dewan') && $user->name !== 'Imron Rosadi')
                                                 @php
                                                     $isPresent = in_array($user->name, $attendanceList);
                                                 @endphp
@@ -579,31 +591,99 @@
                         @endif
                     </div>
                 </div>
-                
-                @if($activity->dispo_note || $activity->dresscode)
-                 <div class="card mb-4">
-                    <div class="card-header d-flex align-items-center">
-                         <div class="icon-shape bg-light text-primary rounded-circle mr-3">
-                            <i class="fe fe-align-left"></i>
+
+                <!-- Manual Attendance (Staff Pendamping) Display -->
+                @php
+                    $attendanceList = $activity->attendance_list ?? [];
+                    // Fetch all staff names categorized
+                    $staffSekretariat = \App\Models\Staff::where('type', 'sekretariat')->pluck('name')->toArray();
+                    $staffTA = \App\Models\Staff::where('type', 'ta')->pluck('name')->toArray();
+                    
+                    $presentSekretariat = array_values(array_intersect($attendanceList, $staffSekretariat));
+                    $presentTA = array_values(array_intersect($attendanceList, $staffTA));
+                @endphp
+
+                @if(!empty($presentSekretariat) || !empty($presentTA))
+                <div class="card mb-4">
+                     <div class="card-header d-flex align-items-center">
+                        <div class="icon-shape bg-light text-success rounded-circle mr-3">
+                            <i class="fe fe-users"></i>
                         </div>
-                         <strong class="card-title">Catatan Tambahan</strong>
+                        <strong class="card-title">Staf Pendamping</strong>
                     </div>
                     <div class="card-body">
-                        @if($activity->dresscode)
-                        <div class="mb-3">
-                            <label class="text-muted small text-uppercase font-weight-bold">Dresscode</label>
-                            <p class="mb-0 font-weight-bold text-dark">{{ $activity->dresscode }}</p>
-                        </div>
-                        <hr>
-                        @endif
-                        
-                        @if($activity->dispo_note)
-                        <div>
-                            <label class="text-muted small text-uppercase font-weight-bold">Keterangan</label>
-                            <div class="bg-light p-3 rounded markdown-content border">
-                                {!! $activity->dispo_note !!}
+                         @if(!empty($presentSekretariat))
+                            <div class="mb-3">
+                                <h6 class="font-weight-bold text-primary small text-uppercase mb-2">Sekretariat DJSN</h6>
+                                <div class="d-flex flex-wrap">
+                                    @foreach($presentSekretariat as $name)
+                                        <span class="badge badge-pill badge-light border mr-2 mb-2 p-2">
+                                            <i class="fe fe-check-circle text-success mr-1"></i> {{ $name }}
+                                        </span>
+                                    @endforeach
+                                </div>
                             </div>
+                        @endif
+
+                        @if(!empty($presentTA))
+                            <div class="mb-0">
+                                <h6 class="font-weight-bold text-info small text-uppercase mb-2">Tenaga Ahli</h6>
+                                <div class="d-flex flex-wrap">
+                                    @foreach($presentTA as $name)
+                                        <span class="badge badge-pill badge-light border mr-2 mb-2 p-2">
+                                            <i class="fe fe-check-circle text-success mr-1"></i> {{ $name }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+                @endif
+                
+                {{-- Logic for Catatan Tambahan Card visibility --}}
+                @php
+                    $canEditNotes = auth()->user()->canManagePostActivity();
+                    $hasNotes = $activity->dispo_note || $activity->dresscode;
+                @endphp
+
+                @if($hasNotes || $canEditNotes)
+                 <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                             <div class="icon-shape bg-light text-primary rounded-circle mr-3">
+                                <i class="fe fe-align-left"></i>
+                            </div>
+                             <strong class="card-title mb-0">Catatan Tambahan</strong>
                         </div>
+                        @if($canEditNotes)
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill" data-toggle="modal" data-target="#additionalNotesModal">
+                                <span class="fe fe-edit"></span> Edit
+                            </button>
+                        @endif
+                    </div>
+                    <div class="card-body">
+                        @if(!$hasNotes)
+                             <div class="text-center py-3">
+                                <p class="text-muted small mb-0">Belum ada catatan tambahan.</p>
+                             </div>
+                        @else
+                            @if($activity->dresscode)
+                            <div class="mb-3">
+                                <label class="text-muted small text-uppercase font-weight-bold">Dresscode</label>
+                                <p class="mb-0 font-weight-bold text-dark">{{ $activity->dresscode }}</p>
+                            </div>
+                            <hr>
+                            @endif
+                            
+                            @if($activity->dispo_note)
+                            <div>
+                                <label class="text-muted small text-uppercase font-weight-bold">Keterangan</label>
+                                <div class="bg-light p-3 rounded markdown-content border">
+                                    {!! $activity->dispo_note !!}
+                                </div>
+                            </div>
+                            @endif
                         @endif
                     </div>
                  </div>
@@ -633,10 +713,43 @@
                         <div id="summary-editor" style="height: 300px;">{!! $activity->summary_content !!}</div>
                         <input type="hidden" name="summary_content" id="summary_content_input">
                     </div>
-                </div>
+                </div> 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
                     <button type="submit" class="btn btn-primary">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Additional Notes Modal -->
+<div class="modal fade" id="additionalNotesModal" tabindex="-1" role="dialog" aria-labelledby="additionalNotesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="additionalNotesModalLabel">Edit Catatan Tambahan</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="{{ route('activities.update-additional-notes', $activity->id) }}" method="POST" id="additionalNotesForm">
+                @csrf
+                @method('PUT')
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="dresscode_input" class="form-label-premium">Dresscode</label>
+                        <input type="text" class="form-control" name="dresscode" id="dresscode_input" value="{{ $activity->dresscode }}" placeholder="Contoh: Batik Lengan Panjang / Pakaian Sipil Lengkap">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label-premium">Keterangan / Catatan</label>
+                        <div id="notes-editor" style="height: 200px;">{!! $activity->dispo_note !!}</div>
+                        <input type="hidden" name="dispo_note" id="dispo_note_input">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary rounded-pill" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary rounded-pill">Simpan Perubahan</button>
                 </div>
             </form>
         </div>
@@ -716,6 +829,23 @@
         var src = button.data('src');
         var modal = $(this);
         modal.find('#photoModalImage').attr('src', src);
+    });
+
+    // Initialize Quill for Additional Notes
+    var notesQuill = new Quill('#notes-editor', {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                ['bold', 'italic', 'underline'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                ['clean']
+            ]
+        }
+    });
+
+    // Update hidden input on notes submit
+    $('#additionalNotesForm').on('submit', function() {
+        $('#dispo_note_input').val(notesQuill.root.innerHTML);
     });
 </script>
 @endpush

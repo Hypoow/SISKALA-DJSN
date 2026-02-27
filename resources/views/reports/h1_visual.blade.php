@@ -192,14 +192,14 @@
                                             $getGroupClass = function($group) {
                                                 if($group == 'Ketua DJSN') return 'text-purple bg-purple-light';
                                                 if($group == 'Komisi PME') return 'text-success bg-success-light';
-                                                if($group == 'Komisi Komjakum') return 'text-primary bg-primary-light';
+                                                if($group == 'Komjakum') return 'text-primary bg-primary-light';
                                                 return 'text-secondary bg-secondary-light';
                                             };
 
                                             $getBadgeClass = function($group) {
                                                 if($group == 'Ketua DJSN') return 'badge-ketua';
                                                 if($group == 'Komisi PME') return 'badge-pme';
-                                                if($group == 'Komisi Komjakum') return 'badge-komjakum';
+                                                if($group == 'Komjakum') return 'badge-komjakum';
                                                 return 'badge-secondary';
                                             };
                                         @endphp

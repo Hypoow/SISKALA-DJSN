@@ -31,13 +31,13 @@ class DewanSeeder extends Seeder
             'Hermansyah' => ['order' => 8, 'divisi' => 'Komisi PME'],
             
             // Komisi Kebijakan Umum (Komjakum)
-            'Paulus Agung Pambudhi' => ['order' => 9, 'divisi' => 'Komisi Komjakum'],
-            'Agus Taufiqurrohman' => ['order' => 10, 'divisi' => 'Komisi Komjakum'],
-            'Kunta Wibawa Dasa Nugraha' => ['order' => 11, 'divisi' => 'Komisi Komjakum'],
-            'Indah Anggoro Putri' => ['order' => 12, 'divisi' => 'Komisi Komjakum'],
-            'Rudi Purwono' => ['order' => 13, 'divisi' => 'Komisi Komjakum'],
-            'Mickael Bobby Hoelman' => ['order' => 14, 'divisi' => 'Komisi Komjakum'],
-            'Royanto Purba' => ['order' => 15, 'divisi' => 'Komisi Komjakum']
+            'Paulus Agung Pambudhi' => ['order' => 9, 'divisi' => 'Komjakum'],
+            'Agus Taufiqurrohman' => ['order' => 10, 'divisi' => 'Komjakum'],
+            'Kunta Wibawa Dasa Nugraha' => ['order' => 11, 'divisi' => 'Komjakum'],
+            'Indah Anggoro Putri' => ['order' => 12, 'divisi' => 'Komjakum'],
+            'Rudi Purwono' => ['order' => 13, 'divisi' => 'Komjakum'],
+            'Mickael Bobby Hoelman' => ['order' => 14, 'divisi' => 'Komjakum'],
+            'Royanto Purba' => ['order' => 15, 'divisi' => 'Komjakum']
         ];
 
         foreach ($councilMembers as $name => $data) {
