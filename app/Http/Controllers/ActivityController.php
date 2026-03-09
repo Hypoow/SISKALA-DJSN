@@ -344,7 +344,7 @@ class ActivityController extends Controller
     {
         // Load users referenced in disposition_to to determine their groups
         $dispoNames = $activity->disposition_to ?? [];
-        $dispositionUsers = User::whereIn('name', $dispoNames)->get();
+        $dispositionUsers = User::whereIn('name', $dispoNames)->orderBy('order', 'asc')->get();
         
         // Reuse the logic from create/edit
         $groupedDisposition = $dispositionUsers->groupBy(function($user) {

@@ -86,6 +86,12 @@ class MasterDataController extends Controller
         return view('master-data.index', compact('groupedUsers'));
     }
 
+    public function topics()
+    {
+        return view('master-data.topics');
+    }
+
+
     public function store(Request $request)
     {
         $request->validate([

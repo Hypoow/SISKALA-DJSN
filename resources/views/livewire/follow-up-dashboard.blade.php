@@ -523,10 +523,11 @@
             );
 
             setInterval(() => {
-                if (Date.now() - lastActive > 10000) {
+                const idleTime = Date.now() - lastActive;
+                if (idleTime > 10000 && idleTime < 300000) { // Refresh only when idle > 10s but < 5 mins to prevent server overload
                     @this.$refresh();
                 }
-            }, 5000);
+            }, 15000);
 
             // Check for highlight_id in URL
             const urlParams = new URLSearchParams(window.location.search);

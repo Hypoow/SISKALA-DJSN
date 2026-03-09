@@ -107,9 +107,10 @@
         );
 
         setInterval(() => {
-            if (Date.now() - lastActive > 10000) {
+            const idleTime = Date.now() - lastActive;
+            if (idleTime > 10000 && idleTime < 300000) { // Refresh only when idle > 10s but < 5 mins to prevent server overload
                 @this.$refresh();
             }
-        }, 10000);
+        }, 15000);
     });
 </script>

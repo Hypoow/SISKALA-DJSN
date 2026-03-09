@@ -76,7 +76,7 @@
         </li>
       </ul>
 
-      @if(auth()->check() && auth()->user()->isAdmin())
+      @if(auth()->check() && auth()->user()->role === 'admin')
       <p class="text-muted nav-heading mt-2 mb-1 px-3">
         <span>Admin</span>
       </p>

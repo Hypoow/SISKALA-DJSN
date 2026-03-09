@@ -73,9 +73,7 @@ Route::middleware('auth')->group(function () {
     // Master Data Routes (Admin Only - checked in controller)
     Route::prefix('master-data')->name('master-data.')->group(function () {
         Route::get('/', [MasterDataController::class, 'index'])->name('index');
-        Route::get('/topics', function () {
-            return view('master-data.topics');
-        })->name('topics');
+        Route::get('/topics', [MasterDataController::class, 'topics'])->name('topics');
         Route::post('/reorder', [MasterDataController::class, 'reorder'])->name('reorder');
         Route::post('/', [MasterDataController::class, 'store'])->name('store');
         Route::put('/{user}', [MasterDataController::class, 'update'])->name('update');

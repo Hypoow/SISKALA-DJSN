@@ -224,8 +224,18 @@ class Activity extends Model
             return reset($foundMembers);
         }
 
+        // Fetch user records to get the dynamic order based on master users
+        $orderedUsers = \App\Models\User::whereIn('name', $foundMembers)
+            ->orderBy('order', 'asc')
+            ->pluck('name')
+            ->toArray();
+
+        // Include any names that might not be in the users table just in case
+        $missing = array_diff($foundMembers, $orderedUsers);
+        $finalMembers = array_merge($orderedUsers, $missing);
+
         $html = "<div class='text-left pl-1'>";
-        foreach ($foundMembers as $member) {
+        foreach ($finalMembers as $member) {
             $html .= "&bull; " . $member . "<br>";
         }
         $html .= "</div>";
@@ -322,13 +332,14 @@ class Activity extends Model
      * @param int $minutes
      * @return int Number of deleted records
      */
-    public static function pruneTrash($minutes = 60)
+    public static function pruneTrash($minutes = 60, $limit = 5)
     {
         $cutoff = now()->subMinutes($minutes);
         
         // Find trashed items older than cutoff
         $trashed = static::onlyTrashed()
                          ->where('deleted_at', '<', $cutoff)
+                         ->limit($limit)
                          ->get();
                          
         $count = 0;

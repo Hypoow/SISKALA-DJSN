@@ -109,11 +109,11 @@
                     <div class="col-md-2 mb-2 mb-md-0" x-data="{ open: false }" @click.away="open = false" style="position: relative; z-index: 1050; overflow: visible;">
                         <div class="position-relative">
                             <button type="button" @click="open = !open" class="form-control-premium shadow-sm text-left d-flex align-items-center justify-content-between" style="background-image: none; height: auto;">
-                                <span class="text-truncate" x-text="$wire.type === 'external' ? 'Eksternal' : ($wire.type === 'internal' ? 'Internal' : 'Semua Tipe Kegiatan')">Semua Tipe Kegiatan</span>
+                                <span class="text-truncate" x-text="$wire.type === 'external' ? 'Eksternal' : ($wire.type === 'internal' ? 'Internal' : 'Tipe Kegiatan')">Tipe Kegiatan</span>
                                 <i class="fe fe-chevron-down ml-2 header-arrow" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
                             </button>
                             <div class="dropdown-menu-premium shadow-lg w-100" x-show="open" x-transition style="display: none; max-height: 250px; overflow-y: auto; position: absolute; top: 100%; left: 0; z-index: 1060;">
-                                <div class="dropdown-item-premium" :class="{ 'active': $wire.type === '' }" @click="$wire.set('type', ''); open = false">Semua Tipe Kegiatan</div>
+                                <div class="dropdown-item-premium" :class="{ 'active': $wire.type === '' }" @click="$wire.set('type', ''); open = false">Semua</div>
                                 <div class="dropdown-item-premium" :class="{ 'active': $wire.type === 'internal' }" @click="$wire.set('type', 'internal'); open = false">Internal</div>
                                 <div class="dropdown-item-premium" :class="{ 'active': $wire.type === 'external' }" @click="$wire.set('type', 'external'); open = false">Eksternal</div>
                             </div>
@@ -371,10 +371,11 @@
         );
 
         setInterval(() => {
-            if (Date.now() - lastActive > 10000) {
+            const idleTime = Date.now() - lastActive;
+            if (idleTime > 10000 && idleTime < 300000) { // Refresh only when idle > 10s but < 5 mins to prevent server overload
                 @this.$refresh();
             }
-        }, 5000);
+        }, 15000);
     });
 </script>
 

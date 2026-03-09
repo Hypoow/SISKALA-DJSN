@@ -85,7 +85,7 @@
                  </div>
 
                  <!-- Month: 2 Cols -->
-                <div class="col-6 col-md-2 col-xl-2 mb-0 pl-1 pr-1" x-data="{ open: false, getMonthName(m) { return m ? ['', 'Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'][m] : 'Bulan'; } }" @click.away="open = false" style="position: relative; z-index: 1050; overflow: visible;">
+                <div class="col-6 col-md-2 col-xl-2 mb-0 pl-1 pr-1" x-data="{ open: false, getMonthName(m) { return m ? ['', 'Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][m] : 'Bulan'; } }" @click.away="open = false" style="position: relative; z-index: 1050; overflow: visible;">
                      <div class="position-relative">
                         <button type="button" @click="open = !open" class="form-control-premium shadow-sm text-left d-flex align-items-center justify-content-between px-3" style="background-image: none; height: auto;">
                             <span class="text-truncate" x-text="getMonthName($wire.month)">Bulan</span>
@@ -113,7 +113,7 @@
                  <div class="col-6 col-md-2 col-xl-2 mb-0 pl-1 pr-1" x-data="{ open: false }" @click.away="open = false">
                     <div class="position-relative">
                         <button type="button" @click="open = !open" class="form-control-premium shadow-sm text-left d-flex align-items-center justify-content-between px-3" style="background-image: none; height: auto;">
-                             <span class="text-truncate" x-text="$wire.type === 'external' ? 'Eksternal' : ($wire.type === 'internal' ? 'Internal' : 'Tipe')">Tipe</span>
+                             <span class="text-truncate" x-text="$wire.type === 'external' ? 'Eksternal' : ($wire.type === 'internal' ? 'Internal' : 'Tipe Kegiatan')">Tipe Kegiatan</span>
                             <i class="fe fe-chevron-down ml-1 header-arrow" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
                         </button>
                         <div class="dropdown-menu-premium shadow-lg w-100" x-show="open" x-transition style="display: none;">

@@ -40,8 +40,8 @@ class ActivityList extends Component
 
     public function mount()
     {
-        // Auto-cleanup trash (force delete soft-deleted items immediately on load)
-        Activity::pruneTrash(0);
+        // Auto-cleanup trash (force delete soft-deleted items after 60 mins, limit 5 to avoid slow loading)
+        Activity::pruneTrash(60, 5);
     }
 
     public function getUrgentActivitiesProperty()

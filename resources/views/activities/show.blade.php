@@ -541,6 +541,14 @@
                             @foreach($councilStructure as $groupName => $members)
                                 @php
                                     $groupSelected = array_intersect($members, $selected);
+                                    if (!empty($groupSelected)) {
+                                        $orderedUsers = \App\Models\User::whereIn('name', $groupSelected)
+                                            ->orderBy('order', 'asc')
+                                            ->pluck('name')
+                                            ->toArray();
+                                        $missing = array_diff($groupSelected, $orderedUsers);
+                                        $groupSelected = array_merge($orderedUsers, $missing);
+                                    }
                                     $attendanceList = $activity->attendance_list ?? [];
                                 @endphp
                                 @if(!empty($groupSelected))
