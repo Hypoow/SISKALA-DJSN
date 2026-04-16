@@ -57,103 +57,192 @@
              </div>
         </div>
 
+        <style>
+            .custom-dropdown-menu {
+                padding: 0.5rem !important;
+                border: 1px solid #edf2f7 !important;
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+                border-radius: 0.5rem !important;
+            }
+            .custom-dropdown-item {
+                border-radius: 0.375rem !important;
+                padding: 0.5rem 1rem !important;
+                color: #4a5568 !important;
+                font-size: 0.95rem;
+                transition: all 0.2s ease-in-out;
+                margin-bottom: 2px;
+                background-color: transparent;
+            }
+            .custom-dropdown-item:last-child {
+                margin-bottom: 0;
+            }
+            .custom-dropdown-item:hover, .custom-dropdown-item:focus {
+                background-color: #f7fafc !important;
+                color: #2b6cb0 !important;
+                transform: translateX(4px);
+            }
+            .custom-dropdown-item.bg-primary {
+                background-color: #0052cc !important;
+                color: white !important;
+                transform: none;
+            }
+
+            /* Smooth pagination transition */
+            .table-loading-wrapper {
+                position: relative;
+                transition: opacity 0.25s ease;
+            }
+            .table-loading-wrapper.is-loading {
+                opacity: 0.45;
+                pointer-events: none;
+            }
+            .table-loading-overlay {
+                display: none;
+                position: absolute;
+                inset: 0;
+                z-index: 10;
+                background: linear-gradient(90deg,
+                    rgba(255,255,255,0) 0%,
+                    rgba(255,255,255,0.55) 50%,
+                    rgba(255,255,255,0) 100%);
+                background-size: 200% 100%;
+                animation: shimmer-slide 1.2s infinite;
+                border-radius: 0;
+                pointer-events: none;
+            }
+            .table-loading-overlay.active {
+                display: block;
+            }
+            @keyframes shimmer-slide {
+                0%   { background-position: 200% 0; }
+                100% { background-position: -200% 0; }
+            }
+
+            /* Spinner badge positioned at top-right of table area */
+            .pagination-loading-badge {
+                display: none;
+                position: absolute;
+                top: 12px;
+                right: 16px;
+                z-index: 20;
+                background: rgba(255,255,255,0.92);
+                border: 1px solid #e2e8f0;
+                border-radius: 999px;
+                padding: 5px 14px;
+                font-size: 0.78rem;
+                font-weight: 600;
+                color: #2a5298;
+                box-shadow: 0 2px 8px rgba(30,60,114,0.10);
+                align-items: center;
+                gap: 7px;
+                backdrop-filter: blur(4px);
+            }
+            .pagination-loading-badge.active {
+                display: flex;
+            }
+        </style>
         <!-- Toolbar -->
         <div class="bg-light border-bottom p-3" style="position: relative; z-index: 100; overflow: visible;">
-             <div class="row align-items-center" style="overflow: visible;">
-                 <!-- Search: 3 Cols on XL, 2.5 Cols? Let's try 3 -->
-                 <div class="col-12 col-md-3 col-xl-3 mb-0">
-                     <div class="input-group input-group-merge input-group-premium bg-white">
-                         <input type="text" class="form-control border-0 pl-4 bg-transparent" wire:model.live.debounce.300ms="search" placeholder="Cari...">
+             <div class="row align-items-center mx-n1" style="overflow: visible;">
+                 
+                 <!-- Search -->
+                 <div class="col-12 col-md-3 px-1 mb-2 mb-md-0">
+                     <div class="input-group input-group-merge bg-white shadow-sm rounded-pill overflow-hidden" style="border: 1px solid #e2e8f0;">
+                         <input type="text" class="form-control border-0 pl-4 bg-transparent py-2" wire:model.live.debounce.300ms="search" placeholder="Cari kegiatan..." style="box-shadow: none;">
                          <div class="input-group-append">
                              <div class="input-group-text border-0 bg-transparent pr-4"><i class="fe fe-search text-muted"></i></div>
                          </div>
                      </div>
                  </div>
 
-                 <!-- Year: 1 Col -->
-                 <div class="col-6 col-md-1 col-xl-1 mb-0 pr-1 pl-1" x-data="{ open: false }" @click.away="open = false">
-                    <div class="position-relative">
-                        <button type="button" @click="open = !open" class="form-control-premium shadow-sm text-center px-1" style="background-image: none; height: auto;">
-                            <span class="text-truncate" x-text="$wire.year"></span>
-                        </button>
-                         <div class="dropdown-menu-premium shadow-lg w-100" x-show="open" x-transition style="display: none; max-height: 250px; overflow-y: auto;">
-                             @foreach(range(date('Y'), 2023) as $y)
-                                 <div class="dropdown-item-premium" :class="{ 'active': $wire.year == {{ $y }} }" @click="$wire.set('year', '{{ $y }}'); open = false">{{ $y }}</div>
-                             @endforeach
-                         </div>
-                    </div>
-                 </div>
-
-                 <!-- Month: 2 Cols -->
-                <div class="col-6 col-md-2 col-xl-2 mb-0 pl-1 pr-1" x-data="{ open: false, getMonthName(m) { return m ? ['', 'Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][m] : 'Bulan'; } }" @click.away="open = false" style="position: relative; z-index: 1050; overflow: visible;">
+                 <!-- Year -->
+                 <div class="col-6 col-md-1 px-1 mb-2 mb-md-0" x-data="{ open: false }" @click.away="open = false">
                      <div class="position-relative">
-                        <button type="button" @click="open = !open" class="form-control-premium shadow-sm text-left d-flex align-items-center justify-content-between px-3" style="background-image: none; height: auto;">
-                            <span class="text-truncate" x-text="getMonthName($wire.month)">Bulan</span>
-                            <i class="fe fe-chevron-down ml-1 header-arrow" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
-                        </button>
-                        <div class="dropdown-menu-premium shadow-lg w-100" x-show="open" x-transition style="display: none; max-height: 400px; overflow-y: auto; position: absolute; top: 100%; left: 0; z-index: 1060;">
-                            <div class="dropdown-item-premium" :class="{ 'active': $wire.month == '' }" @click="$wire.set('month', ''); open = false">Semua</div>
-                            <div class="dropdown-item-premium" :class="{ 'active': $wire.month == '1' }" @click="$wire.set('month', '1'); open = false">Januari</div>
-                            <div class="dropdown-item-premium" :class="{ 'active': $wire.month == '2' }" @click="$wire.set('month', '2'); open = false">Februari</div>
-                            <div class="dropdown-item-premium" :class="{ 'active': $wire.month == '3' }" @click="$wire.set('month', '3'); open = false">Maret</div>
-                            <div class="dropdown-item-premium" :class="{ 'active': $wire.month == '4' }" @click="$wire.set('month', '4'); open = false">April</div>
-                            <div class="dropdown-item-premium" :class="{ 'active': $wire.month == '5' }" @click="$wire.set('month', '5'); open = false">Mei</div>
-                            <div class="dropdown-item-premium" :class="{ 'active': $wire.month == '6' }" @click="$wire.set('month', '6'); open = false">Juni</div>
-                            <div class="dropdown-item-premium" :class="{ 'active': $wire.month == '7' }" @click="$wire.set('month', '7'); open = false">Juli</div>
-                            <div class="dropdown-item-premium" :class="{ 'active': $wire.month == '8' }" @click="$wire.set('month', '8'); open = false">Agustus</div>
-                            <div class="dropdown-item-premium" :class="{ 'active': $wire.month == '9' }" @click="$wire.set('month', '9'); open = false">September</div>
-                            <div class="dropdown-item-premium" :class="{ 'active': $wire.month == '10' }" @click="$wire.set('month', '10'); open = false">Oktober</div>
-                            <div class="dropdown-item-premium" :class="{ 'active': $wire.month == '11' }" @click="$wire.set('month', '11'); open = false">November</div>
-                            <div class="dropdown-item-premium" :class="{ 'active': $wire.month == '12' }" @click="$wire.set('month', '12'); open = false">Desember</div>
-                        </div>
-                    </div>
-                </div>
-
-                 <!-- Type: 2 Cols -->
-                 <div class="col-6 col-md-2 col-xl-2 mb-0 pl-1 pr-1" x-data="{ open: false }" @click.away="open = false">
-                    <div class="position-relative">
-                        <button type="button" @click="open = !open" class="form-control-premium shadow-sm text-left d-flex align-items-center justify-content-between px-3" style="background-image: none; height: auto;">
-                             <span class="text-truncate" x-text="$wire.type === 'external' ? 'Eksternal' : ($wire.type === 'internal' ? 'Internal' : 'Tipe Kegiatan')">Tipe Kegiatan</span>
-                            <i class="fe fe-chevron-down ml-1 header-arrow" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
-                        </button>
-                        <div class="dropdown-menu-premium shadow-lg w-100" x-show="open" x-transition style="display: none;">
-                             <div class="dropdown-item-premium" :class="{ 'active': $wire.type === '' }" @click="$wire.set('type', ''); open = false">Semua</div>
-                             <div class="dropdown-item-premium" :class="{ 'active': $wire.type === 'internal' }" @click="$wire.set('type', 'internal'); open = false">Internal</div>
-                             <div class="dropdown-item-premium" :class="{ 'active': $wire.type === 'external' }" @click="$wire.set('type', 'external'); open = false">Eksternal</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- PIC: 2 Cols -->
-                <div class="col-12 col-md-2 col-xl-2 mb-0 pl-1 pr-1" x-data="{ open: false }" @click.away="open = false" style="position: relative; z-index: 1040;">
-                    <div class="position-relative">
-                        <button type="button" @click="open = !open" class="form-control-premium shadow-sm text-left d-flex align-items-center justify-content-between px-3" style="background-image: none; height: auto;">
-                            <span class="text-truncate" x-text="$wire.pic ? $wire.pic : 'PIC'">PIC</span>
-                            <i class="fe fe-chevron-down ml-1 header-arrow" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
-                        </button>
-                         <div class="dropdown-menu-premium shadow-lg w-100" x-show="open" x-transition style="display: none; max-height: 250px; overflow-y: auto;">
-                             <div class="dropdown-item-premium" :class="{ 'active': $wire.pic === '' }" @click="$wire.set('pic', ''); open = false">Semua PIC</div>
-                             @foreach(\App\Models\Activity::INTERNAL_PICS as $opt)
-                                <div class="dropdown-item-premium" :class="{ 'active': $wire.pic === '{{ $opt }}' }" @click="$wire.set('pic', '{{ $opt }}'); open = false">{{ $opt }}</div>
-                             @endforeach
-                         </div>
-                    </div>
-                 </div>
-
-                 <!-- Sort: 2 Cols -->
-               <div class="col-6 col-md-2 col-xl-2 mb-0 pl-1" x-data="{ open: false }" @click.away="open = false">
-                      <div class="position-relative">
-                         <button type="button" @click="open = !open" class="form-control-premium shadow-sm text-left d-flex align-items-center justify-content-between px-3" style="background-image: none; height: auto;">
-                             <span class="text-truncate" x-text="$wire.sortDirection === 'desc' ? 'Terbaru' : 'Terlama'">Terbaru</span>
-                             <i class="fe fe-chevron-down ml-1 header-arrow" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
+                         <button type="button" @click="open = !open" class="btn bg-white w-100 shadow-sm text-center d-flex align-items-center justify-content-center px-1 px-md-2 rounded-pill" style="border: 1px solid #e2e8f0;">
+                             <span class="text-truncate font-weight-bold text-dark" x-text="$wire.year"></span>
                          </button>
-                         <div class="dropdown-menu-premium shadow-lg w-100" x-show="open" x-transition style="display: none;">
-                              <div class="dropdown-item-premium" :class="{ 'active': $wire.sortDirection === 'desc' }" @click="$wire.set('sortDirection', 'desc'); open = false">Terbaru</div>
-                              <div class="dropdown-item-premium" :class="{ 'active': $wire.sortDirection === 'asc' }" @click="$wire.set('sortDirection', 'asc'); open = false">Terlama</div>
+                         <div class="dropdown-menu custom-dropdown-menu shadow-lg w-100 rounded-lg mt-1" :class="{ 'd-block': open }" x-show="open" x-transition style="display: none; max-height: 250px; overflow-y: auto; position: absolute; z-index: 1050;">
+                             @foreach(range(date('Y'), 2023) as $y)
+                                 <button type="button" class="dropdown-item custom-dropdown-item text-center w-100 border-0" :class="{ 'bg-primary text-white': $wire.year == {{ $y }} }" @click="$wire.set('year', '{{ $y }}'); open = false">{{ $y }}</button>
+                             @endforeach
                          </div>
                      </div>
-               </div>
-          </div>
+                 </div>
+
+                 <!-- Month -->
+                 <div class="col-6 col-md-2 px-1 mb-2 mb-md-0" x-data="{ open: false, getMonthName(m) { return m ? ['', 'Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][m] : 'Bulan'; } }" @click.away="open = false">
+                     <div class="position-relative">
+                         <button type="button" @click="open = !open" class="btn bg-white w-100 shadow-sm text-left d-flex align-items-center justify-content-between px-3 rounded-pill" style="border: 1px solid #e2e8f0;">
+                             <span class="text-truncate font-weight-bold text-dark" x-text="getMonthName($wire.month)">Bulan</span>
+                             <i class="fe fe-chevron-down ml-1 text-muted" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
+                         </button>
+                         <div class="dropdown-menu custom-dropdown-menu shadow-lg w-100 rounded-lg mt-1" :class="{ 'd-block': open }" x-show="open" x-transition style="display: none; max-height: 250px; overflow-y: auto; position: absolute; z-index: 1050;">
+                             <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.month == '' }" @click="$wire.set('month', ''); open = false">Semua</button>
+                             <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.month == '1' }" @click="$wire.set('month', '1'); open = false">Januari</button>
+                             <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.month == '2' }" @click="$wire.set('month', '2'); open = false">Februari</button>
+                             <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.month == '3' }" @click="$wire.set('month', '3'); open = false">Maret</button>
+                             <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.month == '4' }" @click="$wire.set('month', '4'); open = false">April</button>
+                             <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.month == '5' }" @click="$wire.set('month', '5'); open = false">Mei</button>
+                             <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.month == '6' }" @click="$wire.set('month', '6'); open = false">Juni</button>
+                             <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.month == '7' }" @click="$wire.set('month', '7'); open = false">Juli</button>
+                             <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.month == '8' }" @click="$wire.set('month', '8'); open = false">Agustus</button>
+                             <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.month == '9' }" @click="$wire.set('month', '9'); open = false">September</button>
+                             <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.month == '10' }" @click="$wire.set('month', '10'); open = false">Oktober</button>
+                             <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.month == '11' }" @click="$wire.set('month', '11'); open = false">November</button>
+                             <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.month == '12' }" @click="$wire.set('month', '12'); open = false">Desember</button>
+                         </div>
+                     </div>
+                 </div>
+
+                 <!-- Type -->
+                 <div class="col-12 col-md-2 px-1 mb-2 mb-md-0" x-data="{ open: false }" @click.away="open = false">
+                     <div class="position-relative">
+                         <button type="button" @click="open = !open" class="btn bg-white w-100 shadow-sm text-left d-flex align-items-center justify-content-between px-3 rounded-pill" style="border: 1px solid #e2e8f0;">
+                             <span class="text-truncate font-weight-bold text-dark" x-text="$wire.type === 'external' ? 'Eksternal' : ($wire.type === 'internal' ? 'Internal' : 'Tipe Kegiatan')">Tipe Kegiatan</span>
+                             <i class="fe fe-chevron-down ml-1 text-muted" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
+                         </button>
+                         <div class="dropdown-menu custom-dropdown-menu shadow-lg w-100 rounded-lg mt-1" :class="{ 'd-block': open }" x-show="open" x-transition style="display: none; position: absolute; z-index: 1050;">
+                             <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.type === '' }" @click="$wire.set('type', ''); open = false">Semua</button>
+                             <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.type === 'internal' }" @click="$wire.set('type', 'internal'); open = false">Internal</button>
+                             <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.type === 'external' }" @click="$wire.set('type', 'external'); open = false">Eksternal</button>
+                         </div>
+                     </div>
+                 </div>
+
+                 <!-- PIC -->
+                 <div class="col-12 col-md-2 px-1 mb-2 mb-md-0" x-data="{ open: false }" @click.away="open = false">
+                     <div class="position-relative">
+                         <button type="button" @click="open = !open" class="btn bg-white w-100 shadow-sm text-left d-flex align-items-center justify-content-between px-3 rounded-pill" style="border: 1px solid #e2e8f0;">
+                             <span class="text-truncate font-weight-bold text-dark" x-text="$wire.pic ? $wire.pic : 'PIC Kegiatan'">PIC Kegiatan</span>
+                             <i class="fe fe-chevron-down ml-1 text-muted" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
+                         </button>
+                         <div class="dropdown-menu custom-dropdown-menu shadow-lg w-100 rounded-lg mt-1" :class="{ 'd-block': open }" x-show="open" x-transition style="display: none; max-height: 250px; overflow-y: auto; position: absolute; z-index: 1050;">
+                             <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.pic === '' }" @click="$wire.set('pic', ''); open = false">Semua PIC</button>
+                             @foreach(\App\Models\Activity::INTERNAL_PICS as $opt)
+                                <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.pic === '{{ $opt }}' }" @click="$wire.set('pic', '{{ $opt }}'); open = false">{{ $opt }}</button>
+                             @endforeach
+                         </div>
+                     </div>
+                 </div>
+
+                 <!-- Sort -->
+                 <div class="col-12 col-md-2 px-1 mb-0" x-data="{ open: false }" @click.away="open = false">
+                     <div class="position-relative">
+                         <button type="button" @click="open = !open" class="btn bg-white w-100 shadow-sm text-left d-flex align-items-center justify-content-between px-3 rounded-pill" style="border: 1px solid #e2e8f0;">
+                             <div class="d-flex align-items-center" style="overflow: hidden;">
+                                 <i class="fe fe-filter mr-1 text-muted flex-shrink-0"></i>
+                                 <span class="text-truncate font-weight-bold text-dark" x-text="$wire.sortDirection === 'desc' ? 'Terbaru' : 'Terlama'">Terbaru</span>
+                             </div>
+                             <i class="fe fe-chevron-down ml-1 text-muted flex-shrink-0" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
+                         </button>
+                         <div class="dropdown-menu custom-dropdown-menu shadow-lg w-100 rounded-lg mt-1 dropdown-menu-right" :class="{ 'd-block': open }" x-show="open" x-transition style="display: none; position: absolute; z-index: 1050;">
+                             <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.sortDirection === 'desc' }" @click="$wire.set('sortDirection', 'desc'); open = false"><i class="fe fe-arrow-down mr-2"></i>Terbaru</button>
+                             <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.sortDirection === 'asc' }" @click="$wire.set('sortDirection', 'asc'); open = false"><i class="fe fe-arrow-up mr-2"></i>Terlama</button>
+                         </div>
+                     </div>
+                 </div>
+
+             </div>
         </div>
 
         @if (session()->has('success_upload'))
@@ -167,7 +256,7 @@
 
         <div class="card-body p-0">
              <!-- Bulk Actions -->
-            @if(auth()->check() && auth()->user()->isAdmin())
+            @if(auth()->check() && auth()->user()->canManageActivities())
                 <div class="col-12 p-0" 
                      x-data="{ count: @entangle('selected').live }" 
                      x-show="count && count.length > 0" 
@@ -186,11 +275,19 @@
             @endif
 
              <!-- Table -->
+             <div class="table-loading-wrapper" id="pastActivityTableWrapper">
+                 <!-- Shimmer overlay shown during loading -->
+                 <div class="table-loading-overlay" id="pastTableShimmer"></div>
+                 <!-- "Memuat..." badge shown in top-right while loading -->
+                 <div class="pagination-loading-badge" id="pastTableLoadingBadge">
+                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="width:12px;height:12px;border-width:2px;"></span>
+                     Memuat data...
+                 </div>
              <div class="table-responsive">
                  <table class="table mb-0">
                      <thead class="bg-light">
                          <tr>
-                             @if(auth()->check() && auth()->user()->isAdmin())
+                             @if(auth()->check() && auth()->user()->canManageActivities())
                                 <th class="pl-4 align-middle" style="width: 5%;">
                                     <div class="custom-control custom-checkbox">
                                         <input type="checkbox" class="custom-control-input" id="selectAllPast" wire:model.live="selectAll">
@@ -214,7 +311,7 @@
                      <tbody>
                         @forelse($groupedActivities as $month => $monthActivities)
                             <tr class="bg-light">
-                                <td colspan="{{ auth()->check() && auth()->user()->isAdmin() ? 7 : 6 }}" class="py-2 pl-4">
+                                <td colspan="{{ auth()->check() && auth()->user()->canManageActivities() ? 7 : 6 }}" class="py-2 pl-4">
                                     <h6 class="mb-0 text-primary font-weight-bold text-uppercase" style="letter-spacing: 1px; font-size: 0.8rem;">
                                         <i class="fe fe-calendar mr-2"></i>{{ $month }}
                                     </h6>
@@ -222,7 +319,7 @@
                             </tr>
                             @foreach($monthActivities as $activity)
                                 <tr style="border-left: 4px solid {{ $activity->type == 'internal' ? '#004085' : '#17a2b8' }};" wire:key="row-{{ $activity->id }}">
-                                    @if(auth()->check() && auth()->user()->isAdmin())
+                                    @if(auth()->check() && auth()->user()->canManageActivities())
                                     <td class="pl-4 align-middle">
                                         <div class="custom-control custom-checkbox">
                                             <input type="checkbox" class="custom-control-input" id="check_{{ $activity->id }}" value="{{ $activity->id }}" wire:model.live="selected">
@@ -246,13 +343,32 @@
                                         <a href="{{ route('activities.show', $activity->id) }}" class="text-dark font-weight-bold mb-1 d-block text-decoration-none h6">
                                             {{ $activity->name }}
                                         </a>
-                                        <small class="text-muted d-block mb-1"><i class="fe fe-map-pin mr-1"></i>{{ $activity->location_type == 'online' ? 'Online' : $activity->location }}</small>
+                                        <small class="text-muted d-block mb-1">
+                                            <i class="fe fe-map-pin mr-1"></i>
+                                            @if($activity->location_type == 'online' && !$activity->location)
+                                                Pelaksanaan secara daring (tautan tersedia di detail).
+                                            @else
+                                                {{ $activity->location ?? 'Tidak ada detail lokasi' }}
+                                            @endif
+                                        </small>
+
+                                        {{-- Location Type Badge --}}
+                                        <div class="mt-2 mb-2">
+                                            @php
+                                                $locType = $activity->location_type;
+                                                $locClass = $locType == 'online' ? 'bg-primary' : ($locType == 'hybrid' ? 'bg-success' : 'bg-secondary');
+                                                $locIcon = $locType == 'online' ? 'fe-video' : ($locType == 'hybrid' ? 'fe-monitor' : 'fe-map-pin');
+                                            @endphp
+                                            <span class="badge {{ $locClass }} text-white px-3 py-1 shadow-sm" style="font-size: 0.65rem; letter-spacing: 0.5px; border-radius: 50px;">
+                                                <i class="fe {{ $locIcon }} mr-1"></i> {{ strtoupper($locType) }}
+                                            </span>
+                                        </div>
                                         
                                         {{-- PIC Badges --}}
-                                        @if($activity->pic)
+                                        @if(!empty($activity->display_pic_groups))
                                             <div class="d-flex flex-wrap mt-1">
                                                 @php
-                                                    $pics = is_array($activity->pic) ? $activity->pic : [$activity->pic];
+                                                    $pics = $activity->display_pic_groups;
                                                     
                                                     // Mapping matching App\Livewire\ActivityList::getPicColor
                                                     $classMap = [
@@ -260,6 +376,7 @@
                                                         'Komisi PME' => 'badge-pme',
                                                         'Komjakum' => 'badge-komjakum',
                                                         'Sekretariat DJSN' => 'badge-sekretariat',
+                                                        'Sekretaris DJSN' => 'badge-sekretariat',
                                                         'Anggota DJSN' => 'badge-djsn'
                                                     ];
 
@@ -268,8 +385,8 @@
                                                         'Ketua DJSN' => 1,
                                                         'Komisi PME' => 2,
                                                         'Komjakum' => 3,
-                                                        'Komisi Komjakum' => 3, // Legacy support
-                                                        'Sekretariat DJSN' => 4
+                                                        'Sekretariat DJSN' => 4,
+                                                        'Sekretaris DJSN' => 4
                                                     ];
 
                                                     usort($pics, function($a, $b) use ($priority) {
@@ -293,15 +410,11 @@
                                                         // Fallback specific checks if needed (copied from ActivityList logic)
                                                         if (str_contains(strtoupper($picName), 'PME')) $badgeClass = 'badge-pme';
                                                         if (str_contains(strtoupper($picName), 'KOMJAKUM')) $badgeClass = 'badge-komjakum';
-                                                        if (str_contains(strtoupper($picName), 'SEKRETARIAT')) $badgeClass = 'badge-sekretariat';
+                                                        if (str_contains(strtoupper($picName), 'SEKRETARIAT') || str_contains(strtoupper($picName), 'SEKRETARIS')) $badgeClass = 'badge-sekretariat';
 
-                                                        $displayName = $picName;
-                                                        if ($picName === 'Komisi Komjakum') {
-                                                            $displayName = 'Komjakum';
-                                                        }
                                                     @endphp
                                                     <span class="badge badge-pill {{ $badgeClass }} mr-1 mb-1 px-2" style="font-size: 0.65rem;">
-                                                        {{ $displayName }}
+                                                        {{ $picName }}
                                                     </span>
                                                 @endforeach
                                             </div>
@@ -394,7 +507,7 @@
                                         <button class="btn btn-sm {{ $docCount > 0 ? 'btn-outline-primary' : 'btn-outline-secondary' }} rounded-pill shadow-sm px-3" wire:click="openDocumentationModal({{ $activity->id }})" wire:loading.attr="disabled">
                                             <span wire:loading.remove wire:target="openDocumentationModal({{ $activity->id }})"><i class="fe fe-image mr-1"></i></span>
                                             <span wire:loading wire:target="openDocumentationModal({{ $activity->id }})" class="spinner-border spinner-border-sm mr-1" role="status" aria-hidden="true"></span>
-                                            @if(auth()->check() && auth()->user()->isAdmin())
+                                            @if(auth()->check() && auth()->user()->canManageDocumentation())
                                                 {{ $docCount > 0 ? $docCount.' Foto' : 'Upload' }}
                                             @else
                                                 {{ $docCount }} Foto
@@ -426,7 +539,7 @@
                             @endforeach
                         @empty
                             <tr>
-                                <td colspan="{{ auth()->check() && auth()->user()->isAdmin() ? 7 : 6 }}" class="text-center py-5">
+                                <td colspan="{{ auth()->check() && auth()->user()->canManageActivities() ? 7 : 6 }}" class="text-center py-5">
                                     <div class="d-flex flex-column align-items-center justify-content-center">
                                         <div class="bg-light rounded-circle p-4 mb-3">
                                             <i class="fe fe-archive text-muted display-4"></i>
@@ -435,17 +548,51 @@
                                         <p class="text-muted small">Kegiatan yang telah selesai akan muncul di sini.</p>
                                     </div>
                                 </td>
-                            </tr>
+                         </tr>
                         @endforelse
                      </tbody>
                  </table>
-             </div>
-             <div class="p-3">
-                 {{ $activities->links() }}
+             </div>{{-- /table-responsive --}}
+             </div>{{-- /table-loading-wrapper --}}
+             <div class="p-3 border-top bg-light">
+                 {{ $activities->links('vendor.livewire.custom-pagination') }}
              </div>
         </div>
     </div>
     
+    <script>
+        /* Smooth in-place pagination - no scroll jump */
+        (function () {
+            var wrapper = document.getElementById('pastActivityTableWrapper');
+            var shimmer = document.getElementById('pastTableShimmer');
+            var badge   = document.getElementById('pastTableLoadingBadge');
+
+            function showLoading() {
+                if (wrapper) wrapper.classList.add('is-loading');
+                if (shimmer) shimmer.classList.add('active');
+                if (badge)   badge.classList.add('active');
+            }
+            function hideLoading() {
+                if (wrapper) wrapper.classList.remove('is-loading');
+                if (shimmer) shimmer.classList.remove('active');
+                if (badge)   badge.classList.remove('active');
+            }
+
+            // Livewire 3 global request hooks
+            document.addEventListener('livewire:request', showLoading);
+            document.addEventListener('livewire:response', hideLoading);
+
+            // Livewire 2 fallback
+            document.addEventListener('livewire:load', function () {
+                if (window.Livewire && Livewire.hook) {
+                    Livewire.hook('message.sent',      showLoading);
+                    Livewire.hook('message.processed', hideLoading);
+                    Livewire.hook('message.failed',    hideLoading);
+                }
+            });
+        })();
+    </script>
+
     <script>
         function confirmModalDelete(type) {
             let title = '';
@@ -965,7 +1112,7 @@
                                                         @php
                                                             $isInputPresent = in_array($user->name, $attendanceData);
                                                             $repValue = $attendanceDetails[$user->id]['representative'] ?? '';
-                                                            $isAdmin = auth()->check() && auth()->user()->isAdmin();
+                                                            $isAdmin = auth()->check() && auth()->user()->canManagePostActivity();
                                                             // Show if: (Admin) OR (Has Value)
                                                             // Independent of 'Hadir' checkbox
                                                             $showRepInput = ($isAdmin) || (!empty($repValue));
@@ -1228,9 +1375,9 @@
                      <div class="d-flex justify-content-between align-items-center mb-4">
                         <div>
                              <h6 class="font-weight-bold mb-1">{{ $activeActivity->name }}</h6>
-                             <small class="text-muted">Total: {{ $activeActivity->documentations->count() }} Foto  (maks 4 foto)</small>
+                             <small class="text-muted">Total: {{ $activeActivity->documentations->count() }} Foto  (Minimal 4, Maks 8 Foto)</small>
                         </div>
-                        @if(auth()->check() && auth()->user()->isAdmin())
+                        @if(auth()->check() && auth()->user()->canManageDocumentation())
                         <div>
                             <input type="file" wire:model="documentationPhotos" multiple id="docUpload" class="d-none" accept="image/*">
                             <button class="btn btn-primary rounded-pill shadow-sm" onclick="document.getElementById('docUpload').click()">
@@ -1262,7 +1409,7 @@
                                              <a href="{{ Storage::url($doc->file_path) }}" download class="btn btn-sm btn-light btn-icon shadow-sm" title="Download">
                                                 <i class="fe fe-download"></i>
                                              </a>
-                                             @if(auth()->check() && auth()->user()->isAdmin())
+                                             @if(auth()->check() && auth()->user()->canManageDocumentation())
                                              <button type="button" class="btn btn-sm btn-light btn-icon shadow-sm text-danger" title="Hapus" onclick="confirmDeleteFile('documentation', {{ $doc->id }})">
                                                 <i class="fe fe-trash-2"></i>
                                              </button>

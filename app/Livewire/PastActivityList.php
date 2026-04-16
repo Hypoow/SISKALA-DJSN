@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Activity;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Storage;
 
 use Livewire\WithFileUploads;
@@ -17,6 +18,7 @@ class PastActivityList extends Component
 
     public function updatingPerPage()
     {
+        $this->resetSelectionState();
         $this->resetPage();
     }
 
@@ -57,57 +59,78 @@ class PastActivityList extends Component
         Activity::pruneTrash(0);
     }
 
-    public function updatedMonth()
+    public function updatingSearch()
     {
-        // $this->resetPage(); 
+        $this->resetSelectionState();
+        $this->resetPage();
     }
 
-    public function updatedYear()
+    public function updatingType()
     {
-        // $this->resetPage();
+        $this->resetSelectionState();
+        $this->resetPage();
+    }
+
+    public function updatingMonth()
+    {
+        $this->resetSelectionState();
+        $this->resetPage();
+    }
+
+    public function updatingYear()
+    {
+        $this->resetSelectionState();
+        $this->resetPage();
+    }
+
+    public function updatingPic()
+    {
+        $this->resetSelectionState();
+        $this->resetPage();
+    }
+
+    public function updatingSortDirection()
+    {
+        $this->resetSelectionState();
+        $this->resetPage();
+    }
+
+    public function updatingPaginators($page, $pageName)
+    {
+        $this->resetSelectionState();
     }
 
     public function updatedSelectAll($value)
     {
+        $this->ensureCanManageActivities();
+
+        $currentPageIds = $this->getCurrentPageActivityIds();
+
         if ($value) {
-            $query = Activity::query();
-             // if (auth()->check()) {
-             //   $query->visibleToUser(auth()->user()); // Removed per user request
-             // }
-
-            $query->where('start_date', '<', now()->startOfDay())
-                             ->orderBy('start_date', $this->sortDirection)
-                             ->orderBy('start_time', 'desc');
-
-            if ($this->type && in_array($this->type, ['external', 'internal'])) {
-                $query->where('type', $this->type);
-            }
-            if ($this->year) {
-                $query->whereYear('start_date', $this->year);
-            }
-            if ($this->month) {
-                $query->whereMonth('start_date', $this->month);
-            }
-            if ($this->search) {
-                $query->where(function($q) {
-                    $q->where('name', 'like', "%{$this->search}%")
-                      ->orWhere('location', 'like', "%{$this->search}%");
-                });
-            }
-            $this->selected = $query->pluck('id')->map(fn($id) => (string) $id)->toArray();
+            $this->selected = $currentPageIds;
         } else {
             $this->selected = [];
         }
+
+        $this->syncSelectAllState($currentPageIds);
+    }
+
+    public function updatedSelected()
+    {
+        $this->selected = $this->normalizeSelectedIds($this->selected);
+        $this->syncSelectAllState();
     }
 
     // Livewire Hooks for File Uploads
     public function updatedMinutesFiles($value, $id)
     {
+        $this->ensureCanManagePostActivity();
+
         $this->validate([
             "minutesFiles.{$id}" => 'file|mimes:pdf|max:10240', // 10MB
         ]);
 
-        $activity = Activity::find($id);
+        $activity = $this->resolveVisibleActivity($id);
         if ($activity && isset($this->minutesFiles[$id])) {
             // Delete old file if exists
             if ($activity->minutes_path) {
@@ -131,11 +154,13 @@ class PastActivityList extends Component
 
     public function updatedAssignmentFiles($value, $id)
     {
+        $this->ensureCanManageActivities();
+
         $this->validate([
             "assignmentFiles.{$id}" => 'file|mimes:pdf|max:10240', // 10MB
         ]);
 
-        $activity = Activity::find($id);
+        $activity = $this->resolveVisibleActivity($id);
         if ($activity && isset($this->assignmentFiles[$id])) {
             // Delete old file if exists
             if ($activity->assignment_letter_path) {
@@ -158,6 +183,8 @@ class PastActivityList extends Component
 
     public function deleteSelected()
     {
+        $this->ensureCanManageActivities();
+
         if (empty($this->selected)) {
             return;
         }
@@ -179,7 +206,9 @@ class PastActivityList extends Component
 
     public function delete($id)
     {
-        $activity = Activity::find($id);
+        $this->ensureCanManageActivities();
+
+        $activity = $this->resolveVisibleActivity($id);
         if ($activity) {
             $this->deletedIds = [$id];
             $activity->delete(); // Soft Delete
@@ -189,6 +218,8 @@ class PastActivityList extends Component
 
     public function restoreDeleted()
     {
+        $this->ensureCanManageActivities();
+
         if (!empty($this->deletedIds)) {
             Activity::withTrashed()->whereIn('id', $this->deletedIds)->restore();
             $this->deletedIds = [];
@@ -198,6 +229,8 @@ class PastActivityList extends Component
 
     public function forceDeleteDeleted()
     {
+        $this->ensureCanManageActivities();
+
         if (!empty($this->deletedIds)) {
             // Force delete will trigger the 'forceDeleting' event in the model to clean up files
             $activities = Activity::withTrashed()->whereIn('id', $this->deletedIds)->get();
@@ -211,7 +244,9 @@ class PastActivityList extends Component
 
     public function deleteMinutes($id)
     {
-        $activity = Activity::find($id);
+        $this->ensureCanManagePostActivity();
+
+        $activity = $this->resolveVisibleActivity($id);
         if ($activity && $activity->minutes_path) {
             Storage::disk('public')->delete($activity->minutes_path);
             $activity->update(['minutes_path' => null]);
@@ -221,7 +256,9 @@ class PastActivityList extends Component
 
     public function deleteAssignment($id)
     {
-        $activity = Activity::find($id);
+        $this->ensureCanManageActivities();
+
+        $activity = $this->resolveVisibleActivity($id);
         if ($activity && $activity->assignment_letter_path) {
             Storage::disk('public')->delete($activity->assignment_letter_path);
             $activity->update(['assignment_letter_path' => null]);
@@ -250,19 +287,21 @@ class PastActivityList extends Component
     {
         $this->isModalOpen = true;
         $this->summaryActivityId = $id;
-        $activity = Activity::find($id);
+        $activity = $this->resolveVisibleActivity($id);
         $this->summaryContent = $activity->summary_content ?? '';
         $this->dispatch('open-summary-modal', content: $this->summaryContent);
     }
 
     public function saveSummary()
     {
+        $this->ensureCanManagePostActivity();
+
         $this->validate([
              'summaryContent' => 'nullable|string'
         ]);
 
         if ($this->summaryActivityId) {
-            $activity = Activity::find($this->summaryActivityId);
+            $activity = $this->resolveVisibleActivity($this->summaryActivityId);
             $activity->update(['summary_content' => $this->summaryContent]);
             
             $this->dispatch('alert', type: 'success', message: 'Ringkasan Rapat berhasil disimpan.');
@@ -278,9 +317,10 @@ class PastActivityList extends Component
 
     public function openAssignmentModal($id)
     {
+        $activity = $this->resolveVisibleActivity($id);
+
         $this->isModalOpen = true;
         $this->activeActivityId = $id;
-        $activity = Activity::find($id);
         
         $currentAttendance = $activity->attendance_list ?? [];
         $this->attendanceDetails = $activity->attendance_details ?? []; // Load details
@@ -290,10 +330,11 @@ class PastActivityList extends Component
         // We need to keep System Users in $this->attendanceData for checkboxes to work
         
         // 1. Identify System Users names
-        $systemUserNames = \App\Models\User::whereIn('role', ['Dewan'])
-                            ->orWhere('name', 'Imron Rosadi')
-                            ->pluck('name')
-                            ->toArray();
+        $systemUserNames = \App\Models\User::with(['division', 'position'])
+            ->get()
+            ->filter(fn ($user) => $user->canReceiveDisposition())
+            ->pluck('name')
+            ->toArray();
                             
         // 2. Identify Staff names
         $staffSekretariatNames = \App\Models\Staff::where('type', 'sekretariat')->pluck('name')->toArray();
@@ -340,9 +381,11 @@ class PastActivityList extends Component
 
     public function saveAttendance()
     {
+        $this->ensureCanManagePostActivity();
+
         if (!$this->activeActivityId) return;
 
-        $activity = Activity::find($this->activeActivityId);
+        $activity = $this->resolveVisibleActivity($this->activeActivityId);
         
         // Merge Checkboxes + Manual Inputs
         $finalList = array_merge(
@@ -362,12 +405,14 @@ class PastActivityList extends Component
 
     public function updatedNewAssignmentFile()
     {
+        $this->ensureCanManageActivities();
+
         $this->validate([
             'newAssignmentFile' => 'file|mimes:pdf|max:10240',
         ]);
 
         if ($this->activeActivityId && $this->newAssignmentFile) {
-             $activity = Activity::find($this->activeActivityId);
+             $activity = $this->resolveVisibleActivity($this->activeActivityId);
              if ($activity->assignment_letter_path) {
                 Storage::disk('public')->delete($activity->assignment_letter_path);
              }
@@ -386,12 +431,14 @@ class PastActivityList extends Component
 
     public function updatedNewAttachmentFile()
     {
+        $this->ensureCanManageActivities();
+
         $this->validate([
             'newAttachmentFile' => 'file|mimes:pdf|max:10240',
         ]);
 
         if ($this->activeActivityId && $this->newAttachmentFile) {
-             $activity = Activity::find($this->activeActivityId);
+             $activity = $this->resolveVisibleActivity($this->activeActivityId);
              if ($activity->attachment_path) {
                 // Delete old if exists
                 Storage::disk('public')->delete($activity->attachment_path);
@@ -422,8 +469,10 @@ class PastActivityList extends Component
 
     public function deleteAttachmentInModal()
     {
+         $this->ensureCanManageActivities();
+
          if ($this->activeActivityId) {
-            $activity = Activity::find($this->activeActivityId);
+            $activity = $this->resolveVisibleActivity($this->activeActivityId);
             if ($activity && $activity->attachment_path) {
                 Storage::disk('public')->delete($activity->attachment_path);
                 $activity->update(['attachment_path' => null]);
@@ -434,8 +483,10 @@ class PastActivityList extends Component
     }
     public function deleteMinutesInModal()
     {
+         $this->ensureCanManagePostActivity();
+
          if ($this->activeActivityId) {
-            $activity = Activity::find($this->activeActivityId);
+            $activity = $this->resolveVisibleActivity($this->activeActivityId);
             if ($activity && $activity->minutes_path) {
                 Storage::disk('public')->delete($activity->minutes_path);
                 $activity->update(['minutes_path' => null]);
@@ -452,6 +503,8 @@ class PastActivityList extends Component
 
     public function openMaterialModal($id)
     {
+        $this->resolveVisibleActivity($id);
+
         $this->isModalOpen = true;
         $this->activeActivityId = $id;
         $this->loadMaterials($id);
@@ -462,12 +515,14 @@ class PastActivityList extends Component
 
     public function loadMaterials($id)
     {
-        $activity = Activity::find($id);
+        $activity = $this->resolveVisibleActivity($id);
         $this->materialList = $activity ? $activity->materials()->get() : [];
     }
 
     public function saveMaterial()
     {
+        $this->ensureCanManagePostActivity();
+
         $this->validate([
             'newMaterialTitle' => 'required|string|max:255',
             'newMaterialFile' => 'required|file|max:20480', // 20MB
@@ -499,6 +554,8 @@ class PastActivityList extends Component
 
     public function deleteMaterial($materialId)
     {
+        $this->ensureCanManagePostActivity();
+
         $material = \App\Models\ActivityMaterial::find($materialId);
         if ($material) {
             Storage::disk('public')->delete($material->file_path);
@@ -515,6 +572,8 @@ class PastActivityList extends Component
 
     public function openMomModal($id)
     {
+        $this->resolveVisibleActivity($id);
+
         $this->isModalOpen = true;
         $this->activeActivityId = $id;
         $this->loadMoms($id);
@@ -525,12 +584,14 @@ class PastActivityList extends Component
 
     public function loadMoms($id)
     {
-        $activity = Activity::find($id);
+        $activity = $this->resolveVisibleActivity($id);
         $this->momList = $activity ? $activity->moms()->get() : [];
     }
 
     public function saveMom()
     {
+        $this->ensureCanManagePostActivity();
+
         $this->validate([
             'newMomTitle' => 'required|string|max:255',
             'newMomFile' => 'required|file|mimes:pdf,doc,docx|max:20480', // 20MB
@@ -562,6 +623,8 @@ class PastActivityList extends Component
 
     public function deleteMom($momId)
     {
+        $this->ensureCanManagePostActivity();
+
         $mom = \App\Models\ActivityMom::find($momId);
         if ($mom) {
             Storage::disk('public')->delete($mom->file_path);
@@ -573,6 +636,8 @@ class PastActivityList extends Component
 
     public function openDocumentationModal($id)
     {
+        $this->resolveVisibleActivity($id);
+
         $this->isModalOpen = true;
         $this->activeActivityId = $id;
         $this->documentationPhotos = [];
@@ -581,12 +646,14 @@ class PastActivityList extends Component
 
     public function updatedDocumentationPhotos()
     {
+        $this->ensureCanManageDocumentation();
+
         $this->validate([
             'documentationPhotos.*' => 'image|max:5120', 
         ]);
 
         if ($this->activeActivityId) {
-            $activity = Activity::find($this->activeActivityId);
+            $activity = $this->resolveVisibleActivity($this->activeActivityId);
             $currentCount = $activity->documentations()->count();
             $newCount = count($this->documentationPhotos);
             if (($currentCount + $newCount) < 4) {
@@ -621,6 +688,8 @@ class PastActivityList extends Component
 
     public function deleteDocumentationFile($docId)
     {
+        $this->ensureCanManageDocumentation();
+
         $doc = \App\Models\ActivityDocumentation::find($docId);
         if ($doc) {
             Storage::disk('public')->delete($doc->file_path);
@@ -631,23 +700,69 @@ class PastActivityList extends Component
 
     public function render()
     {
+        $activities = $this->getFilteredActivitiesQuery()
+            ->with(['materials', 'moms', 'documentations'])
+            ->paginate($this->perPage);
+
+        // Group the records on the current page
+        $groupedActivities = $activities->getCollection()->groupBy(function($item) {
+            return $item->date_time->isoFormat('MMMM Y');
+        });
+
+        // ... (Dewan Users logic remains same)
+
+        $dewanUsers = \App\Models\User::with(['division', 'position'])
+            ->orderBy('order')
+            ->orderBy('name')
+            ->get()
+            ->filter(fn ($user) => $user->canReceiveDisposition())
+            ->groupBy(fn ($user) => $user->disposition_group_label)
+            ->sortBy(function ($users, $key) {
+                $sampleUser = $users->first();
+                $normalized = mb_strtoupper(trim((string) $key));
+
+                if ($normalized === 'KETUA DJSN') {
+                    return 1;
+                }
+
+                if ($sampleUser?->division?->structure_group === \App\Models\Division::STRUCTURE_GROUP_SECRETARY) {
+                    return 50;
+                }
+
+                if ($sampleUser?->division?->is_commission) {
+                    return 100 + ($sampleUser->division->order ?? 0);
+                }
+
+                if ($sampleUser?->division) {
+                    return 500 + ($sampleUser->division->order ?? 0);
+                }
+
+                return 999;
+            });
+
+        return view('livewire.past-activity-list', [
+            'groupedActivities' => $groupedActivities,
+            'activities' => $activities, // Pass paginator
+            'dewanUsers' => $dewanUsers,
+            'staffSekretariat' => \App\Models\Staff::where('type', 'sekretariat')->orderBy('name')->get(),
+            'staffTA' => \App\Models\Staff::where('type', 'ta')->orderBy('name')->get()
+        ]);
+    }
+
+    private function getFilteredActivitiesQuery(): Builder
+    {
         $query = Activity::query();
-        
-        // Eager load relationships to fix N+1
-        $query->with(['materials', 'moms', 'documentations']);
-        
-        // if (auth()->check()) {
-        //    $query->visibleToUser(auth()->user()); // Removed per user request
-        // }
+
+        if (auth()->check()) {
+            $query->visibleToUser(auth()->user());
+        }
 
         $query->where('start_date', '<', now()->startOfDay());
 
-        // Apply Year Filter
         if ($this->year) {
             $query->whereYear('start_date', $this->year);
         }
 
-        // Apply Month Filter
         if ($this->month) {
             $query->whereMonth('start_date', $this->month);
         }
@@ -660,86 +775,74 @@ class PastActivityList extends Component
         }
 
         if ($this->search) {
-            $query->where(function($q) {
-                $q->where('name', 'like', "%{$this->search}%")
-                  ->orWhere('location', 'like', "%{$this->search}%");
+            $search = $this->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('location', 'like', "%{$search}%");
             });
         }
-        
+
         if ($this->pic) {
-            $query->where(function($q) {
-                // If it is stored as JSON array ["Sekretariat DJSN"]
-                $q->whereJsonContains('pic', $this->pic)
-                  // Or if it was stored as string "Sekretariat DJSN"
-                  ->orWhere('pic', 'like', "%{$this->pic}%");
+            $pic = $this->pic;
+            $query->where(function($q) use ($pic) {
+                $q->whereJsonContains('pic', $pic)
+                  ->orWhere('pic', 'like', "%{$pic}%");
             });
         }
 
-        // Use pagination
-        $activities = $query->paginate($this->perPage);
+        return $query;
+    }
 
-        // Group the records on the current page
-        $groupedActivities = $activities->getCollection()->groupBy(function($item) {
-            return $item->date_time->isoFormat('MMMM Y');
-        });
+    private function getCurrentPageActivityIds(): array
+    {
+        return $this->getFilteredActivitiesQuery()
+            ->paginate($this->perPage, ['activities.id'], 'page', $this->getPage())
+            ->getCollection()
+            ->pluck('id')
+            ->map(fn($id) => (string) $id)
+            ->values()
+            ->all();
+    }
 
-        // ... (Dewan Users logic remains same)
+    private function syncSelectAllState(?array $currentPageIds = null): void
+    {
+        $currentPageIds ??= $this->getCurrentPageActivityIds();
 
-        // Fetch Dewan Users
-        $dewanUsersRaw = \App\Models\User::where('role', 'Dewan')
-                     ->orderBy('order')
-                     ->get();
+        $this->selectAll = !empty($currentPageIds)
+            && empty(array_diff($currentPageIds, $this->normalizeSelectedIds($this->selected)));
+    }
 
-        // Ensure Sekretariat DJSN is present (Imron Rosadi) even if not role='Dewan'
-        $imron = \App\Models\User::where('name', 'Imron Rosadi')->first();
-        if ($imron && !$dewanUsersRaw->contains('id', $imron->id)) {
-            $dewanUsersRaw->push($imron);
-        }
+    private function resetSelectionState(): void
+    {
+        $this->selected = [];
+        $this->selectAll = false;
+    }
 
-        // Custom Grouping Logic
-        $dewanUsers = $dewanUsersRaw->groupBy(function ($user) {
-            $divisi = strtoupper($user->divisi ?? '');
-            $name = strtoupper($user->name);
-            $role = strtoupper($user->role);
+    private function normalizeSelectedIds(array $selected): array
+    {
+        return array_values(array_unique(array_map('strval', $selected)));
+    }
 
-            if ($divisi == 'KETUA DJSN') {
-                return 'Ketua DJSN';
-            }
-            
-            if (str_contains($divisi, 'PME')) {
-                return 'Komisi PME';
-            }
+    private function resolveVisibleActivity($id): Activity
+    {
+        $activity = Activity::findOrFail($id);
+        abort_unless(auth()->user()->canViewActivity($activity), 403);
 
-            if (str_contains($divisi, 'KOMJAKUM')) {
-                return 'Komjakum';
-            }
+        return $activity;
+    }
 
-            if (str_contains($divisi, 'SEKRETARI') || $name == 'IMRON ROSADI') {
-                return 'Sekretaris DJSN';
-            }
-            
-            if ($role == 'TA') {
-                 // Should have been caught by PME/KOMJAKUM check above if divisi is set correctly
-                 // If not, fallback
-                 return 'Tenaga Ahli Lainnya';
-            }
+    private function ensureCanManageActivities(): void
+    {
+        abort_unless(auth()->user()->canManageActivities(), 403);
+    }
 
-            return 'Anggota Dewan Lainnya'; // Fallback
-        });
+    private function ensureCanManagePostActivity(): void
+    {
+        abort_unless(auth()->user()->canManagePostActivity(), 403);
+    }
 
-        // Define specific order for groups
-        $groupOrder = ['Ketua DJSN', 'Komisi PME', 'Komjakum', 'Sekretaris DJSN', 'Tenaga Ahli Lainnya'];
-        $dewanUsers = $dewanUsers->sortBy(function ($users, $key) use ($groupOrder) {
-            $index = array_search($key, $groupOrder);
-            return $index === false ? 999 : $index;
-        });
-
-        return view('livewire.past-activity-list', [
-            'groupedActivities' => $groupedActivities,
-            'activities' => $activities, // Pass paginator
-            'dewanUsers' => $dewanUsers,
-            'staffSekretariat' => \App\Models\Staff::where('type', 'sekretariat')->orderBy('name')->get(),
-            'staffTA' => \App\Models\Staff::where('type', 'ta')->orderBy('name')->get()
-        ]);
+    private function ensureCanManageDocumentation(): void
+    {
+        abort_unless(auth()->user()->canManageDocumentation(), 403);
     }
 }

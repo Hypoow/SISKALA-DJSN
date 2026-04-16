@@ -13,9 +13,7 @@ class ActivityController extends Controller
     public function __construct()
     {
         $this->middleware('admin')->only([
-            'create', 'store', 'edit', 'update', 'destroy',
-            'uploadMinutes', 'uploadAssignmentLetter',
-            'deleteMinutes', 'deleteAssignment', 'updateSummary'
+            'create', 'store', 'edit', 'update', 'destroy'
         ]);
     }
 
@@ -31,9 +29,7 @@ class ActivityController extends Controller
 
     public function uploadMinutes(Request $request, Activity $activity)
     {
-        if (!auth()->user()->canManagePostActivity()) {
-             abort(403, 'Anda tidak memiliki hak akses untuk mengupload notulensi.');
-        }
+        $this->ensureActivityCapability($activity, 'canManagePostActivity', 'Anda tidak memiliki hak akses untuk mengupload notulensi.');
 
         $request->validate([
             'minutes_path' => 'required|file|mimes:pdf|max:10240', // Max 10MB
@@ -55,9 +51,7 @@ class ActivityController extends Controller
 
     public function uploadAssignmentLetter(Request $request, Activity $activity)
     {
-        if (!auth()->user()->canUploadAssignment()) {
-             abort(403, 'Anda tidak memiliki hak akses untuk mengupload surat tugas.');
-        }
+        $this->ensureActivityCapability($activity, 'canUploadAssignment', 'Anda tidak memiliki hak akses untuk mengupload surat tugas.');
 
         $request->validate([
             'assignment_letter_path' => 'required|file|mimes:pdf|max:10240', // Max 10MB
@@ -79,9 +73,7 @@ class ActivityController extends Controller
 
     public function deleteMinutes(Activity $activity)
     {
-        if (!auth()->user()->canManagePostActivity()) {
-             abort(403, 'Anda tidak memiliki hak akses untuk menghapus notulensi.');
-        }
+        $this->ensureActivityCapability($activity, 'canManagePostActivity', 'Anda tidak memiliki hak akses untuk menghapus notulensi.');
 
         if ($activity->minutes_path) {
             \Storage::disk('public')->delete($activity->minutes_path);
@@ -93,9 +85,7 @@ class ActivityController extends Controller
 
     public function deleteAssignment(Activity $activity)
     {
-        if (!auth()->user()->canUploadAssignment()) {
-             abort(403, 'Anda tidak memiliki hak akses untuk menghapus surat tugas.');
-        }
+        $this->ensureActivityCapability($activity, 'canUploadAssignment', 'Anda tidak memiliki hak akses untuk menghapus surat tugas.');
 
         if ($activity->assignment_letter_path) {
             \Storage::disk('public')->delete($activity->assignment_letter_path);
@@ -107,9 +97,7 @@ class ActivityController extends Controller
 
     public function deleteAttachment(Activity $activity)
     {
-        if (!auth()->user()->canManageActivities()) {
-             abort(403, 'Anda tidak memiliki hak akses untuk menghapus lampiran.');
-        }
+        $this->ensureActivityCapability($activity, 'canManageActivities', 'Anda tidak memiliki hak akses untuk menghapus lampiran.');
 
         if ($activity->attachment_path) {
             \Storage::disk('public')->delete($activity->attachment_path);
@@ -121,9 +109,7 @@ class ActivityController extends Controller
 
     public function uploadMaterial(Request $request, Activity $activity)
     {
-        if (!auth()->user()->canManagePostActivity()) {
-             abort(403, 'Anda tidak memiliki hak akses untuk mengupload materi.');
-        }
+        $this->ensureActivityCapability($activity, 'canManagePostActivity', 'Anda tidak memiliki hak akses untuk mengupload materi.');
 
         $request->validate([
             'title' => 'required|string|max:255',
@@ -143,6 +129,8 @@ class ActivityController extends Controller
 
     public function deleteMaterial(\App\Models\ActivityMaterial $material)
     {
+        $this->ensureActivityCapability($material->activity, 'canManagePostActivity', 'Anda tidak memiliki hak akses untuk menghapus materi.');
+
         if (\Storage::disk('public')->exists($material->file_path)) {
             \Storage::disk('public')->delete($material->file_path);
         }
@@ -152,6 +140,8 @@ class ActivityController extends Controller
 
     public function uploadDocumentation(Request $request, Activity $activity)
     {
+        $this->ensureActivityCapability($activity, 'canManageDocumentation', 'Anda tidak memiliki hak akses untuk mengupload dokumentasi.');
+
         $request->validate([
             'file_path' => 'required',
             'file_path.*' => 'file|image|max:10240', // 10MB Images
@@ -189,9 +179,7 @@ class ActivityController extends Controller
 
     public function deleteDocumentation(\App\Models\ActivityDocumentation $documentation)
     {
-        if (!auth()->user()->canManagePostActivity()) {
-             abort(403, 'Anda tidak memiliki hak akses untuk menghapus dokumentasi.');
-        }
+        $this->ensureActivityCapability($documentation->activity, 'canManageDocumentation', 'Anda tidak memiliki hak akses untuk menghapus dokumentasi.');
 
         if (\Storage::disk('public')->exists($documentation->file_path)) {
             \Storage::disk('public')->delete($documentation->file_path);
@@ -203,59 +191,8 @@ class ActivityController extends Controller
     public function create(Request $request)
     {
         $date = $request->query('date');
-        
-        // Fetch All Relevant Users for Disposition
-        // Roles: Dewan, DJSN, TA
-        $targetRoles = ['Dewan', 'DJSN', 'TA'];
-        
-        $users = User::whereIn('role', $targetRoles)
-                     ->orderBy('order') // Use the hierarchical order
-                     ->get();
-        
-        $dewanUsers = $users->groupBy(function($user) {
-            // Group 1: Dewan, TA, and Commission-based Groups
-            if (in_array($user->role, ['Dewan', 'TA'])) {
-                $divisi = strtolower($user->divisi ?? '');
-                
-                if (str_contains($divisi, 'ketua djsn')) {
-                    return 'Ketua DJSN';
-                }
-                if (str_contains($divisi, 'pme') || str_contains($divisi, 'monitoring')) {
-                    return 'Komisi PME';
-                }
-                if (str_contains($divisi, 'komjakum') || str_contains($divisi, 'kebijakan')) {
-                    return 'Komjakum';
-                }
-                
-                // Dynamic Grouping
-                if (str_contains($divisi, 'komisi')) {
-                    return ucwords($user->divisi);
-                }
 
-                if ($user->role === 'Dewan') return 'Anggota Dewan Lainnya';
-                // TA Fallback
-                return 'Tenaga Ahli Lainnya'; 
-            }
-            
-            // Group 2: Roles separation
-            return 'Sekretariat DJSN';
-        });
-
-        // Sort Groups: Ketua DJSN -> PME -> Komjakum -> Lainnya -> Sekretariat -> TU -> Persidangan -> Umum
-        $groupOrder = [
-            'Ketua DJSN' => 1,
-            'Komisi PME' => 2,
-            'Komjakum' => 3,
-            'Anggota Dewan Lainnya' => 4,
-            'Sekretariat DJSN' => 5,
-            'Tata Usaha' => 6,
-            'Persidangan' => 7,
-            'Bagian Umum' => 8
-        ];
-
-        $dewanUsers = $dewanUsers->sortBy(function($items, $key) use ($groupOrder) {
-             return $groupOrder[$key] ?? 99;
-        });
+        $dewanUsers = $this->getDispositionUserGroups();
 
         return view('activities.create', compact('date', 'dewanUsers'));
     }
@@ -288,6 +225,7 @@ class ActivityController extends Controller
             'narasumber' => 'nullable|array', // Validasi Narasumber
             'organizer_name' => 'nullable|string',
             'dispo_note' => 'nullable|string',
+            'report_target_override' => 'nullable|string|max:2000',
             'disposition_to' => 'nullable|array',
             'dresscode' => 'nullable|string',
             'attachment_path' => 'nullable|file|mimes:pdf|max:10240',
@@ -346,6 +284,8 @@ class ActivityController extends Controller
 
     public function show(Activity $activity)
     {
+        abort_unless(auth()->user()->canViewActivity($activity), 403, 'Anda tidak memiliki hak akses untuk melihat kegiatan ini.');
+
         $groupedDisposition = $activity->grouped_disposition_users;
 
         return view('activities.show', compact('activity', 'groupedDisposition'));
@@ -355,55 +295,7 @@ class ActivityController extends Controller
 
     public function edit(Activity $activity)
     {
-        $targetRoles = ['Dewan', 'DJSN', 'TA'];
-        
-        $users = User::whereIn('role', $targetRoles)
-                     ->orderBy('order')
-                     ->get();
-        
-        $dewanUsers = $users->groupBy(function($user) {
-             // Group 1: Dewan Specific Groups
-             if (in_array($user->role, ['Dewan', 'TA'])) {
-                $divisi = strtolower($user->divisi ?? '');
-                
-                if (str_contains($divisi, 'ketua djsn')) {
-                    return 'Ketua DJSN';
-                }
-                if (str_contains($divisi, 'pme') || str_contains($divisi, 'monitoring')) {
-                    return 'Komisi PME';
-                }
-                if (str_contains($divisi, 'komjakum') || str_contains($divisi, 'kebijakan')) {
-                    return 'Komjakum';
-                }
-
-                // Dynamic Grouping
-                if (str_contains($divisi, 'komisi')) {
-                    return ucwords($user->divisi);
-                }
-
-                if ($user->role === 'Dewan') return 'Anggota Dewan Lainnya';
-                return 'Tenaga Ahli Lainnya';
-            }
-            
-            // Group 2: Roles separation
-            return 'Sekretariat DJSN';
-        });
-
-        // Sort Groups
-        $groupOrder = [
-            'Ketua DJSN' => 1,
-            'Komisi PME' => 2,
-            'Komjakum' => 3,
-            'Anggota Dewan Lainnya' => 4,
-            'Sekretariat DJSN' => 5,
-            'Tata Usaha' => 6,
-            'Persidangan' => 7,
-            'Bagian Umum' => 8
-        ];
-
-        $dewanUsers = $dewanUsers->sortBy(function($items, $key) use ($groupOrder) {
-             return $groupOrder[$key] ?? 99;
-        });
+        $dewanUsers = $this->getDispositionUserGroups();
 
         return view('activities.edit', compact('activity', 'dewanUsers'));
     }
@@ -435,6 +327,7 @@ class ActivityController extends Controller
             'narasumber' => 'nullable|array', // Validasi Narasumber
             'organizer_name' => 'nullable|string',
             'dispo_note' => 'nullable|string',
+            'report_target_override' => 'nullable|string|max:2000',
             'disposition_to' => 'nullable|array',
             'dresscode' => 'nullable|string',
             'attachment_path' => 'nullable|file|mimes:pdf|max:10240',
@@ -548,9 +441,7 @@ class ActivityController extends Controller
 
     public function updateSummary(Request $request, Activity $activity)
     {
-        if (!auth()->user()->canManagePostActivity()) {
-            abort(403, 'Anda tidak memiliki hak akses untuk mengelola ringkasan rapat.');
-        }
+        $this->ensureActivityCapability($activity, 'canManagePostActivity', 'Anda tidak memiliki hak akses untuk mengelola ringkasan rapat.');
 
         $request->validate([
             'summary_content' => 'required|string',
@@ -564,12 +455,7 @@ class ActivityController extends Controller
     }
     public function updateAdditionalNotes(Request $request, Activity $activity)
     {
-        // Additional notes might be open to more roles or specific ones? 
-        // User request didn't specify strictly, but 'Persidangan' manages post activity.
-        // Let's assume Persidangan or Admin for consistency with post-activity management.
-        if (!auth()->user()->canManagePostActivity()) {
-             abort(403, 'Anda tidak memiliki hak akses untuk mengelola catatan tambahan.');
-        }
+        $this->ensureActivityCapability($activity, 'canManagePostActivity', 'Anda tidak memiliki hak akses untuk mengelola catatan tambahan.');
 
         $request->validate([
             'dresscode' => 'nullable|string|max:255',
@@ -585,9 +471,7 @@ class ActivityController extends Controller
     }
     public function uploadMom(Request $request, Activity $activity)
     {
-        if (!auth()->user()->canManagePostActivity()) {
-             abort(403, 'Anda tidak memiliki hak akses untuk mengupload MoM.');
-        }
+        $this->ensureActivityCapability($activity, 'canManagePostActivity', 'Anda tidak memiliki hak akses untuk mengupload MoM.');
 
         $request->validate([
             'title' => 'required|string|max:255',
@@ -607,14 +491,67 @@ class ActivityController extends Controller
 
     public function deleteMom(\App\Models\ActivityMom $mom)
     {
-        if (!auth()->user()->canManagePostActivity()) {
-             abort(403, 'Anda tidak memiliki hak akses untuk menghapus MoM.');
-        }
+        $this->ensureActivityCapability($mom->activity, 'canManagePostActivity', 'Anda tidak memiliki hak akses untuk menghapus MoM.');
 
         if (\Storage::disk('public')->exists($mom->file_path)) {
             \Storage::disk('public')->delete($mom->file_path);
         }
         $mom->delete();
         return redirect()->back()->with('success', 'MoM berhasil dihapus.');
+    }
+
+    private function getDispositionUserGroups()
+    {
+        $users = User::with(['division', 'position'])
+            ->orderBy('order')
+            ->orderBy('name')
+            ->get()
+            ->filter(fn (User $user) => $user->canReceiveDisposition());
+
+        return $users
+            ->groupBy(fn (User $user) => $user->disposition_group_label)
+            ->sortBy(function ($items, $key) {
+                return $this->getDispositionGroupSortOrder($key, $items->first());
+            });
+    }
+
+    private function getDispositionGroupSortOrder(string $groupName, ?User $sampleUser = null): int
+    {
+        $normalized = mb_strtoupper(trim($groupName));
+
+        if ($normalized === 'KETUA DJSN') {
+            return 1;
+        }
+
+        if ($sampleUser?->division?->structure_group === \App\Models\Division::STRUCTURE_GROUP_SECRETARY) {
+            return 50;
+        }
+
+        if ($sampleUser?->division?->is_commission) {
+            return 100 + ($sampleUser->division->order ?? 0);
+        }
+
+        if (in_array($normalized, ['SEKRETARIS DJSN', 'SET DJSN', 'SET.DJSN'], true)) {
+            return 50;
+        }
+
+        if ($sampleUser?->division) {
+            return 500 + ($sampleUser->division->order ?? 0);
+        }
+
+        return 10;
+    }
+
+    private function ensureActivityCapability(Activity $activity, string $capability, string $message): void
+    {
+        $user = auth()->user();
+
+        if (!$user || !method_exists($user, $capability) || !$user->{$capability}()) {
+            abort(403, $message);
+        }
+
+        if (!$user->canViewAllActivities() && !$user->canViewActivity($activity)) {
+            abort(403, 'Anda tidak memiliki akses ke kegiatan ini.');
+        }
     }
 }

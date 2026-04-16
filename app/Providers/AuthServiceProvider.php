@@ -23,32 +23,32 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        // Level 0 & 1: Full Access (Admin, DJSN)
         \Gate::define('admin-full', function ($user) {
-            return $user->getAdminLevel() <= 1;
+            return $user->canAccessAdminArea();
         });
 
-        // Level 2: Tata Usaha + Above (Manage Activities, Upload Surat Tugas)
         \Gate::define('manage-activities', function ($user) {
-            return $user->getAdminLevel() <= 2;
+            return $user->canManageActivities();
         });
 
-        // Level 3: Persidangan + Above (Minutes, Attendance, Follow-up, Materials)
         \Gate::define('manage-minutes', function ($user) {
-            return $user->getAdminLevel() <= 3;
+            return $user->canManagePostActivity();
         });
         
         \Gate::define('manage-attendance', function ($user) {
-            return $user->getAdminLevel() <= 3;
+            return $user->canManagePostActivity();
         });
 
         \Gate::define('manage-followups', function ($user) {
-            return $user->getAdminLevel() <= 3;
+            return $user->canManageFollowUp();
         });
 
-        // Level 4: Bagian Umum + Above (Documentation)
         \Gate::define('manage-documentation', function ($user) {
-            return $user->getAdminLevel() <= 4;
+            return $user->canManageDocumentation();
+        });
+
+        \Gate::define('manage-topics', function ($user) {
+            return $user->canManageTopics();
         });
     }
 }

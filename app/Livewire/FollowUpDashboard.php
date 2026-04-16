@@ -61,7 +61,7 @@ class FollowUpDashboard extends Component
             'Komjakum' => 'komjakum', // Blue custom class
             'Komisi PME' => 'pme', // Green custom class
             'PME' => 'pme',
-            'Sekretariat DJSN' => 'sekretariat', // Orange custom class
+            'Sekretaris DJSN' => 'sekretariat', // Orange custom class
             'Anggota DJSN' => 'djsn',
             'Ketua DJSN' => 'ketua', // Purple custom class
         ];
@@ -92,6 +92,8 @@ class FollowUpDashboard extends Component
 
     public function editProgress($id)
     {
+        abort_unless(auth()->user()->canManageFollowUp(), 403);
+
         $this->editingProgressId = $id;
         $item = ActivityFollowup::find($id);
         $this->progressNote = $item->progress_notes;
@@ -99,6 +101,8 @@ class FollowUpDashboard extends Component
 
     public function saveProgress($id)
     {
+        abort_unless(auth()->user()->canManageFollowUp(), 403);
+
         $item = ActivityFollowup::find($id);
         $item->update([
             'progress_notes' => $this->progressNote
@@ -108,6 +112,8 @@ class FollowUpDashboard extends Component
 
     public function updateStatus($id, $status)
     {
+        abort_unless(auth()->user()->canManageFollowUp(), 403);
+
         $item = ActivityFollowup::find($id);
         $item->update(['status' => $status]);
     }
@@ -136,6 +142,7 @@ class FollowUpDashboard extends Component
                   ->orderByRaw('CASE WHEN deadline IS NULL THEN 1 ELSE 0 END, deadline ASC')
                   ->orderBy('id', 'asc');
             }])
+            ->visibleToUser(auth()->user())
             ->whereHas('followups', function($q) {
                 if ($this->status !== 'all') {
                     $q->where('status', $this->status);
@@ -186,6 +193,7 @@ class FollowUpDashboard extends Component
 
         // Stats Calculation (Filtered by Year AND Month)
         $baseStatsQuery = ActivityFollowup::whereHas('activity', function($q) {
+             $q->visibleToUser(auth()->user());
              if($this->year) {
                 $q->whereYear('start_date', $this->year);
              }

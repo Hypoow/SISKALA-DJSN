@@ -13,7 +13,7 @@ class MasterStaffController extends Controller
     {
         $this->middleware('auth');
         $this->middleware(function ($request, $next) {
-            if (Auth::user()->role !== 'admin') {
+            if (!Auth::user()->canAccessAdminArea()) {
                 abort(403, 'Akses ditolak.');
             }
             return $next($request);

@@ -31,70 +31,73 @@
         </div>
     @endif
 
-    <div class="card shadow-sm border-0 rounded-lg overflow-hidden">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-items-center mb-0">
-                    <thead class="bg-light">
-                        <tr>
-                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 pl-4 py-3" style="width: 5%;">No</th>
-                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 py-3">Nama Topik</th>
-                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 py-3 text-center">Warna Label</th>
-                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 py-3 text-right pr-4">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($topics as $index => $topic)
-                            <tr style="transition: background-color 0.2s;">
-                                <td class="pl-4">
-                                    <span class="text-secondary text-xs font-weight-bold">{{ $topics->firstItem() + $index }}</span>
-                                </td>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                         <div class="icon icon-shape icon-sm shadow-sm rounded-circle mr-3 text-white d-flex align-items-center justify-content-center" style="background-color: {{ $topic->color }}; width: 32px; height: 32px;">
-                                            <i class="fe fe-tag text-xs"></i>
-                                        </div>
-                                        <span class="font-weight-bold text-dark text-sm">{{ $topic->name }}</span>
-                                    </div>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge badge-pill px-3 py-2 text-xs" style="background-color: {{ $topic->color }}15; color: {{ $topic->color }}; border: 1px solid {{ $topic->color }}40;">
-                                        {{ strtoupper($topic->color) }}
-                                    </span>
-                                </td>
-                                <td class="text-right pr-4">
-                                    <button wire:click="edit({{ $topic->id }})" class="btn btn-sm btn-outline-info rounded-circle btn-icon shadow-sm mr-2" data-toggle="tooltip" title="Edit">
-                                        <i class="fe fe-edit-2"></i>
+    <!-- Grid View for Topics -->
+    <div class="row">
+        @forelse($topics as $index => $topic)
+            <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
+                <div class="card h-100 border-0 shadow-sm topic-card position-relative overflow-hidden" style="border-radius: 1.25rem;">
+                    <!-- Decorative back blob -->
+                    <div class="position-absolute" style="top: -30px; right: -30px; width: 120px; height: 120px; border-radius: 50%; opacity: 0.15; background-color: {{ $topic->color }}; z-index: 0; transition: all 0.3s ease;"></div>
+                    
+                    <div class="card-body p-4 d-flex flex-column position-relative" style="z-index: 1;">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="d-flex align-items-center justify-content-center shadow-sm" style="width: 54px; height: 54px; border-radius: 1rem; background-color: {{ $topic->color }}15; color: {{ $topic->color }}; border: 1px solid {{ $topic->color }}30;">
+                                <i class="fe fe-tag" style="font-size: 1.5rem;"></i>
+                            </div>
+                            
+                            <!-- Actions Dropdown -->
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-link text-muted p-0" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="outline: none; box-shadow: none;">
+                                    <i class="fe fe-more-vertical" style="font-size: 1.4rem;"></i>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-right shadow border-0" style="border-radius: 0.8rem; padding: 0.5rem; min-width: 140px;">
+                                    <button wire:click="edit({{ $topic->id }})" class="dropdown-item text-primary font-weight-bold d-flex align-items-center py-2" style="border-radius: 0.5rem; transition: background 0.15s;">
+                                        <i class="fe fe-edit-2 mr-2"></i> Edit
                                     </button>
-                                    <button onclick="confirmDeleteTopic({{ $topic->id }})" class="btn btn-sm btn-outline-danger rounded-circle btn-icon shadow-sm" data-toggle="tooltip" title="Hapus">
-                                        <i class="fe fe-trash-2"></i>
+                                    <div class="dropdown-divider my-1"></div>
+                                    <button onclick="confirmDeleteTopic({{ $topic->id }})" class="dropdown-item text-danger font-weight-bold d-flex align-items-center py-2" style="border-radius: 0.5rem; transition: background 0.15s;">
+                                        <i class="fe fe-trash-2 mr-2"></i> Hapus
                                     </button>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="4" class="text-center py-5">
-                                    <div class="d-flex flex-column align-items-center justify-content-center my-4">
-                                        <div class="icon icon-shape bg-light text-muted rounded-circle mb-3 shadow-none" style="width: 64px; height: 64px;">
-                                            <i class="fe fe-search" style="font-size: 1.5rem;"></i>
-                                        </div>
-                                        <h5 class="text-muted mb-1">Tidak ada topik ditemukan</h5>
-                                        <p class="text-small text-muted mb-0">Coba kata kunci lain atau tambahkan topik baru.</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            
-            @if($topics->hasPages())
-                <div class="p-4 border-top">
-                    {{ $topics->links() }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-auto">
+                            <h4 class="font-weight-bold text-dark mb-2 pr-1" style="font-size: 1.15rem; line-height: 1.3;">{{ $topic->name }}</h4>
+                            <div class="d-flex align-items-center mt-3">
+                                <span class="badge px-3 py-2 text-xs font-weight-bold" style="background-color: {{ $topic->color }}; color: #fff; border-radius: 0.5rem; box-shadow: 0 4px 10px {{ $topic->color }}40; letter-spacing: 0.5px;">
+                                    <i class="fe fe-droplet mr-1"></i> {{ strtoupper($topic->color) }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            @endif
-        </div>
+            </div>
+        @empty
+            <div class="col-12">
+                <div class="card shadow-sm border-0" style="border-radius: 1.25rem;">
+                    <div class="card-body py-5 text-center">
+                        <div class="icon-shape bg-light text-muted rounded-circle mb-4 mx-auto d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <i class="fe fe-search" style="font-size: 2rem;"></i>
+                        </div>
+                        <h4 class="text-dark font-weight-bold mb-2">Tidak ada topik kegiatan</h4>
+                        <p class="text-muted mb-4">Mulai dengan menambahkan kategori atau topik baru untuk pelaporan.</p>
+                        <button wire:click="create" class="btn btn-primary rounded-pill px-4 py-2 font-weight-bold shadow-sm" data-toggle="modal" data-target="#topicModal">
+                            <i class="fe fe-plus mr-2"></i> Buat Topik Perdana
+                        </button>
+                    </div>
+                </div>
+            </div>
+        @endforelse
     </div>
+    
+    @if($topics->hasPages())
+        <div class="d-flex justify-content-center mt-4">
+            <div class="bg-white px-4 py-2 shadow-sm" style="border-radius: 2rem;">
+                {{ $topics->links() }}
+            </div>
+        </div>
+    @endif
 
     <!-- Modal -->
     <div wire:ignore.self class="modal fade" id="topicModal" tabindex="-1" role="dialog" aria-labelledby="topicModalLabel" aria-hidden="true">
@@ -226,6 +229,22 @@
         }
         .swal2-rounded-lg {
             border-radius: 1rem !important;
+        }
+        .topic-card {
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            top: 0;
+            border: 1px solid rgba(0,0,0,0.04) !important;
+        }
+        .topic-card:hover {
+            top: -5px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.08) !important;
+        }
+        .topic-card:hover .position-absolute {
+            transform: scale(1.2);
+            opacity: 0.25 !important;
+        }
+        .dropdown-item:hover {
+            background-color: #f8f9fa;
         }
     </style>
 </div>

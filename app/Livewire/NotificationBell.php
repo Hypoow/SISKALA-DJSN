@@ -69,8 +69,8 @@ class NotificationBell extends Component
 
         $notifications = collect();
 
-        // Admin: Urgent Activities (H-3, No Dispo)
-        if ($user->isAdmin()) {
+        // Activity managers: urgent activities without disposition.
+        if ($user->canManageActivities()) {
             $activities = Activity::whereBetween('start_date', [now()->startOfDay(), now()->addDays(3)->endOfDay()])
                            ->where('status', '!=', Activity::STATUS_CANCELLED) 
                            ->where(function($q) {
@@ -82,37 +82,43 @@ class NotificationBell extends Component
                            ->get();
             $notifications = $notifications->merge($activities);
         }
-        
-        // Dewan/DJSN: Activities assigned to them (upcoming only)
-        if (in_array($user->role, ['Dewan', 'DJSN'])) {
-            $activities = Activity::where('start_date', '>=', now()->startOfDay())
-                           ->where('status', '!=', Activity::STATUS_CANCELLED)
-                           ->where(function($q) use ($user) {
-                               $q->whereJsonContains('disposition_to', $user->name);
-                           })
-                           ->whereNotIn('id', $hiddenActivities)
-                           ->orderBy('start_date', 'asc')
-                           ->get();
+
+        if ($user->isTA() || $user->isPersidangan()) {
+            $activities = Activity::visibleToUser($user)
+                ->where('start_date', '>=', now()->startOfDay())
+                ->where('status', '!=', Activity::STATUS_CANCELLED)
+                ->whereNotIn('id', $hiddenActivities)
+                ->orderBy('start_date', 'asc')
+                ->get();
             $notifications = $notifications->merge($activities);
         }
 
-        // Follow-ups
-        $followUpQuery = ActivityFollowup::with('activity')
-            ->whereBetween('deadline', [now()->startOfDay(), now()->addDays(3)->endOfDay()])
-            ->whereIn('status', [0, 1]) // Pending or On Progress
-            ->whereNotIn('id', $hiddenFollowups);
-
-        if (! $user->isAdmin()) {
-             $followUpQuery->where('pic', $user->name)
-                           ->orWhere('pic', $user->role);
+        if ($user->canReceiveDisposition() && !$user->isTA() && !$user->isPersidangan()) {
+            $activities = Activity::where('start_date', '>=', now()->startOfDay())
+                ->where('status', '!=', Activity::STATUS_CANCELLED)
+                ->whereJsonContains('disposition_to', $user->name)
+                ->whereNotIn('id', $hiddenActivities)
+                ->orderBy('start_date', 'asc')
+                ->get();
+            $notifications = $notifications->merge($activities);
         }
 
-        $followUps = $followUpQuery->get()->map(function($item) {
-            $item->type = 'followup';
-            return $item;
-        });
-        
-        $notifications = $notifications->merge($followUps);
+        if ($user->canManageFollowUp() || $user->isDewan() || $user->isTA() || $user->isPersidangan()) {
+            $followUps = ActivityFollowup::with('activity')
+                ->whereBetween('deadline', [now()->startOfDay(), now()->addDays(3)->endOfDay()])
+                ->whereIn('status', [0, 1])
+                ->whereNotIn('id', $hiddenFollowups)
+                ->whereHas('activity', function ($query) use ($user) {
+                    $query->visibleToUser($user);
+                })
+                ->get()
+                ->map(function($item) {
+                    $item->type = 'followup';
+                    return $item;
+                });
+
+            $notifications = $notifications->merge($followUps);
+        }
 
         return $notifications->sortBy(function($item) {
             return $item->type === 'followup' ? $item->deadline : $item->start_date;

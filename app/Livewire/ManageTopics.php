@@ -29,6 +29,8 @@ class ManageTopics extends Component
 
     public function render()
     {
+        abort_unless(auth()->user()->canManageTopics() || auth()->user()->canAccessAdminArea(), 403);
+
         $topics = Topic::orderBy('name', 'asc')
             ->when($this->search, function($query) {
                 $query->where('name', 'like', '%' . $this->search . '%');
@@ -51,12 +53,16 @@ class ManageTopics extends Component
 
     public function create()
     {
+        abort_unless(auth()->user()->canManageTopics() || auth()->user()->canAccessAdminArea(), 403);
+
         $this->resetInput();
         $this->dispatch('open-modal');
     }
 
     public function store()
     {
+        abort_unless(auth()->user()->canManageTopics() || auth()->user()->canAccessAdminArea(), 403);
+
         $validationRules = $this->rules;
         if ($this->isEditing) {
             $validationRules['name'] = 'required|min:2|unique:topics,name,' . $this->topic_id;
@@ -77,6 +83,8 @@ class ManageTopics extends Component
 
     public function edit($id)
     {
+        abort_unless(auth()->user()->canManageTopics() || auth()->user()->canAccessAdminArea(), 403);
+
         $topic = Topic::findOrFail($id);
         $this->topic_id = $id;
         $this->name = $topic->name;
@@ -88,6 +96,8 @@ class ManageTopics extends Component
 
     public function delete($id)
     {
+        abort_unless(auth()->user()->canManageTopics() || auth()->user()->canAccessAdminArea(), 403);
+
         Topic::find($id)->delete();
         session()->flash('message', 'Topik berhasil dihapus.');
     }

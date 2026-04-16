@@ -7,6 +7,88 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Backup SISKALA
+
+Project ini sudah memakai command backup harian `php artisan app:backup-data`.
+
+Yang dibackup:
+- dump database (`database.sql` atau `database.sqlite`)
+- file upload di `storage/app/public`
+- `manifest.json`
+- file `.env` hanya jika `BACKUP_INCLUDE_ENV=true` atau command dijalankan dengan `--include-env`
+
+Lokasi file backup:
+- Default lokal dan default setelah publish: `storage/app/backups` di dalam folder project Laravel
+- Rekomendasi untuk server/VM production: pindahkan ke folder di luar release project, misalnya `BACKUP_PATH=/var/backups/siskala`
+
+Konfigurasi `.env` yang bisa dipakai:
+
+```env
+BACKUP_PATH=storage/app/backups
+BACKUP_KEEP=14
+BACKUP_SCHEDULE_TIME=01:00
+BACKUP_INCLUDE_ENV=false
+BACKUP_MYSQLDUMP_BINARY=C:\xampp\mysql\bin\mysqldump.exe
+```
+
+Catatan:
+- Jika `BACKUP_PATH` relatif, path akan dibaca dari root project Laravel
+- Jika `BACKUP_PATH` absolut, backup akan disimpan langsung ke folder itu
+- Pada Linux VM biasanya cukup isi `BACKUP_MYSQLDUMP_BINARY=/usr/bin/mysqldump` bila binary tidak ada di `PATH`
+
+Menjalankan backup manual:
+
+```bash
+php artisan app:backup-data
+```
+
+Menjalankan backup manual dan simpan lebih banyak arsip:
+
+```bash
+php artisan app:backup-data --keep=30
+```
+
+Agar backup harian benar-benar jalan di server:
+- Laravel scheduler harus dipanggil tiap menit
+- Contoh cron di Linux VM:
+
+```bash
+* * * * * cd /var/www/schedulo-djsn && php artisan schedule:run >> /dev/null 2>&1
+```
+
+Kalau memakai deploy berbasis release folder, sebaiknya `BACKUP_PATH` diarahkan ke folder permanen di VM, bukan ke dalam folder release yang bisa terganti saat deploy.
+
+## Production Safety
+
+Project ini sekarang memblok command artisan yang destruktif saat `APP_ENV=production`.
+
+Command yang diblok:
+- `migrate:fresh`
+- `migrate:refresh`
+- `migrate:reset`
+- `migrate:rollback`
+- `db:wipe`
+
+Konfigurasi `.env`:
+
+```env
+DATA_SAFETY_BLOCK_DESTRUCTIVE_COMMANDS=true
+ALLOW_DESTRUCTIVE_COMMANDS=false
+```
+
+Kalau suatu saat maintenance memang butuh command tersebut di production, buka sementara:
+
+```env
+ALLOW_DESTRUCTIVE_COMMANDS=true
+```
+
+Lalu kembalikan lagi ke `false` setelah maintenance selesai.
+
+Catatan penting:
+- Guard ini melindungi command artisan dari aplikasi
+- Guard ini tidak bisa mencegah SQL manual dari phpMyAdmin atau akses root MySQL
+- Untuk production tetap disarankan memakai user database khusus aplikasi yang tidak punya izin `DROP`, `CREATE`, atau `ALTER`
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

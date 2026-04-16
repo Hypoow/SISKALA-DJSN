@@ -501,6 +501,7 @@
                         <!-- Disposition Accordion -->
                         <div class="form-group mb-0 mt-0">
                             <label class="font-weight-bold">Target Disposisi / Undangan</label>
+                            <small class="text-muted d-block mb-3">Checklist ini mengikuti konfigurasi akun dan jabatan pada menu Master Data.</small>
                              <div class="accordion" id="accordionDewan">
                                  @php $groupIndex = 0; @endphp
                                  @foreach($dewanUsers as $groupName => $members)
@@ -521,7 +522,7 @@
                                              <div class="card-body py-2">
                                                  <div class="row">
                                                      @foreach($members as $member)
-                                                     @if(!in_array($member->role, ['Dewan', 'DJSN'])) @continue @endif
+                                                    @if(!$member->canReceiveDisposition()) @continue @endif
                                                      @php 
                                                          $selectedDewan = (isset($activity) && is_array($activity->disposition_to)) ? $activity->disposition_to : [];
                                                      @endphp
@@ -530,7 +531,7 @@
                                                              <input type="checkbox" class="custom-control-input dewan-checkbox group-{{ $groupIndex }}" id="dewan_{{ $member->id }}" name="disposition_to[]" value="{{ $member->name }}" data-group-name="{{ $groupName }}" {{ in_array($member->name, $selectedDewan) ? 'checked' : '' }}>
                                                              <label class="custom-control-label" for="dewan_{{ $member->id }}">
                                                                  {{ $member->name }}
-                                                                 <br><small class="text-muted">{{ $member->divisi }}</small>
+                                                                 <br><small class="text-muted">{{ $member->position?->name ?? $member->divisi }}</small>
                                                              </label>
                                                          </div>
                                                      </div>
@@ -553,6 +554,19 @@
                          <div class="form-group mb-3">
                              <label for="dresscode" class="font-weight-bold">Dresscode</label>
                              <input type="text" class="form-control" id="dresscode" name="dresscode" value="{{ old('dresscode', $activity->dresscode ?? '') }}" placeholder="Contoh: Batik Lengan Panjang / Bebas Rapi">
+                         </div>
+                         <div class="form-group mb-3">
+                             <label for="report_target_override" class="font-weight-bold">Format "Kegiatan ditujukan untuk" (Opsional)</label>
+                             <textarea
+                                 class="form-control"
+                                 id="report_target_override"
+                                 name="report_target_override"
+                                 rows="3"
+                                 placeholder='Contoh: Ketua DJSN dan Wakil Ketua Komjakum, atau "Seluruh Anggota DJSN, Tim Sekretariat DJSN, dan TA DJSN"'
+                             >{{ old('report_target_override', $activity->report_target_override ?? '') }}</textarea>
+                             <small class="text-muted d-block mt-2">
+                                 Kosongkan jika ingin otomatis dari disposisi dan master user.
+                             </small>
                          </div>
                          <div class="form-group mb-0">
                              <label for="dispo_note" class="font-weight-bold">Keterangan / Catatan</label>
@@ -1154,7 +1168,8 @@
              // 2. Select All in Sekretariat Disposition Group
              // Find grouping based on header text "Sekretariat DJSN"
              $('.card-header button').each(function() {
-                if ($(this).text().trim() === 'Sekretariat DJSN') {
+                const groupTitle = $(this).text().trim().toLowerCase();
+                if (groupTitle.includes('sekretariat')) {
                     // Trigger the "Select All" checkbox in this header
                     const selectAll = $(this).closest('.card-header').find('.group-check-all');
                     if (!selectAll.prop('checked')) {

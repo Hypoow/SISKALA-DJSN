@@ -7,12 +7,12 @@
         }
     }
     $allDispos = array_unique($allDispos);
-    $usersMap = \App\Models\User::whereIn('name', $allDispos)->get()->keyBy('name');
+    $usersMap = \App\Models\User::with('division')->whereIn('name', $allDispos)->get()->keyBy('name');
 @endphp
 
 @extends('layouts.app')
 
-@section('title', 'Visualisasi H-1')
+@section('title', 'Visualisasi Mutasi Kegiatan')
 
 @section('content')
 <div class="container-fluid">
@@ -20,20 +20,34 @@
         <div class="col-12">
             
             <!-- Page Header Container -->
-            <div class="card shadow-sm border-0 mb-4 rounded-lg overflow-hidden">
-                <div class="card-body p-4 bg-white d-md-flex align-items-center justify-content-between">
-                    <div>
-                        <h2 class="h3 font-weight-bold mb-1 text-dark">Visualisasi Agenda</h2>
-                        <p class="text-muted mb-0">Jadwal kegiatan untuk H-1</p>
-                    </div>
-                    
-                    <div class="mt-3 mt-md-0">
-                        <form action="{{ route('report.h1-visual') }}" method="GET" class="form-inline bg-light p-2 rounded border">
-                            <label class="my-1 mr-2 font-weight-bold text-secondary text-uppercase small" for="date">Tanggal</label>
-                            <input type="date" class="form-control form-control-sm border-0 bg-white shadow-sm mr-2" id="date" name="date" value="{{ $dateStr }}">
-                            <button type="submit" class="btn btn-sm btn-primary shadow-sm px-3">
-                                <i class="fe fe-filter mr-1"></i> Tampilkan
-                            </button>
+            <div class="mb-4">
+                <h2 class="h3 font-weight-bold mb-1 text-dark">Visualisasi Mutasi Kegiatan</h2>
+                <p class="text-muted mb-3">Jadwal kegiatan berdasarkan rentang mutasi waktu</p>
+                
+                <div class="d-inline-block mt-2">
+                    <div class="bg-white rounded-pill shadow-sm border border-light p-2 d-flex align-items-center">
+                        <form action="{{ route('report.h1-visual') }}" method="GET" class="d-flex align-items-center m-0">
+                            <!-- Start Date -->
+                            <div class="d-flex align-items-center px-3 border-right">
+                                <i class="fe fe-calendar text-primary mr-2" style="font-size: 1.1rem;"></i>
+                                <div class="d-flex flex-column">
+                                    <label class="text-uppercase text-muted mb-0" style="font-size:0.65rem; font-weight:700; letter-spacing:0.5px;" for="start_date">Mulai</label>
+                                    <input type="date" class="form-control form-control-sm border-0 p-0 text-dark font-weight-bold" id="start_date" name="start_date" value="{{ $startDateStr }}" style="box-shadow:none; background:transparent;">
+                                </div>
+                            </div>
+                            <!-- End Date -->
+                            <div class="d-flex align-items-center px-3 border-right">
+                                <div class="d-flex flex-column">
+                                    <label class="text-uppercase text-muted mb-0" style="font-size:0.65rem; font-weight:700; letter-spacing:0.5px;" for="end_date">Selesai</label>
+                                    <input type="date" class="form-control form-control-sm border-0 p-0 text-dark font-weight-bold" id="end_date" name="end_date" value="{{ $endDateStr }}" style="box-shadow:none; background:transparent;">
+                                </div>
+                            </div>
+                            <!-- Submit Button -->
+                            <div class="px-2 pl-3">
+                                <button type="submit" class="btn btn-primary btn-sm rounded-pill px-4 py-2 font-weight-bold shadow-sm" style="transition: all 0.2s;">
+                                    <i class="fe fe-search mr-1"></i> Tampilkan Visualisasi
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -54,27 +68,13 @@
                             // Logic setup
                             $dispositions = $activity->disposition_to ?? [];
                             $pics = $activity->pic ?? [];
-                            $dispositions = array_unique($dispositions);
-                            $pics = array_unique($pics);
-                            
-                            // Separate Dewan vs Sekretariat
-                            $dewanMembers = [];
-                            $hasSekretariat = false;
-                            
-                            foreach($dispositions as $name) {
-                                $userObj = $usersMap->get($name);
-                                if ($userObj && $userObj->role === 'Dewan') {
-                                    $dewanMembers[] = $name;
-                                } else {
-                                    $hasSekretariat = true;
-                                }
-                            }
-                            
-                            // Check if "Sekretariat DJSN" is explicitly in PICs for deduplication
-                            $sekretariatPicIndex = array_search('Sekretariat DJSN', $pics);
-                            if ($sekretariatPicIndex !== false) {
-                                $hasSekretariat = true; 
-                                unset($pics[$sekretariatPicIndex]); 
+
+                            $dispositions = array_values(array_unique($dispositions));
+                            $pics = array_values(array_unique($pics));
+                            $visualizationGroups = collect();
+
+                            if ($activity->type !== 'external') {
+                                $visualizationGroups = \App\Models\Activity::buildVisualizationGroupsFromDisposition($dispositions, $usersMap);
                             }
                         @endphp
                         
@@ -184,89 +184,92 @@
 
                                     <!-- Dispositions / PICs -->
                                     <div class="mt-3">
-                                        {{-- 1. DEWAN GROUPING --}}
                                         @php
-                                            $councilStructure = \App\Models\Activity::COUNCIL_STRUCTURE;
-                                            
-                                            // Helper to get color class
-                                            $getGroupClass = function($group) {
-                                                if($group == 'Ketua DJSN') return 'text-purple bg-purple-light';
-                                                if($group == 'Komisi PME') return 'text-success bg-success-light';
-                                                if($group == 'Komjakum') return 'text-primary bg-primary-light';
-                                                return 'text-secondary bg-secondary-light';
+                                            $sekretariatGroup = $visualizationGroups->firstWhere('type', 'sekretariat');
+                                            $dewanVisualizationGroups = $visualizationGroups->reject(function ($group) {
+                                                return ($group['type'] ?? null) === 'sekretariat';
+                                            })->values();
+
+                                            $getGroupHeaderClass = function($group) {
+                                                $type = $group['type'] ?? null;
+                                                $label = strtoupper($group['label'] ?? '');
+
+                                                if ($type === 'ketua') return 'visualization-group-header visualization-group-header--ketua';
+                                                if ($type === 'sekretariat') return 'visualization-group-header visualization-group-header--sekretariat';
+                                                if (str_contains($label, 'PME')) return 'visualization-group-header visualization-group-header--pme';
+                                                if (str_contains($label, 'KOMJAKUM') || str_contains($label, 'KEBIJAKAN')) return 'visualization-group-header visualization-group-header--komjakum';
+
+                                                return 'visualization-group-header visualization-group-header--komisi';
                                             };
 
-                                            $getBadgeClass = function($group) {
-                                                if($group == 'Ketua DJSN') return 'badge-ketua';
-                                                if($group == 'Komisi PME') return 'badge-pme';
-                                                if($group == 'Komjakum') return 'badge-komjakum';
-                                                return 'badge-secondary';
+                                            $getGroupDotClass = function($group) {
+                                                $type = $group['type'] ?? null;
+                                                $label = strtoupper($group['label'] ?? '');
+
+                                                if ($type === 'ketua') return 'badge-ketua';
+                                                if ($type === 'sekretariat') return 'badge-sekretariat';
+                                                if (str_contains($label, 'PME')) return 'badge-pme';
+                                                if (str_contains($label, 'KOMJAKUM') || str_contains($label, 'KEBIJAKAN')) return 'badge-komjakum';
+
+                                                return 'badge-primary';
                                             };
                                         @endphp
 
-                                        <div class="row">
-                                            @foreach($councilStructure as $groupName => $members)
-                                                @php
-                                                    // Filter members present in this activity's disposition
-                                                    $presentMembers = array_intersect($dewanMembers, $members);
-                                                @endphp
-                                                
-                                                @if(!empty($presentMembers))
-                                                <div class="col-12 mb-3">
-                                                    <h6 class="font-weight-bold mb-2 d-flex align-items-center {{ $getGroupClass($groupName) }} p-2 rounded">
-                                                        <span class="badge {{ $getBadgeClass($groupName) }} mr-2 p-1" style="height: 8px; width: 8px; border-radius: 50%;"> </span>
-                                                        {{ $groupName }}
-                                                    </h6>
-                                                    <ol class="pl-4 mb-0 text-sm text-dark font-weight-medium">
-                                                        @foreach($presentMembers as $pm)
-                                                            <li class="mb-1">{{ $pm }}</li>
+                                        @if($activity->type === 'external')
+                                            @if(!empty($pics))
+                                                <div>
+                                                    <h6 class="font-weight-bold text-muted small text-uppercase mb-2">PIC</h6>
+                                                    <div class="d-flex flex-wrap">
+                                                        @foreach($pics as $pic)
+                                                            <span class="badge badge-pill badge-outline-info text-dark border-info mb-2 mr-2 px-3 py-2">
+                                                                {{ $pic }}
+                                                            </span>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        @elseif($dewanVisualizationGroups->isNotEmpty() || $sekretariatGroup)
+                                            @foreach($dewanVisualizationGroups as $group)
+                                                <div class="visualization-group">
+                                                    <div class="{{ $getGroupHeaderClass($group) }}">
+                                                        <span class="badge {{ $getGroupDotClass($group) }} visualization-group-dot"></span>
+                                                        <span>{{ $group['label'] }}</span>
+                                                    </div>
+                                                    <ol class="visualization-group-list">
+                                                        @foreach($group['members'] as $member)
+                                                            <li>{{ $member }}</li>
                                                         @endforeach
                                                     </ol>
                                                 </div>
-                                                @endif
                                             @endforeach
 
-                                            {{-- 2. COMMISSIONS / PICS --}}
-                                            @if(!empty($pics) || $hasSekretariat)
-                                                <div class="col-12 mb-2">
-                                                    @if(!empty($pics))
-                                                    <h6 class="font-weight-bold text-muted small text-uppercase mb-2">PIC Lainnya</h6>
-                                                    <div class="d-flex flex-wrap">
-                                                        @foreach($pics as $pic)
-                                                            @if($activity->type === 'external')
-                                                                <span class="badge badge-pill badge-outline-info text-dark border-info mb-2 mr-2 px-3 py-2">
-                                                                    {{ $pic }}
-                                                                </span>
-                                                            @else
-                                                                 @php
-                                                                    $picClass = 'badge-secondary';
-                                                                    $picUpper = strtoupper($pic);
-                                                                    if (str_contains($picUpper, 'KOMJAKUM')) $picClass = 'badge-komjakum';
-                                                                    elseif (str_contains($picUpper, 'PME')) $picClass = 'badge-pme';
-                                                                    elseif ($pic == 'Sekretariat DJSN') $picClass = 'badge-sekretariat';
-                                                                    elseif ($pic == 'Ketua DJSN') $picClass = 'badge-ketua';
-                                                                 @endphp
-                                                                 <span class="badge badge-pill {{ $picClass }} mb-2 mr-2 px-3 py-2">
-                                                                    {{ $pic }}
-                                                                </span>
-                                                            @endif
-                                                        @endforeach
-                                                    </div>
-                                                    @endif
-
-                                                    {{-- 3. SEKRETARIAT GROUP --}}
-                                                    @if($hasSekretariat)
-                                                        <div class="mt-2">
-                                                            <span class="badge badge-pill badge-sekretariat text-white px-3 py-2 shadow-sm d-inline-flex align-items-center">
-                                                                <i class="fe fe-users mr-2"></i> Sekretariat DJSN
-                                                            </span>
-                                                        </div>
-                                                    @endif
+                                            @if($sekretariatGroup)
+                                                <div class="mt-2">
+                                                    <span class="badge badge-pill badge-sekretariat text-white px-3 py-2 shadow-sm d-inline-flex align-items-center">
+                                                        <i class="fe fe-users mr-2"></i> {{ $sekretariatGroup['label'] }}
+                                                    </span>
                                                 </div>
                                             @endif
-                                        </div>
-
-                                        @if(empty($dewanMembers) && !$hasSekretariat && empty($pics))
+                                        @elseif(!empty($pics))
+                                            <div>
+                                                <h6 class="font-weight-bold text-muted small text-uppercase mb-2">PIC Tercatat</h6>
+                                                <div class="d-flex flex-wrap">
+                                                    @foreach($pics as $pic)
+                                                        @php
+                                                            $picClass = 'badge-secondary';
+                                                            $picUpper = strtoupper($pic);
+                                                            if (str_contains($picUpper, 'KOMJAKUM') || str_contains($picUpper, 'KEBIJAKAN')) $picClass = 'badge-komjakum';
+                                                            elseif (str_contains($picUpper, 'PME')) $picClass = 'badge-pme';
+                                                            elseif ($pic == 'Sekretaris DJSN' || $pic == 'Sekretariat DJSN') $picClass = 'badge-sekretariat';
+                                                            elseif ($pic == 'Ketua DJSN') $picClass = 'badge-ketua';
+                                                        @endphp
+                                                        <span class="badge badge-pill {{ $picClass }} mb-2 mr-2 px-3 py-2">
+                                                            {{ $pic }}
+                                                        </span>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        @else
                                             <div class="text-center py-3 bg-light rounded text-muted small font-italic">
                                                 Tidak ada data PIC / Disposisi
                                             </div>
@@ -336,6 +339,63 @@
     .text-xxs {
         font-size: 0.65rem;
         letter-spacing: 0.5px;
+    }
+    .visualization-group {
+        margin-bottom: 1rem;
+    }
+    .visualization-group:last-child {
+        margin-bottom: 0;
+    }
+    .visualization-group-header {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        padding: 0.75rem 0.9rem;
+        border-radius: 0.75rem;
+        font-size: 0.95rem;
+        font-weight: 700;
+        line-height: 1.4;
+    }
+    .visualization-group-header--ketua {
+        background-color: rgba(139, 92, 246, 0.12);
+        color: #7c3aed;
+    }
+    .visualization-group-header--komisi {
+        background-color: rgba(44, 123, 229, 0.1);
+        color: #2c7be5;
+    }
+    .visualization-group-header--komjakum {
+        background-color: rgba(0, 123, 255, 0.1);
+        color: #007bff;
+    }
+    .visualization-group-header--pme {
+        background-color: rgba(40, 167, 69, 0.12);
+        color: #28a745;
+    }
+    .visualization-group-header--sekretariat {
+        background-color: rgba(249, 115, 22, 0.12);
+        color: #ea580c;
+    }
+    .visualization-group-dot {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        min-width: 10px;
+        padding: 0;
+        border-radius: 999px;
+    }
+    .visualization-group-list {
+        margin: 0.75rem 0 0 1.5rem;
+        padding-left: 1rem;
+        color: #212529;
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+    .visualization-group-list li {
+        margin-bottom: 0.35rem;
+    }
+    .visualization-group-list li:last-child {
+        margin-bottom: 0;
     }
     .user-badge {
         font-size: 0.8rem;

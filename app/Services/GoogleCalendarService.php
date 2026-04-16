@@ -103,9 +103,12 @@ class GoogleCalendarService
         // Sekretariat: Role 'DJSN' or specific division names
         // Ideally we query Users to check roles based on names in disposition
         
-        $dewanUsers = User::whereIn('name', $disposition)->where('role', 'Dewan')->get();
-        // Sekretariat includes all roles that are NOT Dewan (DJSN, Tata Usaha, Persidangan, Bagian Umum, Admin)
-        $sekretariatUsers = User::whereIn('name', $disposition)->where('role', '!=', 'Dewan')->get();
+        $targetUsers = User::with(['division', 'position'])
+            ->whereIn('name', $disposition)
+            ->get();
+
+        $dewanUsers = $targetUsers->filter(fn (User $user) => $user->isDewan())->values();
+        $sekretariatUsers = $targetUsers->reject(fn (User $user) => $user->isDewan())->values();
         
         // Logic: 
         // If Dewan selected -> Create/Update Dewan Event
@@ -241,9 +244,6 @@ class GoogleCalendarService
             }
 
             // Attendees
-            // Note: Service Accounts cannot invite attendees (send emails) without Domain-Wide Delegation.
-            // We list them in the description instead.
-            // $event->setAttendees($attendeeList);
 
             if ($currentEventId) {
                 // Update
@@ -269,7 +269,12 @@ class GoogleCalendarService
         $disposition = $activity->disposition_to ?? [];
         if (!is_array($disposition)) $disposition = [];
         
-        $invitedDewan = User::whereIn('name', $disposition)->where('role', 'Dewan')->orderBy('order')->get();
+        $invitedDewan = User::with(['division', 'position'])
+            ->whereIn('name', $disposition)
+            ->orderBy('order')
+            ->get()
+            ->filter(fn (User $user) => $user->isDewan())
+            ->values();
         $count = $invitedDewan->count();
 
         $desc = "Yth.\n";
@@ -279,7 +284,7 @@ class GoogleCalendarService
             // --- TEMPLATE 1 (External) ---
             // List Names Directly
             foreach ($invitedDewan as $member) {
-                $salutation = (stripos($member->name, 'Indah Anggoro Putri') !== false) ? 'Ibu' : 'Bapak';
+                $salutation = $member->prefix ?? 'Bapak';
                 $desc .= "{$salutation} {$member->name}\n";
             }
             $desc .= "\n";
@@ -306,7 +311,7 @@ class GoogleCalendarService
              // We'll trust $invitedDewan which is already sorted by 'order' from line 226.
              
              foreach ($invitedDewan as $member) {
-                 $salutation = (stripos($member->name, 'Indah Anggoro Putri') !== false) ? 'Ibu' : 'Bapak';
+                 $salutation = $member->prefix ?? 'Bapak';
                  $desc .= "{$counter}. {$salutation} {$member->name}\n";
                  $counter++;
              }
@@ -414,7 +419,7 @@ class GoogleCalendarService
         $disposition = $activity->disposition_to ?? [];
         if (is_array($disposition) && count($disposition) > 0) {
              // Fetch users to get their titles (divisi) and role
-             $users = User::whereIn('name', $disposition)->get()->keyBy('name');
+             $users = User::with(['division', 'position'])->whereIn('name', $disposition)->get()->keyBy('name');
 
              $lines = []; // Initialize an array to hold formatted lines
              $number = 1; // Initialize counter for numbered list
@@ -423,7 +428,7 @@ class GoogleCalendarService
                  $user = $users->get($name);
                  
                  // SKIP if user is Dewan, as requested (focus on Sekretariat)
-                 if ($user && $user->role === 'Dewan') {
+                 if ($user && $user->isDewan()) {
                      continue;
                  }
 

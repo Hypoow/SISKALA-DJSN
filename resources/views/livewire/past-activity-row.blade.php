@@ -16,9 +16,25 @@
         </div>
     </td>
     <td>
-        <a href="{{ route('activities.show', $activity->id) }}" class="text-dark font-weight-bold">{{ $activity->name }}</a>
-        <br>
-        <small class="text-muted">{{ $activity->location_type == 'online' ? 'Online' : $activity->location }}</small>
+        <a href="{{ route('activities.show', $activity->id) }}" class="text-dark font-weight-bold mb-1 d-block text-decoration-none h6">{{ $activity->name }}</a>
+        <div class="d-flex align-items-start text-muted mt-2" style="font-size: 0.85rem; line-height: 1.4; max-width: 350px;">
+            <div class="mr-2" style="margin-top: 1px;">
+                @if($activity->location_type == 'online')
+                    <i class="fe fe-video text-primary"></i>
+                @elseif($activity->location_type == 'hybrid')
+                    <i class="fe fe-monitor text-success"></i>
+                @else
+                    <i class="fe fe-map-pin text-secondary"></i>
+                @endif
+            </div>
+            <div style="word-break: break-word; white-space: normal;">
+                @if($activity->location_type == 'online' && !$activity->location)
+                    <span class="text-dark">Pelaksanaan secara daring (tautan tersedia di detail).</span>
+                @else
+                    <span class="text-dark">{{ $activity->location ?? 'Tidak ada detail lokasi' }}</span>
+                @endif
+            </div>
+        </div>
     </td>
     <td class="text-center">
         @switch($activity->status)

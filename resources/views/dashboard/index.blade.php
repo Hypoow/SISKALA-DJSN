@@ -46,6 +46,11 @@
     
     /* Custom Gradient for Internal (Dark Blue) */
     .bg-gradient-dark-blue { background: linear-gradient(87deg, #004085 0, #0056b3 100%) !important; }
+    
+    /* Ensure tooltips always appear above full-screen modals */
+    .tooltip, .tooltip-inner {
+        z-index: 105000 !important;
+    }
 </style>
 @endpush
 
@@ -156,7 +161,7 @@
                     <div class="d-flex flex-wrap align-items-center justify-content-center">
                          {{-- Legend --}}
                         <div class="mr-md-4 mb-3 mb-md-0 d-flex">
-                             @if(Auth::user()->role === 'Dewan')
+                             @if(Auth::user()->isDewan())
                                 <div class="badge badge-pill badge-primary mr-2 px-3 py-2" style="background-color: #004085;">Internal</div>
                                 <div class="badge badge-pill badge-info text-white px-3 py-2">Eksternal</div>
                              @else
@@ -165,7 +170,7 @@
                              @endif
                         </div>
                         
-                         @if(Auth::user()->role === 'admin')
+                         @if(Auth::user()->canManageActivities())
                         <a href="{{ route('activities.create') }}" class="btn btn-primary shadow-sm rounded-pill px-4">
                             <i class="fe fe-plus-circle mr-2"></i> Buat Kegiatan
                         </a>
@@ -235,7 +240,7 @@
         </div>
       </div>
       <div class="modal-footer border-0 bg-light">
-        @if(Auth::user()->role === 'admin')
+        @if(Auth::user()->canManageActivities())
             <a href="#" id="eventDetailEditBtn" class="btn btn-warning shadow-sm"><i class="fe fe-edit-2 mr-1"></i> Edit</a>
         @endif
         <a href="#" id="eventDetailLinkBtn" class="btn btn-primary shadow-sm"><i class="fe fe-eye mr-1"></i> Lihat Detail</a>
@@ -314,7 +319,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Extended Props
         var props = info.event.extendedProps;
         
-        // Type Badge
         // Type Badge
         var typeBadge = '';
         if (props.type === 'external') {
@@ -402,7 +406,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     if(p.includes('Komjakum') || p.includes('Kebijakan')) badgeClass = 'badge-komjakum';
                     else if(p.includes('PME') || p.includes('Monitoring')) badgeClass = 'badge-pme';
-                    else if(p.includes('Sekretariat')) badgeClass = 'badge-sekretariat';
+                    else if(p.includes('Sekretariat') || p.includes('Sekretaris')) badgeClass = 'badge-sekretariat';
                     else if(p.includes('Ketua')) badgeClass = 'badge-ketua';
                     else if(p.includes('Anggota')) badgeClass = 'badge-djsn';
                     
@@ -437,7 +441,7 @@ document.addEventListener('DOMContentLoaded', function() {
         detailBtn.attr('href', '/activities/' + info.event.id);
 
         // Set Edit Link (Admin Only)
-        @if(Auth::user()->role === 'admin')
+        @if(Auth::user()->canManageActivities())
             editBtn.attr('href', '/activities/' + info.event.id + '/edit');
             editBtn.show();
         @else
@@ -449,14 +453,14 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Re-init tooltips inside modal
         setTimeout(function() {
-             $('[data-toggle="tooltip"]').tooltip('dispose');
-             $('[data-toggle="tooltip"]').tooltip({
-                 html: true
+             $('#eventDetailPic [data-toggle="tooltip"]').tooltip('dispose').tooltip({
+                 html: true,
+                 container: 'body'
              });
         }, 300);
       },
       dateClick: function(info) {
-        @if(Auth::user()->role === 'admin')
+        @if(Auth::user()->canManageActivities())
         window.location.href = "{{ route('activities.create') }}?date=" + info.dateStr;
         @endif
       },

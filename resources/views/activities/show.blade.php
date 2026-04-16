@@ -33,27 +33,52 @@
             </div>
         </div>
 
-        <div class="row">
-            <!-- Left Column: Main Info -->
-            <div class="col-md-7">
-                
-                <!-- Name Card -->
-                 <div class="card mb-4" style="border-left: 5px solid {{ $activity->type == 'external' ? '#17a2b8' : '#004085' }};">
-                    <div class="card-body">
-                        <div class="form-group mb-0">
-                            <label class="form-label-premium">Nama Kegiatan</label>
-                            <p class="h5 font-weight-bold text-dark mb-0">{{ $activity->name }}</p>
+        <div class="activity-hero mb-4">
+            <div class="row align-items-center">
+                <div class="col-lg-8 mb-3 mb-lg-0">
+                    <small class="text-uppercase d-block mb-2 hero-eyebrow">Ringkasan Kegiatan</small>
+                    <h3 class="mb-2 text-white font-weight-bold">{{ $activity->name }}</h3>
+                    <div class="d-flex flex-wrap align-items-center">
+                        <span class="hero-chip mr-2 mb-2">
+                            <i class="fe fe-calendar mr-1"></i>{{ $activity->start_date->isoFormat('D MMM Y') }}
+                        </span>
+                        <span class="hero-chip mr-2 mb-2">
+                            <i class="fe fe-clock mr-1"></i>{{ \Carbon\Carbon::parse($activity->start_time)->format('H:i') }} WIB
+                        </span>
+                        <span class="hero-chip mr-2 mb-2">
+                            <i class="fe fe-map-pin mr-1"></i>{{ ucfirst($activity->location_type) }}
+                        </span>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="hero-stats">
+                        <div class="hero-stat">
+                            <small>Update Terakhir</small>
+                            <strong>{{ $activity->updated_at->diffForHumans() }}</strong>
+                        </div>
+                        <div class="hero-stat">
+                            <small>Jenis Kegiatan</small>
+                            <strong>{{ $activity->type == 'external' ? 'Eksternal' : 'Internal' }}</strong>
                         </div>
                     </div>
-                 </div>
+                </div>
+            </div>
+        </div>
 
+        <div class="row">
+            <!-- Left Column: Main Info -->
+            <div class="col-lg-8">
+                
                 <!-- Informasi Utama Card -->
-                <div class="card mb-4">
+                <div class="card mb-4 info-main-card section-card">
                     <div class="card-header d-flex align-items-center">
                         <div class="icon-shape bg-light text-primary rounded-circle mr-3">
                             <i class="fe fe-info"></i>
                         </div>
-                        <strong class="card-title">Informasi Utama</strong>
+                        <div>
+                            <strong class="card-title d-block mb-0">Informasi Utama</strong>
+                            <small class="text-muted">Data inti kegiatan dan status pelaksanaan</small>
+                        </div>
                     </div>
                     <div class="card-body">
                         <!-- Nomor Surat -->
@@ -207,14 +232,14 @@
                         </div>
 
                         <!-- PIC -->
-                        @if($activity->pic)
+                        @if(!empty($activity->display_pic_groups))
                         <div class="form-group row">
                             <label class="col-sm-3 col-form-label text-muted font-weight-bold">PIC</label>
                             <div class="col-sm-9">
                                  @if($activity->type == 'external')
-                                    <p class="form-control-plaintext text-dark">{{ is_array($activity->pic) ? implode(', ', $activity->pic) : $activity->pic }}</p>
+                                    <p class="form-control-plaintext text-dark">{{ implode(', ', $activity->display_pic_groups) }}</p>
                                 @else
-                                    @foreach($activity->pic as $pic)
+                                    @foreach($activity->display_pic_groups as $pic)
                                         @php
                                             $badgeClass = 'badge-info';
                                             $picUpper = strtoupper($pic);
@@ -223,18 +248,13 @@
                                                 $badgeClass = 'badge-komjakum';
                                             } elseif (str_contains($picUpper, 'PME')) {
                                                 $badgeClass = 'badge-pme';
-                                            } elseif ($pic == 'Sekretariat DJSN') {
+                                            } elseif ($pic == 'Sekretaris DJSN' || $pic == 'Sekretariat DJSN') {
                                                 $badgeClass = 'badge-sekretariat';
                                             } elseif ($pic == 'Ketua DJSN') {
                                                 $badgeClass = 'badge-ketua';
                                             }
-
-                                            $displayName = $pic;
-                                            if ($pic === 'Komisi Komjakum') {
-                                                $displayName = 'Komjakum';
-                                            }
                                         @endphp
-                                        <span class="badge {{ $badgeClass }} mr-1 mb-1">{{ $displayName }}</span>
+                                        <span class="badge {{ $badgeClass }} mr-1 mb-1">{{ $pic }}</span>
                                     @endforeach
                                 @endif
                             </div>
@@ -245,13 +265,16 @@
                 </div>
 
                 <!-- Hasil Rapat & Follow Up Wrapper to maintain single column flow if needed, or keep existing Follow Up Manager -->
-                <div class="card mb-4">
+                <div class="card mb-4 summary-card section-card">
                      <div class="card-header d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center">
                             <div class="icon-shape bg-light text-primary rounded-circle mr-3">
                                 <i class="fe fe-file-text"></i>
                             </div>
-                            <strong class="card-title mb-0">Hasil Rapat Secara Singkat</strong>
+                            <div>
+                                <strong class="card-title mb-0 d-block">Hasil Rapat Secara Singkat</strong>
+                                <small class="text-muted">Rangkuman poin penting hasil pembahasan</small>
+                            </div>
                         </div>
                         @if(auth()->user()->canManagePostActivity())
                             @if(!empty($activity->summary_content) && trim(strip_tags($activity->summary_content)) != '')
@@ -277,20 +300,25 @@
                     </div>
                 </div>
 
-                @livewire('follow-up-manager', ['activity' => $activity])
+                <div id="tindak-lanjut-arahan">
+                    @livewire('follow-up-manager', ['activity' => $activity])
+                </div>
 
             </div>
 
              <!-- Right Column: Details & Disposition -->
-            <div class="col-md-5">
+            <div class="col-lg-4">
                 
                 <!-- Dokumen Pendukung Card -->
-                <div class="card mb-4">
+                <div class="card mb-4 doc-support-card section-card">
                      <div class="card-header d-flex align-items-center">
                         <div class="icon-shape bg-light text-primary rounded-circle mr-3">
                             <i class="fe fe-folder"></i>
                         </div>
-                        <strong class="card-title">Dokumen Pendukung</strong>
+                        <div>
+                            <strong class="card-title d-block mb-0">Dokumen Pendukung</strong>
+                            <small class="text-muted">Akses cepat surat, MoM, materi, dan dokumentasi</small>
+                        </div>
                     </div>
                     <div class="card-body p-0">
                         <div class="list-group list-group-flush">
@@ -447,12 +475,15 @@
                 </div>
 
                 <!-- Disposition Card -->
-                <div class="card mb-4">
+                <div class="card mb-4 disposition-card section-card">
                      <div class="card-header d-flex align-items-center">
                         <div class="icon-shape bg-light text-primary rounded-circle mr-3">
                             <i class="fe fe-check-square"></i>
                         </div>
-                        <strong class="card-title">Tujuan Disposisi</strong>
+                        <div>
+                            <strong class="card-title d-block mb-0">Tujuan Disposisi</strong>
+                            <small class="text-muted">Pihak yang menjadi target disposisi kegiatan</small>
+                        </div>
                     </div>
                     <div class="card-body">
                          <!-- Narasumber Display (Moved from Main Info) -->
@@ -498,7 +529,6 @@
                                         <div class="mb-1 font-weight-bold text-dark">{{ $groupName }}</div>
                                         <ul class="list-unstyled mb-0 text-muted small">
                                             @foreach($users as $user)
-                                                @continue(!$user->hasRole('Dewan') && $user->name !== 'Imron Rosadi')
                                                 @php
                                                     $isPresent = in_array($user->name, $attendanceList);
                                                 @endphp
@@ -511,6 +541,7 @@
                                                         @endif
                                                         <span class="{{ $isPresent ? 'text-dark font-weight-bold' : '' }}">{{ $user->name }}</span>
                                                     </div>
+
                                                     {{-- Representative Display (Imron Rosadi logic) --}}
                                                     @if($user->name === 'Imron Rosadi')
                                                         @php
@@ -531,67 +562,26 @@
                             @endforeach
                             </div>
                         @elseif($activity->disposition_to)
-                             {{-- Fallback for legacy views pending controller update or cache issues --}}
-                            @php
-                                $councilStructure = \App\Models\Activity::COUNCIL_STRUCTURE;
-                                $selected = $activity->disposition_to;
-                            @endphp
-                            
                             <div class="timeline ml-3 timeline-disposition">
-                            @foreach($councilStructure as $groupName => $members)
+                            @foreach($activity->disposition_to as $member)
                                 @php
-                                    $groupSelected = array_intersect($members, $selected);
-                                    if (!empty($groupSelected)) {
-                                        $orderedUsers = \App\Models\User::whereIn('name', $groupSelected)
-                                            ->orderBy('order', 'asc')
-                                            ->pluck('name')
-                                            ->toArray();
-                                        $missing = array_diff($groupSelected, $orderedUsers);
-                                        $groupSelected = array_merge($orderedUsers, $missing);
-                                    }
                                     $attendanceList = $activity->attendance_list ?? [];
+                                    $isPresent = in_array($member, $attendanceList);
                                 @endphp
-                                @if(!empty($groupSelected))
-                                    <div class="pb-3 timeline-item item-primary">
-                                        <div class="pl-4">
-                                            <div class="mb-1 font-weight-bold text-dark">{{ $groupName }}</div>
-                                            <ul class="list-unstyled mb-0 text-muted small">
-                                                @foreach($groupSelected as $member)
-                                                    @php
-                                                        $isPresent = in_array($member, $attendanceList);
-                                                    @endphp
-                                                    <li class="mb-1 d-flex flex-column">
-                                                        <div class="d-flex align-items-center">
-                                                            @if($isPresent)
-                                                                <span class="fe fe-check text-success mr-2 font-weight-bold"></span>
-                                                            @else
-                                                                <span class="mr-2 text-muted font-weight-bold" style="width: 14px; text-align: center;">-</span>
-                                                            @endif
-                                                            <span class="{{ $isPresent ? 'text-dark font-weight-bold' : '' }}">{{ $member }}</span>
-                                                        </div>
-                                                        {{-- Display Representative if applicable (Legacy string logic) --}}
-                                                        @if($member === 'Imron Rosadi')
-                                                            @php
-                                                                $imronUser = \App\Models\User::where('name', 'Imron Rosadi')->first();
-                                                                $details = $activity->attendance_details ?? [];
-                                                                $repName = null;
-                                                                if ($imronUser && isset($details[$imronUser->id]['representative'])) {
-                                                                    $repName = $details[$imronUser->id]['representative'];
-                                                                }
-                                                            @endphp
-    
-                                                            @if($repName)
-                                                                <div class="ml-4 pl-1 text-muted small">
-                                                                    <i class="fe fe-corner-down-right mr-1"></i> Diwakili: <span class="font-weight-bold text-dark">{{ $repName }}</span>
-                                                                </div>
-                                                            @endif
-                                                        @endif
-                                                    </li>
-                                                @endforeach
-                                            </ul>
-                                        </div>
+                                <div class="pb-3 timeline-item item-primary">
+                                    <div class="pl-4">
+                                        <ul class="list-unstyled mb-0 text-muted small">
+                                            <li class="mb-1 d-flex align-items-center">
+                                                @if($isPresent)
+                                                    <span class="fe fe-check text-success mr-2 font-weight-bold"></span>
+                                                @else
+                                                    <span class="mr-2 text-muted font-weight-bold" style="width: 14px; text-align: center;">-</span>
+                                                @endif
+                                                <span class="{{ $isPresent ? 'text-dark font-weight-bold' : '' }}">{{ $member }}</span>
+                                            </li>
+                                        </ul>
                                     </div>
-                                @endif
+                                </div>
                             @endforeach
                             </div>
                         @else
@@ -656,13 +646,16 @@
                 @endphp
 
                 @if($hasNotes || $canEditNotes)
-                 <div class="card mb-4">
+                 <div class="card mb-4 notes-card section-card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center">
                              <div class="icon-shape bg-light text-primary rounded-circle mr-3">
                                 <i class="fe fe-align-left"></i>
                             </div>
-                             <strong class="card-title mb-0">Catatan Tambahan</strong>
+                             <div>
+                                <strong class="card-title mb-0 d-block">Catatan Tambahan</strong>
+                                <small class="text-muted">Keterangan, dresscode, dan catatan pendukung</small>
+                             </div>
                         </div>
                         @if($canEditNotes)
                             <button type="button" class="btn btn-sm btn-outline-primary rounded-pill" data-toggle="modal" data-target="#additionalNotesModal">
@@ -783,6 +776,121 @@
 @push('styles')
 <link rel="stylesheet" href="{{ asset('tinydash/css/quill.snow.css') }}">
 <style>
+    .activity-hero {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
+        border-radius: 20px;
+        padding: 1.75rem 2rem;
+        box-shadow: 0 20px 40px rgba(49, 46, 129, 0.25);
+        position: relative;
+        overflow: hidden;
+    }
+    .activity-hero::before {
+        content: '';
+        position: absolute;
+        top: 0; right: 0; bottom: 0; left: 0;
+        background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+CgkJPGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNykiLz4KPC9zdmc+');
+        opacity: 0.6;
+    }
+    .activity-hero > div {
+        position: relative;
+        z-index: 2;
+    }
+    .hero-eyebrow {
+        color: rgba(255, 255, 255, 0.85);
+        letter-spacing: 1px;
+        font-weight: 600;
+    }
+    .hero-chip {
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: #fff;
+        border-radius: 999px;
+        padding: .4rem .8rem;
+        font-size: .85rem;
+        font-weight: 500;
+        backdrop-filter: blur(4px);
+    }
+    .hero-stats {
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
+        padding: 1rem;
+        backdrop-filter: blur(8px);
+    }
+    .hero-stat {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: #fff;
+        padding: .5rem .25rem;
+    }
+    .hero-stat + .hero-stat {
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .hero-stat small {
+        color: rgba(255,255,255,.8);
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        font-size: .7rem;
+        font-weight: 600;
+    }
+    .hero-stat strong {
+        font-size: .9rem;
+        font-weight: 700;
+    }
+    .card {
+        border-radius: 18px;
+        border: none;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+        background: #ffffff;
+    }
+    .card-header {
+        background: transparent;
+        border-bottom: 1px solid #f3f4f6;
+    }
+    .section-card .card-header {
+        border-bottom: 1px solid #edf1f7;
+        padding-top: .9rem;
+        padding-bottom: .9rem;
+    }
+    .section-card .card-title {
+        color: #13294b;
+        font-weight: 700;
+    }
+    .section-card .card-body {
+        background: linear-gradient(180deg, #ffffff 0%, #fcfdff 100%);
+    }
+    .info-main-card .form-group.row {
+        border: 1px solid #eef2f8;
+        border-radius: 10px;
+        margin: 0 0 .75rem 0;
+        padding: .6rem .3rem;
+        background: #fff;
+    }
+    .info-main-card .form-group.row:last-child {
+        margin-bottom: 0;
+    }
+    .summary-card .card-body {
+        min-height: 170px;
+    }
+    .summary-card .markdown-content {
+        line-height: 1.7;
+        color: #2c3f5f;
+    }
+    .doc-support-card .list-group-item {
+        border-color: #eff3fa;
+    }
+    .disposition-card .card-body {
+        background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+    }
+    .notes-card .card-body {
+        background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+    }
+    @media (max-width: 767.98px) {
+        .info-main-card .form-group.row {
+            padding: .6rem .2rem;
+        }
+    }
     .uppercase-label {
         letter-spacing: 0.5px;
         text-transform: uppercase;

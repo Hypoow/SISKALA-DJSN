@@ -613,10 +613,10 @@
                              <div class="icon-shape bg-light text-warning rounded-circle mr-3">
                                 <i class="fe fe-image"></i>
                             </div>
-                            <strong class="card-title">Dokumentasi</strong>
+                            <strong class="card-title">Dokumentasi <span class="text-muted small font-weight-normal ml-2 pl-2 border-left" style="font-size: 0.8rem;">(Minimal 4, Maksimal 8 Foto)</span></strong>
                         </div>
                          <div class="card-body p-0">
-                             <div class="row p-3">
+                             <div class="row p-3" id="documentation-container">
                                 @forelse($activity->documentations as $doc)
                                     <div class="col-6 mb-3 position-relative">
                                         <a href="{{ Storage::url($doc->file_path) }}" target="_blank">
@@ -652,6 +652,9 @@
                             <strong class="card-title">Tujuan Disposisi</strong>
                         </div>
                         <div class="card-body p-0">
+                            <div class="px-3 pt-3 text-muted small">
+                                Checklist ini mengikuti konfigurasi akun dan jabatan pada menu Master Data.
+                            </div>
                             <!-- Accordion Style from Create Page -->
                             <div class="accordion" id="accordionDewan">
                                  @php $groupIndex = 0; @endphp
@@ -667,11 +670,11 @@
                                                  <label class="custom-control-label small" for="checkAll{{ $groupIndex }}">All</label>
                                              </div>
                                          </div>
-                                         <div id="collapse{{ $groupIndex }}" class="collapse {{ in_array('Sekretariat DJSN', $activity->disposition_to ?? []) && $groupName == 'Sekretariat DJSN' ? 'show' : '' }}" aria-labelledby="heading{{ $groupIndex }}">
+                                         <div id="collapse{{ $groupIndex }}" class="collapse show" aria-labelledby="heading{{ $groupIndex }}">
                                              <div class="card-body py-2">
                                                  <div class="row">
                                                      @foreach($members as $member)
-                                                     @if(!in_array($member->role, ['Dewan', 'DJSN'])) @continue @endif
+                                                    @if(!$member->canReceiveDisposition()) @continue @endif
                                                      @php 
                                                          $selectedDewan = (isset($activity) && is_array($activity->disposition_to)) ? $activity->disposition_to : [];
                                                      @endphp
@@ -680,7 +683,7 @@
                                                              <input type="checkbox" class="custom-control-input dewan-checkbox group-{{ $groupIndex }}" id="dewan_{{ $member->id }}" name="disposition_to[]" value="{{ $member->name }}" data-group-name="{{ $groupName }}" {{ in_array($member->name, $selectedDewan) ? 'checked' : '' }}>
                                                              <label class="custom-control-label" for="dewan_{{ $member->id }}">
                                                                  <span class="d-block font-weight-bold text-dark">{{ $member->name }}</span>
-                                                                 <span class="d-block small text-muted lh-120">{{ $member->divisi }}</span>
+                                                                 <span class="d-block small text-muted lh-120">{{ $member->position?->name ?? $member->divisi }}</span>
                                                              </label>
                                                          </div>
                                                      </div>
@@ -706,6 +709,17 @@
                             <div class="form-group">
                                 <label class="form-label-premium">Dresscode</label>
                                 <input type="text" class="form-control" name="dresscode" value="{{ old('dresscode', $activity->dresscode) }}">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label-premium">Format "Kegiatan ditujukan untuk" (Opsional)</label>
+                                <textarea
+                                    class="form-control"
+                                    name="report_target_override"
+                                    rows="3"
+                                    placeholder='Contoh: Ketua DJSN dan Wakil Ketua Komjakum, atau "Seluruh Anggota DJSN, Tim Sekretariat DJSN, dan TA DJSN"'
+                                >{{ old('report_target_override', $activity->report_target_override) }}</textarea>
+                                <small class="text-muted d-block mt-2">Kosongkan jika ingin otomatis dari disposisi dan master user.</small>
                             </div>
                             
                             <div class="form-group mb-0">
@@ -799,10 +813,18 @@
         var file = $('#doc_file')[0].files[0];
         
         if(file) {
-            // Check file count
+            // Check total file count
+            var currentCount = $('#documentation-container img').length;
             var files = $('#doc_file')[0].files;
-            if(files.length > 4) {
-                 Swal.fire('Error', 'Maksimal upload 4 foto sekaligus.', 'error');
+            var newCount = files.length;
+            
+            if((currentCount + newCount) < 4) {
+                 Swal.fire('Error', 'Total dokumentasi kegiatan minimal harus 4 foto.', 'error');
+                 return;
+            }
+
+            if((currentCount + newCount) > 8) {
+                 Swal.fire('Error', 'Total dokumentasi tidak boleh melebihi 8 foto (Saat ini: ' + currentCount + ' foto).', 'error');
                  return;
             }
 

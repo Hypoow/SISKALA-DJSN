@@ -28,9 +28,12 @@ Route::post('password/email', [App\Http\Controllers\Auth\ForgotPasswordControlle
 Route::get('password/reset/{token}', [App\Http\Controllers\Auth\ResetPasswordController::class, 'showResetForm'])->name('password.reset');
 Route::post('password/reset', [App\Http\Controllers\Auth\ResetPasswordController::class, 'reset'])->name('password.update');
 
+// Public Pages
+Route::view('/developer', 'developer.index')->name('developer');
+
 // Dashboard Routes
 Route::middleware('auth')->group(function () {
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/', [DashboardController::class, 'index']);
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/events', [DashboardController::class, 'getEvents'])->name('dashboard.events.get');
     Route::post('/dashboard/events', [DashboardController::class, 'store'])->name('dashboard.events.store');
@@ -73,6 +76,8 @@ Route::middleware('auth')->group(function () {
     // Master Data Routes (Admin Only - checked in controller)
     Route::prefix('master-data')->name('master-data.')->group(function () {
         Route::get('/', [MasterDataController::class, 'index'])->name('index');
+        Route::get('/create', [MasterDataController::class, 'create'])->name('create');
+        Route::get('/{user}/edit', [MasterDataController::class, 'edit'])->name('edit');
         Route::get('/topics', [MasterDataController::class, 'topics'])->name('topics');
         Route::post('/reorder', [MasterDataController::class, 'reorder'])->name('reorder');
         Route::post('/', [MasterDataController::class, 'store'])->name('store');
@@ -81,5 +86,18 @@ Route::middleware('auth')->group(function () {
         
         // Master Staff Routes
         Route::resource('staff', \App\Http\Controllers\MasterStaffController::class)->except(['create', 'show', 'edit']);
+
+        // Division Management
+        Route::get('/divisions', [MasterDataController::class, 'divisions'])->name('divisions');
+        Route::post('/divisions', [MasterDataController::class, 'storeDivision'])->name('divisions.store');
+        Route::put('/divisions/{division}', [MasterDataController::class, 'updateDivision'])->name('divisions.update');
+        Route::delete('/divisions/{division}', [MasterDataController::class, 'destroyDivision'])->name('divisions.destroy');
+        Route::post('/divisions/reorder', [MasterDataController::class, 'reorderDivision'])->name('divisions.reorder');
+
+        // Position Management
+        Route::post('/positions', [MasterDataController::class, 'storePosition'])->name('positions.store');
+        Route::put('/positions/{position}', [MasterDataController::class, 'updatePosition'])->name('positions.update');
+        Route::delete('/positions/{position}', [MasterDataController::class, 'destroyPosition'])->name('positions.destroy');
+        Route::post('/positions/reorder', [MasterDataController::class, 'reorderPosition'])->name('positions.reorder');
     });
 });

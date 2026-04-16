@@ -46,7 +46,7 @@
             </div>
             <p>Dashboard</p>
           </div>
-          @if(Auth::user()->role === 'admin')
+          @if(Auth::user()->canAccessAdminArea())
           <div class="col-6 text-center">
             <div class="squircle bg-primary justify-content-center">
               <i class="fe fe-users fe-32 align-self-center text-white"></i>
@@ -59,6 +59,8 @@
     </div>
   </div>
 </div>
+
+
 
 
 

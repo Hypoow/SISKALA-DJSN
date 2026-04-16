@@ -4,11 +4,20 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Activity;
+use Illuminate\Database\Eloquent\Builder;
 use Livewire\WithPagination;
 
 class ActivityList extends Component
 {
     use WithPagination;
+
+    public $perPage = 10;
+
+    public function updatingPerPage()
+    {
+        $this->resetSelectionState();
+        $this->resetPage();
+    }
 
     public function getPicColor($picName)
     {
@@ -18,6 +27,7 @@ class ActivityList extends Component
             'Komisi PME' => 'pme',
             'PME' => 'pme',
             'Sekretariat DJSN' => 'sekretariat',
+            'Sekretaris DJSN' => 'sekretariat',
             'Anggota DJSN' => 'djsn',
             'Ketua DJSN' => 'ketua',
         ];
@@ -63,11 +73,19 @@ class ActivityList extends Component
 
     public function updatingSearch()
     {
+        $this->resetSelectionState();
         $this->resetPage();
     }
 
     public function updatingType()
     {
+        $this->resetSelectionState();
+        $this->resetPage();
+    }
+
+    public function updatingSortDirection()
+    {
+        $this->resetSelectionState();
         $this->resetPage();
     }
 
@@ -76,44 +94,36 @@ class ActivityList extends Component
     public $selectAll = false;
     public $deletedIds = []; // Track deleted IDs for Undo
 
+    public function updatingPaginators($page, $pageName)
+    {
+        $this->resetSelectionState();
+    }
+
     public function updatedSelectAll($value)
     {
+        abort_unless(auth()->user()->canManageActivities(), 403);
+
+        $currentPageIds = $this->getCurrentPageActivityIds();
+
         if ($value) {
-            // Select all on current page (approximate since we don't have easy access to the paginator here without query)
-            // Or simpler: We can just let the view handle "Select All" if we pass the IDs, but wire:model on header is easier.
-            // Let's re-run the query to get IDs. 
-            $query = Activity::where('start_date', '>=', now()->startOfDay())
-                             ->orderBy('start_date', $this->sortDirection)
-                             ->orderBy('start_time', 'asc');
-            
-            if ($this->type && in_array($this->type, ['external', 'internal'])) {
-                $query->where('type', $this->type);
-            }
-            if ($this->search) {
-                $query->where(function($q) {
-                    $q->where('name', 'like', "%{$this->search}%")
-                      ->orWhere('location', 'like', "%{$this->search}%");
-                });
-            }
-            
-            // We can only select what's visible or all?
-            // User requested "select", usually implies visible.
-            // But doing a full query `pluck` selects ALL matching results, not just page.
-            // Let's select ALL matching results for convenience, or just the ones visible?
-            // Standard grid usually selects current page. 
-            // But we don't have pagination enabled in the query above (it uses ->get()).
-            // Wait, usages of `use WithPagination` is present but `render` uses `->get()`.
-            // So there is NO pagination currently implemented in render! It gets ALL.
-            // So `->pluck('id')` is safe and correct.
-            
-            $this->selected = $query->pluck('id')->map(fn($id) => (string) $id)->toArray();
+            $this->selected = $currentPageIds;
         } else {
             $this->selected = [];
         }
+
+        $this->syncSelectAllState($currentPageIds);
+    }
+
+    public function updatedSelected()
+    {
+        $this->selected = $this->normalizeSelectedIds($this->selected);
+        $this->syncSelectAllState();
     }
 
     public function deleteSelected()
     {
+        abort_unless(auth()->user()->canManageActivities(), 403);
+
         if (empty($this->selected)) return;
 
         // Retrieve models to trigger 'deleting' event for file cleanup
@@ -133,6 +143,8 @@ class ActivityList extends Component
 
     public function delete($id)
     {
+        abort_unless(auth()->user()->canManageActivities(), 403);
+
         $activity = Activity::find($id);
         
         if ($activity) {
@@ -147,6 +159,8 @@ class ActivityList extends Component
 
     public function restoreDeleted()
     {
+        abort_unless(auth()->user()->canManageActivities(), 403);
+
         if (!empty($this->deletedIds)) {
             Activity::withTrashed()->whereIn('id', $this->deletedIds)->restore();
             $this->deletedIds = [];
@@ -156,6 +170,8 @@ class ActivityList extends Component
 
     public function forceDeleteDeleted()
     {
+        abort_unless(auth()->user()->canManageActivities(), 403);
+
         if (!empty($this->deletedIds)) {
             $activities = Activity::withTrashed()->whereIn('id', $this->deletedIds)->get();
             foreach ($activities as $activity) {
@@ -168,11 +184,23 @@ class ActivityList extends Component
 
     public function render()
     {
+        $activities = $this->getFilteredActivitiesQuery()->paginate($this->perPage);
+
+        // Group the records on the current page
+        $groupedActivities = $activities->getCollection()->groupBy(function($item) {
+            return $item->start_date->isoFormat('MMMM Y');
+        });
+
+        // Pass both the paginated object (for links) and the grouped collection (for display)
+        return view('livewire.activity-list', compact('groupedActivities', 'activities'));
+    }
+
+    private function getFilteredActivitiesQuery(): Builder
+    {
         $query = Activity::query();
-        
-        // Apply Visibility Scope
+
         if (auth()->check()) {
-            // $query->visibleToUser(auth()->user()); // Removed per user request: lists show all
+            $query->visibleToUser(auth()->user());
         }
 
         $query->where('start_date', '>=', now()->startOfDay())
@@ -191,15 +219,36 @@ class ActivityList extends Component
             });
         }
 
-        // Use pagination instead of getting all records
-        $activities = $query->paginate(15);
+        return $query;
+    }
 
-        // Group the records on the current page
-        $groupedActivities = $activities->getCollection()->groupBy(function($item) {
-            return $item->start_date->isoFormat('MMMM Y');
-        });
+    private function getCurrentPageActivityIds(): array
+    {
+        return $this->getFilteredActivitiesQuery()
+            ->paginate($this->perPage, ['activities.id'], 'page', $this->getPage())
+            ->getCollection()
+            ->pluck('id')
+            ->map(fn($id) => (string) $id)
+            ->values()
+            ->all();
+    }
 
-        // Pass both the paginated object (for links) and the grouped collection (for display)
-        return view('livewire.activity-list', compact('groupedActivities', 'activities'));
+    private function syncSelectAllState(?array $currentPageIds = null): void
+    {
+        $currentPageIds ??= $this->getCurrentPageActivityIds();
+
+        $this->selectAll = !empty($currentPageIds)
+            && empty(array_diff($currentPageIds, $this->normalizeSelectedIds($this->selected)));
+    }
+
+    private function resetSelectionState(): void
+    {
+        $this->selected = [];
+        $this->selectAll = false;
+    }
+
+    private function normalizeSelectedIds(array $selected): array
+    {
+        return array_values(array_unique(array_map('strval', $selected)));
     }
 }

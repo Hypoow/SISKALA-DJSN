@@ -96,52 +96,89 @@
             </div>
 
             <!-- Toolbar & Filters -->
-            <div class="bg-light border-bottom p-3" style="position: relative; z-index: 100; overflow: visible;">
-                <div class="row align-items-center" style="overflow: visible;">
-                    <div class="col-md-3 mb-2 mb-md-0">
-                        <div class="input-group input-group-merge input-group-premium bg-white">
-                            <input type="text" class="form-control border-0 pl-4 bg-transparent" wire:model.live.debounce.300ms="search" placeholder="Cari kegiatan...">
+        <style>
+            .custom-dropdown-menu {
+                padding: 0.5rem !important;
+                border: 1px solid #edf2f7 !important;
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+                border-radius: 0.5rem !important;
+            }
+            .custom-dropdown-item {
+                border-radius: 0.375rem !important;
+                padding: 0.5rem 1rem !important;
+                color: #4a5568 !important;
+                font-size: 0.95rem;
+                transition: all 0.2s ease-in-out;
+                margin-bottom: 2px;
+                background-color: transparent;
+            }
+            .custom-dropdown-item:last-child {
+                margin-bottom: 0;
+            }
+            .custom-dropdown-item:hover, .custom-dropdown-item:focus {
+                background-color: #f7fafc !important;
+                color: #2b6cb0 !important;
+                transform: translateX(4px);
+            }
+            .custom-dropdown-item.bg-primary {
+                background-color: #0052cc !important; 
+                color: white !important;
+                transform: none;
+            }
+        </style>
+        <div class="bg-light border-bottom p-3" style="position: relative; z-index: 100; overflow: visible;">
+            <div class="row align-items-center mx-n1" style="overflow: visible;">
+                    <!-- Search -->
+                    <div class="col-12 col-md-3 px-1 mb-2 mb-md-0">
+                        <div class="input-group input-group-merge bg-white shadow-sm rounded-pill overflow-hidden" style="border: 1px solid #e2e8f0;">
+                            <input type="text" class="form-control border-0 pl-4 bg-transparent py-2" wire:model.live.debounce.300ms="search" placeholder="Cari kegiatan..." style="box-shadow: none;">
                             <div class="input-group-append">
                                 <div class="input-group-text border-0 bg-transparent pr-4"><i class="fe fe-search text-muted"></i></div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-2 mb-2 mb-md-0" x-data="{ open: false }" @click.away="open = false" style="position: relative; z-index: 1050; overflow: visible;">
+
+                    <!-- Type -->
+                    <div class="col-12 col-md-2 px-1 mb-2 mb-md-0" x-data="{ open: false }" @click.away="open = false">
                         <div class="position-relative">
-                            <button type="button" @click="open = !open" class="form-control-premium shadow-sm text-left d-flex align-items-center justify-content-between" style="background-image: none; height: auto;">
-                                <span class="text-truncate" x-text="$wire.type === 'external' ? 'Eksternal' : ($wire.type === 'internal' ? 'Internal' : 'Tipe Kegiatan')">Tipe Kegiatan</span>
-                                <i class="fe fe-chevron-down ml-2 header-arrow" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
+                            <button type="button" @click="open = !open" class="btn bg-white w-100 shadow-sm text-left d-flex align-items-center justify-content-between px-3 rounded-pill" style="border: 1px solid #e2e8f0; height: 38px;">
+                                <span class="text-truncate font-weight-bold text-dark" style="font-size: 0.9rem;" x-text="$wire.type === 'external' ? 'Eksternal' : ($wire.type === 'internal' ? 'Internal' : 'Tipe Kegiatan')">Tipe Kegiatan</span>
+                                <i class="fe fe-chevron-down ml-1 text-muted" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
                             </button>
-                            <div class="dropdown-menu-premium shadow-lg w-100" x-show="open" x-transition style="display: none; max-height: 250px; overflow-y: auto; position: absolute; top: 100%; left: 0; z-index: 1060;">
-                                <div class="dropdown-item-premium" :class="{ 'active': $wire.type === '' }" @click="$wire.set('type', ''); open = false">Semua</div>
-                                <div class="dropdown-item-premium" :class="{ 'active': $wire.type === 'internal' }" @click="$wire.set('type', 'internal'); open = false">Internal</div>
-                                <div class="dropdown-item-premium" :class="{ 'active': $wire.type === 'external' }" @click="$wire.set('type', 'external'); open = false">Eksternal</div>
+                            <div class="dropdown-menu custom-dropdown-menu shadow-lg w-100 rounded-lg mt-1" :class="{ 'd-block': open }" x-show="open" x-transition style="display: none; position: absolute; z-index: 1050;">
+                                <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.type === '' }" @click="$wire.set('type', ''); open = false">Semua</button>
+                                <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.type === 'internal' }" @click="$wire.set('type', 'internal'); open = false">Internal</button>
+                                <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.type === 'external' }" @click="$wire.set('type', 'external'); open = false">Eksternal</button>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3 mb-2 mb-md-0" x-data="{ open: false }" @click.away="open = false" style="position: relative; z-index: 1049; overflow: visible;">
+
+                    <!-- Sort -->
+                    <div class="col-12 col-md-3 px-1 mb-2 mb-md-0" x-data="{ open: false }" @click.away="open = false">
                         <div class="position-relative">
-                            <button type="button" @click="open = !open" class="form-control-premium shadow-sm text-left d-flex align-items-center justify-content-between" style="background-image: none; height: auto;">
-                                <span class="text-truncate" x-text="$wire.sortDirection === 'asc' ? 'Waktu Terdekat' : 'Waktu Terjauh'">Waktu Terdekat</span>
-                                <i class="fe fe-chevron-down ml-2 header-arrow" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
+                            <button type="button" @click="open = !open" class="btn bg-white w-100 shadow-sm text-left d-flex align-items-center justify-content-between px-3 rounded-pill" style="border: 1px solid #e2e8f0; height: 38px;">
+                                <span class="text-truncate font-weight-bold text-dark" style="font-size: 0.9rem;" x-text="$wire.sortDirection === 'asc' ? 'Waktu Terdekat' : 'Waktu Terjauh'">Waktu Terdekat</span>
+                                <i class="fe fe-chevron-down ml-1 text-muted flex-shrink-0" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
                             </button>
-                            <div class="dropdown-menu-premium shadow-lg w-100" x-show="open" x-transition style="display: none; max-height: 250px; overflow-y: auto; position: absolute; top: 100%; left: 0; z-index: 1060;">
-                                <div class="dropdown-item-premium" :class="{ 'active': $wire.sortDirection === 'asc' }" @click="$wire.set('sortDirection', 'asc'); open = false">Waktu Terdekat</div>
-                                <div class="dropdown-item-premium" :class="{ 'active': $wire.sortDirection === 'desc' }" @click="$wire.set('sortDirection', 'desc'); open = false">Waktu Terjauh</div>
+                            <div class="dropdown-menu custom-dropdown-menu shadow-lg w-100 rounded-lg mt-1 dropdown-menu-md-right" :class="{ 'd-block': open }" x-show="open" x-transition style="display: none; position: absolute; z-index: 1050;">
+                                <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.sortDirection === 'asc' }" @click="$wire.set('sortDirection', 'asc'); open = false">Waktu Terdekat</button>
+                                <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.sortDirection === 'desc' }" @click="$wire.set('sortDirection', 'desc'); open = false">Waktu Terjauh</button>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4 text-right">
-                        <div class="d-inline-flex align-items-center bg-white rounded-pill px-3 py-2 shadow-sm border">
-                            <span class="mr-2 small text-muted font-weight-bold">Ket:</span>
-                            <div class="d-flex align-items-center mr-3">
-                                <span class="rounded-circle mr-1" style="width: 10px; height: 10px; background-color: #004085;"></span>
-                                <span class="small font-weight-bold text-dark">Internal</span>
-                            </div>
-                            <div class="d-flex align-items-center">
-                                <span class="rounded-circle mr-1" style="width: 10px; height: 10px; background-color: #17a2b8;"></span>
-                                <span class="small font-weight-bold text-dark">Eksternal</span>
-                            </div>
+
+                    <!-- Legends -->
+                    <div class="col-12 col-md-4 px-1 text-md-right mb-0">
+                        <div class="d-flex align-items-center justify-content-center justify-content-md-end w-100 h-100" style="min-height: 38px;">
+                            <span class="mr-2 small text-muted font-weight-bold d-none d-md-inline-block"><i class="fe fe-info mr-1"></i>Keterangan:</span>
+                            <span class="badge badge-pill mr-2 shadow-sm d-flex align-items-center" style="background-color: rgba(0, 64, 133, 0.08); color: #004085; font-size: 0.75rem; padding: 0.35rem 0.7rem; border: 1px solid rgba(0,64,133,0.15); font-weight: 600;">
+                                <span class="rounded-circle mr-2" style="width: 8px; height: 8px; background-color: #004085;"></span>
+                                Internal
+                            </span>
+                            <span class="badge badge-pill shadow-sm d-flex align-items-center" style="background-color: rgba(23, 162, 184, 0.08); color: #0b7a8a; font-size: 0.75rem; padding: 0.35rem 0.7rem; border: 1px solid rgba(23,162,184,0.15); font-weight: 600;">
+                                <span class="rounded-circle mr-2" style="width: 8px; height: 8px; background-color: #17a2b8;"></span>
+                                Eksternal
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -182,11 +219,11 @@
                                 </th>
                                 @endif
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 pl-4">Tanggal & Waktu</th>
-                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Detail Kegiatan</th>
+                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Nama & Lokasi Kegiatan</th>
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Status Pelaksanaan</th>
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Status Undangan</th>
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Surat Undangan</th>
-                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">PIC & Lokasi</th>
+                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">PIC</th>
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Aksi</th>
                             </tr>
                         </thead>
@@ -225,13 +262,35 @@
                                         <a href="{{ route('activities.show', $activity->id) }}" class="text-dark font-weight-bold mb-1 d-block text-decoration-none h6">
                                             {{ $activity->name }}
                                         </a>
-                                        <div class="d-flex align-items-center text-muted small">
-                                            <i class="fe fe-map-pin mr-1" style="color: #EF4444;"></i>
-                                            @if($activity->location_type == 'online')
-                                                <span>Online</span>
-                                            @else
-                                                <span class="text-truncate" style="max-width: 250px;">{{ $activity->location ?? '-' }}</span>
-                                            @endif
+                                        <div class="d-flex align-items-start text-muted mt-2" style="font-size: 0.85rem; line-height: 1.4; max-width: 350px;">
+                                            <div class="mr-2" style="margin-top: 1px;">
+                                                @if($activity->location_type == 'online')
+                                                    <i class="fe fe-video text-primary"></i>
+                                                @elseif($activity->location_type == 'hybrid')
+                                                    <i class="fe fe-monitor text-success"></i>
+                                                @else
+                                                    <i class="fe fe-map-pin text-secondary"></i>
+                                                @endif
+                                            </div>
+                                            <div style="word-break: break-word; white-space: normal;">
+                                                @if($activity->location_type == 'online' && !$activity->location)
+                                                    <span class="text-dark">Pelaksanaan secara daring (tautan tersedia di detail).</span>
+                                                @else
+                                                    <span class="text-dark">{{ $activity->location ?? 'Tidak ada detail lokasi' }}</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        
+                                        {{-- Location Type Badge --}}
+                                        <div class="mt-2 pl-4 ml-2">
+                                            @php
+                                                $locType = $activity->location_type;
+                                                $locClass = $locType == 'online' ? 'bg-primary' : ($locType == 'hybrid' ? 'bg-success' : 'bg-secondary');
+                                                $locIcon = $locType == 'online' ? 'fe-video' : ($locType == 'hybrid' ? 'fe-monitor' : 'fe-map-pin');
+                                            @endphp
+                                            <span class="badge {{ $locClass }} text-white px-3 py-1 shadow-sm" style="font-size: 0.7rem; letter-spacing: 0.5px; border-radius: 50px;">
+                                                <i class="fe {{ $locIcon }} mr-1"></i> {{ strtoupper($locType) }}
+                                            </span>
                                         </div>
                                     </td>
                                     <td class="align-middle text-center">
@@ -285,9 +344,6 @@
                                                 <span class="text-muted small">-</span>
                                             @endif
                                         </div>
-                                        <div>
-                                            <span class="badge text-white px-3" style="background-color: #6c757d;">{{ ucfirst($activity->location_type) }}</span>
-                                        </div>
                                     </td>
                                     <td class="align-middle text-center">
                                         <div class="dropdown">
@@ -330,7 +386,7 @@
                 </div>
                 
                 <div class="p-3 border-top bg-light">
-                     {{ $activities->links() }}
+                     {{ $activities->links('vendor.livewire.custom-pagination') }}
                 </div>
             </div>
         </div>

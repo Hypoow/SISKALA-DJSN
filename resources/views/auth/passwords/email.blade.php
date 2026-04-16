@@ -251,6 +251,70 @@
             height: 16px;
         }
 
+        .helper-links {
+            margin-top: 1rem;
+            display: grid;
+            gap: 0.85rem;
+        }
+
+        .helper-link-card {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            padding: 0.9rem 1rem;
+            border-radius: 14px;
+            text-decoration: none;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 14px 26px -24px rgba(15, 23, 42, 0.35);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .helper-link-card:hover {
+            text-decoration: none;
+            transform: translateY(-1px);
+            border-color: rgba(37, 99, 235, 0.24);
+            box-shadow: 0 20px 30px -24px rgba(37, 99, 235, 0.35);
+        }
+
+        .helper-link-icon {
+            width: 2.4rem;
+            height: 2.4rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            border-radius: 12px;
+            background: var(--primary-soft);
+            color: var(--primary-color);
+        }
+
+        .helper-link-copy {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+            min-width: 0;
+        }
+
+        .helper-link-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #94a3b8;
+        }
+
+        .helper-link-title {
+            color: var(--text-main);
+            font-size: 0.92rem;
+            font-weight: 700;
+        }
+
+        .helper-link-arrow {
+            margin-left: auto;
+            color: #94a3b8;
+        }
+
         .footer {
             margin-top: 3rem;
             text-align: center;
@@ -350,8 +414,8 @@
         <div class="right-panel">
             <div class="form-container">
                 <div class="form-header">
-                    <h2 class="form-title">Lupa Password? 🔒</h2>
-                    <p class="form-subtitle">Jangan khawatir. Masukkan email Anda dan kami akan mengirimkan link untuk mereset password.</p>
+                    <h2 class="form-title">Lupa Password?</h2>
+                    <p class="form-subtitle">Masukkan email Anda dan kami akan mengirimkan link untuk mereset password.</p>
                 </div>
 
                 @if (session('status'))
@@ -367,7 +431,7 @@
                     @csrf
                     
                     <div class="form-group">
-                        <label for="email" class="form-label">Email Address</label>
+                        <label for="email" class="form-label">Alamat Email</label>
                         <div class="input-group">
                             <i class="fe fe-mail input-icon"></i>
                             <input type="email" id="email" name="email" class="form-control" placeholder="Masukkan Email" required autofocus value="{{ old('email') }}">
@@ -385,6 +449,22 @@
                         <a href="{{ route('login') }}" class="back-link">
                             <i class="fe fe-arrow-left"></i>
                             Kembali ke Login
+                        </a>
+                    </div>
+                    <br>
+                    <div class="helper-links">
+                        <br>
+                        <a href="{{ route('developer') }}" class="helper-link-card">
+                            <span class="helper-link-icon" aria-hidden="true">
+                                <i class="fe fe-user"></i>
+                            </span>
+                            <span class="helper-link-copy">
+                                <span class="helper-link-label">Informasi</span>
+                                <span class="helper-link-title">Lihat halaman developer SISKALA</span>
+                            </span>
+                            <span class="helper-link-arrow" aria-hidden="true">
+                                <i class="fe fe-arrow-right"></i>
+                            </span>
                         </a>
                     </div>
                 </form>

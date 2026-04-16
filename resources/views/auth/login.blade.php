@@ -269,6 +269,70 @@
             text-decoration: underline;
         }
 
+        .helper-links {
+            margin-top: 1rem;
+            display: grid;
+            gap: 0.85rem;
+        }
+
+        .helper-link-card {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            padding: 0.9rem 1rem;
+            border-radius: 14px;
+            text-decoration: none;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 14px 26px -24px rgba(15, 23, 42, 0.35);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .helper-link-card:hover {
+            text-decoration: none;
+            transform: translateY(-1px);
+            border-color: rgba(37, 99, 235, 0.24);
+            box-shadow: 0 20px 30px -24px rgba(37, 99, 235, 0.35);
+        }
+
+        .helper-link-icon {
+            width: 2.4rem;
+            height: 2.4rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            border-radius: 12px;
+            background: var(--primary-soft);
+            color: var(--primary-color);
+        }
+
+        .helper-link-copy {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+            min-width: 0;
+        }
+
+        .helper-link-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #94a3b8;
+        }
+
+        .helper-link-title {
+            color: var(--text-main);
+            font-size: 0.92rem;
+            font-weight: 700;
+        }
+
+        .helper-link-arrow {
+            margin-left: auto;
+            color: #94a3b8;
+        }
+
         .btn-primary {
             display: block;
             width: 100%;
@@ -366,9 +430,96 @@
                z-index: 10;
             }
         }
+
+        /* ===== PREMIUM LOADER STYLES ===== */
+        #loader-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .loader-wrapper-hide {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+
+        .loader-content {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loader-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 3px solid transparent;
+            border-top-color: #2563eb; /* Primary Blue from root */
+            border-radius: 50%;
+            animation: spin 1s cubic-bezier(0.5, 0.1, 0.4, 0.9) infinite;
+        }
+
+        .loader-ring::before {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            right: 5px;
+            bottom: 5px;
+            border: 3px solid transparent;
+            border-top-color: #C69749; /* Gold accent */
+            border-radius: 50%;
+            animation: spin 2s linear infinite;
+        }
+
+        .loader-logo {
+            width: 70px;
+            height: 70px;
+            z-index: 10;
+            filter: drop-shadow(0 0 15px rgba(37, 99, 235, 0.2));
+            animation: pulse-logo 2s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse-logo {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.15); opacity: 0.85; }
+        }
+
+        body.loading-active {
+            overflow: hidden !important;
+        }
     </style>
 </head>
-<body>
+<body class="loading-active">
+    <!-- Premium Loader -->
+    <div id="loader-wrapper" class="loader-wrapper-hide">
+        <div class="loader-content">
+            <div class="loader-ring"></div>
+            <img src="{{ asset('images/logo.svg') }}" alt="Loading..." class="loader-logo">
+        </div>
+    </div>
+
     <div class="split-screen">
         <!-- Left Panel: Branding -->
         <div class="left-panel">
@@ -385,8 +536,8 @@
         <div class="right-panel">
             <div class="form-container">
                 <div class="form-header">
-                    <h2 class="form-title">Selamat Datang 👋</h2>
-                    <p class="form-subtitle">Masukkan email dan kata sandi untuk masuk.</p>
+                    <h2 class="form-title">Selamat Datang</h2>
+                    <p class="form-subtitle">Masuk untuk mengakses layanan SISKALA</p>
                 </div>
 
                 <form method="POST" action="{{ route('login') }}">
@@ -433,6 +584,22 @@
                     <button type="submit" class="btn-primary">
                         Login
                     </button>
+                    <br>
+                    <br>
+                    <div class="helper-links">
+                        <a href="{{ route('developer') }}" class="helper-link-card">
+                            <span class="helper-link-icon" aria-hidden="true">
+                                <i class="fe fe-user"></i>
+                            </span>
+                            <span class="helper-link-copy">
+                                <span class="helper-link-label">Informasi</span>
+                                <span class="helper-link-title">Lihat halaman developer SISKALA</span>
+                            </span>
+                            <span class="helper-link-arrow" aria-hidden="true">
+                                <i class="fe fe-arrow-right"></i>
+                            </span>
+                        </a>
+                    </div>
 
                     <div class="footer">
                         &copy; {{ date('Y') }} Dewan Jaminan Sosial Nasional
@@ -446,6 +613,10 @@
     <script src="{{ asset('js/jquery.min.js') }}"></script>
     <script>
         $(document).ready(function() {
+            // Loader Elements
+            const loader = $('#loader-wrapper');
+            const body = $('body');
+
             // Toggle Password Visibility
             $('#showPassword').change(function() {
                 var input = $('#password');
@@ -455,8 +626,16 @@
                     input.attr('type', 'password');
                 }
             });
+
+            // Show loader on form submit
+            $('form').on('submit', function() {
+                loader.removeClass('loader-wrapper-hide');
+                body.addClass('loading-active');
+            });
         });
     </script>
 </body>
 </html>
+
+
 

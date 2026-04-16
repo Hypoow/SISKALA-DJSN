@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Division;
+use App\Models\Position;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Str;
 
 class MasterDataController extends Controller
 {
@@ -15,100 +18,127 @@ class MasterDataController extends Controller
     {
         $this->middleware('auth');
         $this->middleware(function ($request, $next) {
-            if (Auth::user()->role !== 'admin') {
+            $user = Auth::user();
+
+            if ($request->routeIs('master-data.topics')) {
+                if (!$user->canManageTopics() && !$user->canAccessAdminArea()) {
+                    abort(403, 'Akses ditolak.');
+                }
+
+                return $next($request);
+            }
+
+            if (!$user->canAccessAdminArea()) {
                 abort(403, 'Akses ditolak.');
             }
+
             return $next($request);
         });
     }
 
     public function index()
     {
-        $users = User::orderBy('order', 'asc') // Prioritize custom drag-and-drop order
-            ->orderByRaw("CASE 
-            WHEN role = 'admin' THEN 1 
-            WHEN role = 'DJSN' THEN 2
-            WHEN role = 'Tata Usaha' THEN 3
-            WHEN role = 'Persidangan' THEN 4
-            WHEN role = 'Bagian Umum' THEN 5
-            WHEN role = 'Dewan' THEN 6
-            ELSE 7 END")
-            ->orderBy('name', 'asc')
-            ->get();
+        $users = User::with(['division', 'position'])->get();
 
-        // Grouping Logic (Identical to ActivityController + Admin/User fallback)
-        $groupedUsers = $users->groupBy(function($user) {
-             if (in_array($user->role, ['Dewan', 'TA', 'Persidangan'])) {
-                $divisi = strtoupper($user->divisi ?? '');
-                
-                // Simplified 3-tier Dewan Grouping
-                if (str_contains($divisi, 'KETUA DJSN')) return 'Ketua DJSN';
-                if (str_contains($divisi, 'PME')) return 'Komisi PME';
-                if (str_contains($divisi, 'KOMJAKUM') || str_contains($divisi, 'KEBIJAKAN')) return 'KOMJAKUM';
-                
-                // Fallbacks
-                if ($user->role === 'Dewan') return 'Anggota Dewan Lainnya';
-            }
-
-            if ($user->role === 'admin') return 'Admin Utama';
-            if ($user->role === 'DJSN') return 'Sekretariat DJSN'; // Generic Label for specific role
-            if ($user->role === 'Persidangan') return 'Persidangan'; // Fallback for General Persidangan
-            
-            // Fallback for others by Role Name
-            return $user->role;
+        $sortedUsers = $users->sortBy(function (User $user) {
+            return sprintf(
+                '%03d-%05d-%s',
+                $user->management_sort_order,
+                $user->order ?? 99999,
+                mb_strtolower($user->name)
+            );
         });
 
-        // Define Priority Order for Groups
-        $groupPriority = [
-            'Admin Utama' => 0,
-            'Ketua DJSN' => 1,
-            'Komisi PME' => 2,
-            'KOMJAKUM' => 3,
-            'Anggota Dewan Lainnya' => 4,
-            'Sekretariat DJSN' => 5, // Access Level 1
-            'Tata Usaha' => 6,
-            'Persidangan' => 7,
-            'Bagian Umum' => 8,
-            'User' => 9
-        ];
-
-        // Sort the Groups
-        $groupedUsers = $groupedUsers->sortBy(function($items, $key) use ($groupPriority) {
-            return $groupPriority[$key] ?? 99;
-        });
+        $groupedUsers = $sortedUsers
+            ->groupBy(fn (User $user) => $user->management_group_label)
+            ->sortBy(function ($items, $key) {
+                return optional($items->first())->management_sort_order ?? 99;
+            });
             
         $divisions = Division::orderBy('category')->orderBy('order')->get();
+        $positions = Position::orderBy('order')->get();
             
-        return view('master-data.index', compact('groupedUsers', 'divisions'));
+        return view('master-data.index', compact('groupedUsers', 'divisions', 'positions'));
     }
 
     public function topics()
     {
+        abort_unless(Auth::user()->canManageTopics() || Auth::user()->canAccessAdminArea(), 403, 'Akses ditolak.');
+
         return view('master-data.topics');
     }
 
+    public function create()
+    {
+        $divisions = Division::orderBy('category')->orderBy('order')->get();
+        $positions = Position::orderBy('order')->get();
+        $accessProfiles = User::accessProfileOptions();
+        $commissionOptions = User::commissionOptions();
+        $divisionStructureGroups = Division::structureGroupOptions();
+        $positionStructureGroups = User::structureGroupOptions();
 
+        return view('master-data.account-create', compact(
+            'divisions',
+            'positions',
+            'accessProfiles',
+            'commissionOptions',
+            'divisionStructureGroups',
+            'positionStructureGroups'
+        ));
+    }
+
+    public function edit(User $user)
+    {
+        $divisions = Division::orderBy('category')->orderBy('order')->get();
+        $positions = Position::orderBy('order')->get();
+        $accessProfiles = User::accessProfileOptions();
+        $commissionOptions = User::commissionOptions();
+        $divisionStructureGroups = Division::structureGroupOptions();
+        $positionStructureGroups = User::structureGroupOptions();
+
+        return view('master-data.account-edit', compact(
+            'user',
+            'divisions',
+            'positions',
+            'accessProfiles',
+            'commissionOptions',
+            'divisionStructureGroups',
+            'positionStructureGroups'
+        ));
+    }
     public function store(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
-            'role' => ['required', Rule::in(User::ROLES)],
+            'role' => ['nullable', Rule::in(User::ROLES)],
+            'is_super_admin' => 'nullable|boolean',
             'division_id' => 'nullable|exists:divisions,id',
+            'position_id' => 'nullable|exists:positions,id',
             'prefix' => 'nullable|string|max:20',
+            'report_target_label' => 'nullable|string|max:255',
+            'receives_disposition' => 'nullable|boolean',
+            'disposition_group_label' => 'nullable|string|max:255',
         ]);
+
+        $division = $request->filled('division_id') ? Division::find($request->division_id) : null;
+        $position = $request->filled('position_id') ? Position::find($request->position_id) : null;
 
         User::create([
             'name' => $request->name,
             'prefix' => $request->prefix ?? 'Bapak',
+            'report_target_label' => $request->filled('report_target_label') ? $request->report_target_label : null,
+            'receives_disposition' => $this->normalizeNullableBoolean($request->input('receives_disposition')),
+            'disposition_group_label' => $request->filled('disposition_group_label') ? $request->disposition_group_label : null,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => $request->role,
+            'role' => $this->resolveRequestedUserRole($request, $division, $position),
             'division_id' => $request->division_id,
+            'position_id' => $request->position_id,
             // Mirror to divisi for backward compatibility if needed, 
             // but we'll transition to division_id
-            'divisi' => Division::find($request->division_id)?->name,
+            'divisi' => $division?->name,
         ]);
 
         return redirect()->route('master-data.index')->with('success', 'Akun berhasil dibuat.');
@@ -119,9 +149,14 @@ class MasterDataController extends Controller
         $rules = [
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'role' => ['required', Rule::in(User::ROLES)],
+            'role' => ['nullable', Rule::in(User::ROLES)],
+            'is_super_admin' => 'nullable|boolean',
             'division_id' => 'nullable|exists:divisions,id',
+            'position_id' => 'nullable|exists:positions,id',
             'prefix' => 'nullable|string|max:20',
+            'report_target_label' => 'nullable|string|max:255',
+            'receives_disposition' => 'nullable|boolean',
+            'disposition_group_label' => 'nullable|string|max:255',
         ];
         
         if ($request->filled('password')) {
@@ -130,13 +165,20 @@ class MasterDataController extends Controller
         
         $request->validate($rules);
 
+        $division = $request->filled('division_id') ? Division::find($request->division_id) : null;
+        $position = $request->filled('position_id') ? Position::find($request->position_id) : null;
+
         $data = [
             'name' => $request->name,
             'email' => $request->email,
-            'role' => $request->role,
+            'role' => $this->resolveRequestedUserRole($request, $division, $position, $user),
             'division_id' => $request->division_id,
-            'divisi' => Division::find($request->division_id)?->name,
+            'position_id' => $request->position_id,
+            'divisi' => $division?->name,
             'prefix' => $request->prefix ?? 'Bapak',
+            'report_target_label' => $request->filled('report_target_label') ? $request->report_target_label : null,
+            'receives_disposition' => $this->normalizeNullableBoolean($request->input('receives_disposition')),
+            'disposition_group_label' => $request->filled('disposition_group_label') ? $request->disposition_group_label : null,
         ];
 
         if ($request->filled('password')) {
@@ -182,8 +224,8 @@ class MasterDataController extends Controller
         }
 
         // Prevent deleting Admin Utama
-        if ($user->role === 'admin' || $user->id === 1) {
-            return redirect()->route('master-data.index')->with('error', 'Akun Admin Utama tidak dapat dihapus.');
+        if ($user->isSuperAdmin() || $user->id === 1) {
+            return redirect()->route('master-data.index')->with('error', 'Akun Super Admin tidak dapat dihapus.');
         }
 
         $user->delete();
@@ -194,61 +236,325 @@ class MasterDataController extends Controller
 
     public function divisions()
     {
-        $divisions = Division::orderBy('category')
+        $divisions = Division::withCount('users')
+            ->orderBy('category')
             ->orderBy('order', 'asc')
             ->get();
-            
-        return view('master-data.divisions', compact('divisions'));
+
+        $positions = Position::withCount('users')
+            ->orderBy('order', 'asc')
+            ->orderBy('name')
+            ->get();
+
+        $accessProfiles = User::accessProfileOptions();
+        $commissionOptions = User::commissionOptions();
+        $structureGroups = User::structureGroupOptions();
+        $divisionStructureGroups = Division::structureGroupOptions();
+        $groupedDivisions = collect($divisionStructureGroups)->mapWithKeys(fn ($label, $key) => [
+            $key => $divisions->where('structure_group', $key)->values(),
+        ]);
+        $groupedPositions = collect($structureGroups)->mapWithKeys(fn ($label, $key) => [
+            $key => $positions->where('structure_group', $key)->values(),
+        ]);
+
+        return view('master-data.builder', compact(
+            'divisions',
+            'positions',
+            'accessProfiles',
+            'commissionOptions',
+            'structureGroups',
+            'divisionStructureGroups',
+            'groupedDivisions',
+            'groupedPositions'
+        ));
     }
 
     public function storeDivision(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'category' => 'required|in:Ketua DJSN,Komisi,Sekretariat DJSN',
-            'order' => 'nullable|integer'
+            'short_label' => 'nullable|string|max:255',
+            'structure_group' => ['required', Rule::in(array_keys(Division::structureGroupOptions()))],
+            'access_profile' => ['required', Rule::in(array_keys(User::accessProfileOptions()))],
+            'commission_code' => 'nullable|string|max:255',
+            'is_commission' => 'nullable|boolean',
+            'description' => 'nullable|string|max:255',
+            'order' => 'nullable|integer',
         ]);
 
-        Division::create($request->all());
+        $divisionData = $this->resolveDivisionPayload($request);
 
-        return redirect()->back()->with('success', 'Jabatan berhasil ditambahkan.');
+        Division::create($divisionData);
+
+        return redirect()->back()->with('success', 'Unit kerja berhasil ditambahkan.');
     }
 
     public function updateDivision(Request $request, Division $division)
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'category' => 'required|in:Ketua DJSN,Komisi,Sekretariat DJSN',
-            'order' => 'nullable|integer'
+            'short_label' => 'nullable|string|max:255',
+            'structure_group' => ['required', Rule::in(array_keys(Division::structureGroupOptions()))],
+            'access_profile' => ['required', Rule::in(array_keys(User::accessProfileOptions()))],
+            'commission_code' => 'nullable|string|max:255',
+            'is_commission' => 'nullable|boolean',
+            'description' => 'nullable|string|max:255',
+            'order' => 'nullable|integer',
         ]);
 
-        $division->update($request->all());
+        $division->update($this->resolveDivisionPayload($request, $division));
 
-        return redirect()->back()->with('success', 'Jabatan berhasil diperbarui.');
+        return redirect()->back()->with('success', 'Unit kerja berhasil diperbarui.');
     }
 
     public function destroyDivision(Division $division)
     {
         // Check if any users are using this division
         if ($division->users()->count() > 0) {
-            return redirect()->back()->with('error', 'Jabatan ini tidak dapat dihapus karena masih digunakan oleh pengguna.');
+            return redirect()->back()->with('error', 'Unit kerja ini tidak dapat dihapus karena masih digunakan oleh pengguna.');
         }
 
         $division->delete();
-        return redirect()->back()->with('success', 'Jabatan berhasil dihapus.');
+        return redirect()->back()->with('success', 'Unit kerja berhasil dihapus.');
     }
 
     public function reorderDivision(Request $request)
     {
-        $request->validate([
-            'order' => 'required|array',
-            'order.*' => 'exists:divisions,id',
-        ]);
+        $request->validate(['order' => 'required|array']);
 
-        foreach ($request->order as $index => $id) {
-            Division::where('id', $id)->update(['order' => $index]);
+        foreach ($request->order as $index => $item) {
+            $id = is_array($item) ? ($item['id'] ?? null) : $item;
+            $structureGroup = is_array($item) ? ($item['structure_group'] ?? null) : null;
+
+            if (!$id || !Division::whereKey($id)->exists()) {
+                continue;
+            }
+
+            $payload = ['order' => $index];
+
+            if ($structureGroup && array_key_exists($structureGroup, Division::structureGroupOptions())) {
+                $payload['structure_group'] = $structureGroup;
+                $payload['category'] = Division::legacyCategoryFor(
+                    $structureGroup,
+                    (bool) Division::whereKey($id)->value('is_commission'),
+                    Division::whereKey($id)->value('name')
+                );
+            }
+
+            Division::where('id', $id)->update($payload);
         }
 
         return response()->json(['success' => true]);
+    }
+
+    public function storePosition(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'structure_group' => ['required', Rule::in(array_keys(User::structureGroupOptions()))],
+            'access_profile' => ['nullable', Rule::in(array_keys(User::accessProfileOptions()))],
+            'order' => 'nullable|integer',
+            'receives_disposition' => 'required|boolean',
+            'disposition_group_label' => 'nullable|string|max:255',
+            'report_target_label' => 'nullable|string|max:255',
+        ]);
+
+        Position::create([
+            'name' => $request->name,
+            'code' => $this->generateUniquePositionCode($request->name),
+            'structure_group' => $request->structure_group,
+            'access_profile' => $request->filled('access_profile') ? $request->access_profile : null,
+            'order' => $request->input('order', 0),
+            'receives_disposition' => $this->normalizeNullableBoolean($request->input('receives_disposition')),
+            'disposition_group_label' => $request->filled('disposition_group_label') ? $request->disposition_group_label : null,
+            'report_target_label' => $request->filled('report_target_label') ? $request->report_target_label : null,
+        ]);
+
+        return redirect()->back()->with('success', 'Jabatan berhasil ditambahkan.');
+    }
+
+    public function updatePosition(Request $request, Position $position)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'structure_group' => ['required', Rule::in(array_keys(User::structureGroupOptions()))],
+            'access_profile' => ['nullable', Rule::in(array_keys(User::accessProfileOptions()))],
+            'order' => 'nullable|integer',
+            'receives_disposition' => 'required|boolean',
+            'disposition_group_label' => 'nullable|string|max:255',
+            'report_target_label' => 'nullable|string|max:255',
+        ]);
+
+        $position->update([
+            'name' => $request->name,
+            'structure_group' => $request->structure_group,
+            'access_profile' => $request->filled('access_profile') ? $request->access_profile : null,
+            'order' => $request->input('order', 0),
+            'receives_disposition' => $this->normalizeNullableBoolean($request->input('receives_disposition')),
+            'disposition_group_label' => $request->filled('disposition_group_label') ? $request->disposition_group_label : null,
+            'report_target_label' => $request->filled('report_target_label') ? $request->report_target_label : null,
+        ]);
+
+        return redirect()->back()->with('success', 'Jabatan berhasil diperbarui.');
+    }
+
+    public function destroyPosition(Position $position)
+    {
+        if ($position->users()->count() > 0) {
+            return redirect()->back()->with('error', 'Jabatan ini tidak dapat dihapus karena masih digunakan oleh pengguna.');
+        }
+
+        $position->delete();
+
+        return redirect()->back()->with('success', 'Jabatan berhasil dihapus.');
+    }
+
+    public function reorderPosition(Request $request)
+    {
+        $request->validate(['order' => 'required|array']);
+
+        foreach ($request->order as $index => $item) {
+            $id = is_array($item) ? ($item['id'] ?? null) : $item;
+            $structureGroup = is_array($item) ? ($item['structure_group'] ?? null) : null;
+
+            if (!$id || !Position::whereKey($id)->exists()) {
+                continue;
+            }
+
+            $payload = ['order' => $index];
+
+            if ($structureGroup && array_key_exists($structureGroup, User::structureGroupOptions())) {
+                $payload['structure_group'] = $structureGroup;
+            }
+
+            Position::where('id', $id)->update($payload);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    private function normalizeNullableBoolean($value): ?bool
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+    }
+
+    private function resolveRequestedUserRole(
+        Request $request,
+        ?Division $division = null,
+        ?Position $position = null,
+        ?User $existingUser = null
+    ): string {
+        if ($request->boolean('is_super_admin')) {
+            return User::ROLE_SUPER_ADMIN;
+        }
+
+        if ($request->filled('role')) {
+            return $request->role;
+        }
+
+        $profile = trim((string) ($position?->access_profile ?: $division?->access_profile));
+
+        if ($profile !== '') {
+            return User::legacyRoleFromAccessProfile($profile);
+        }
+
+        return $existingUser?->role ?: User::ROLE_USER;
+    }
+
+    private function resolveDivisionPayload(Request $request, ?Division $division = null): array
+    {
+        $structureGroup = $request->input('structure_group');
+        $isCommission = $request->boolean('is_commission');
+        $name = trim((string) $request->name);
+        $shortLabel = trim((string) $request->input('short_label', ''));
+        $commissionCode = $this->resolveDivisionCommissionCode(
+            $request->input('commission_code'),
+            $shortLabel !== '' ? $shortLabel : $name,
+            $isCommission,
+            $structureGroup
+        );
+
+        if ($isCommission && $commissionCode === null) {
+            throw ValidationException::withMessages([
+                'commission_code' => 'Unit komisi wajib memiliki kode komisi yang valid.',
+            ]);
+        }
+
+        if (
+            !$isCommission
+            && $commissionCode !== null
+            && !array_key_exists($commissionCode, Division::commissionOptions())
+        ) {
+            throw ValidationException::withMessages([
+                'commission_code' => 'Komisi acuan belum terdaftar di master struktur.',
+            ]);
+        }
+
+        if ($isCommission) {
+            $duplicateCommission = Division::query()
+                ->commissionDefinitions()
+                ->where('commission_code', $commissionCode)
+                ->when($division, fn ($query) => $query->where('id', '!=', $division->id))
+                ->exists();
+
+            if ($duplicateCommission) {
+                throw ValidationException::withMessages([
+                    'commission_code' => 'Kode komisi sudah dipakai oleh komisi Dewan lain.',
+                ]);
+            }
+        }
+
+        return [
+            'name' => $name,
+            'short_label' => $shortLabel !== '' ? $shortLabel : null,
+            'category' => Division::legacyCategoryFor($structureGroup, $isCommission, $name),
+            'structure_group' => $structureGroup,
+            'access_profile' => $request->access_profile,
+            'commission_code' => $commissionCode,
+            'description' => $request->filled('description') ? $request->description : null,
+            'is_commission' => $isCommission,
+            'order' => $request->input('order', 0),
+        ];
+    }
+
+    private function resolveDivisionCommissionCode(
+        ?string $requestedCode,
+        ?string $label,
+        bool $isCommission,
+        ?string $structureGroup
+    ): ?string {
+        if ($isCommission) {
+            return Division::normalizeCommissionCode($requestedCode ?: $label);
+        }
+
+        if (!in_array($structureGroup, [Division::STRUCTURE_GROUP_DEWAN, Division::STRUCTURE_GROUP_SUPPORT], true)) {
+            return null;
+        }
+
+        return Division::normalizeCommissionCode($requestedCode);
+    }
+
+    private function generateUniquePositionCode(string $name): string
+    {
+        $baseCode = Str::of($name)
+            ->trim()
+            ->lower()
+            ->replaceMatches('/[^a-z0-9]+/u', '_')
+            ->trim('_')
+            ->value();
+
+        $baseCode = $baseCode !== '' ? $baseCode : 'jabatan';
+        $code = $baseCode;
+        $counter = 2;
+
+        while (Position::where('code', $code)->exists()) {
+            $code = $baseCode . '_' . $counter++;
+        }
+
+        return $code;
     }
 }

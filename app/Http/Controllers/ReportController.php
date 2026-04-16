@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Activity;
+use App\Models\User;
 use Carbon\Carbon;
 
 class ReportController extends Controller
@@ -15,6 +16,8 @@ class ReportController extends Controller
 
     public function index(Request $request)
     {
+        abort_unless(auth()->user()->canAccessH1Report(), 403, 'Anda tidak memiliki hak akses untuk pelaporan H-1.');
+
         // Default to tomorrow to tomorrow if not specified
         $startDateStr = $request->input('start_date', Carbon::tomorrow()->format('Y-m-d'));
         $endDateStr = $request->input('end_date', Carbon::tomorrow()->format('Y-m-d'));
@@ -72,6 +75,18 @@ class ReportController extends Controller
             $text .= "Tidak ada kegiatan terjadwal pada periode tersebut.\n";
             return $text;
         }
+
+        $allDispositionNames = $activities
+            ->pluck('disposition_to')
+            ->filter(fn ($names) => is_array($names) && !empty($names))
+            ->flatten()
+            ->unique()
+            ->values();
+
+        $dispositionUsers = User::with('division')
+            ->whereIn('name', $allDispositionNames)
+            ->get()
+            ->keyBy('name');
 
         foreach ($activities as $index => $activity) {
             $num = $index + 1;
@@ -157,22 +172,25 @@ class ReportController extends Controller
             
             $text .= "\n";
             
-            // Disposition/PIC
             // "Kegiatan ditujukan untuk :"
-            // Check `disposition_to` (Dewan) and `pic` (Internal/External)
-            $targets = [];
-            
-            // Include Dewan Dispositions
-            if (!empty($activity->disposition_to)) {
-                $targets = array_merge($targets, $activity->disposition_to);
-            }
-            
-            // Include Internal PICs (e.g. "Tim Sekretariat")
-            if (!empty($activity->pic)) {
-                 $targets = array_merge($targets, $activity->pic);
-            }
+            $targetOverride = trim((string) ($activity->report_target_override ?? ''));
+            if ($targetOverride !== '') {
+                $targetStr = $targetOverride;
+            } else {
+                $targets = [];
+                if (!empty($activity->disposition_to) && is_array($activity->disposition_to)) {
+                    foreach ($activity->disposition_to as $targetName) {
+                        $user = $dispositionUsers->get($targetName);
+                        $targetLabel = $this->resolveReportTargetLabel($user, $targetName);
 
-            $targetStr = empty($targets) ? '-' : implode(', ', array_unique($targets));
+                        if ($targetLabel !== null && !in_array($targetLabel, $targets, true)) {
+                            $targets[] = $targetLabel;
+                        }
+                    }
+                }
+
+                $targetStr = empty($targets) ? '-' : implode(', ', $targets);
+            }
             
             // Fix "Bapak/Ibu" prefix if needed? 
             // User example: "Bapak Niko, Bapak Agus..."
@@ -186,5 +204,14 @@ class ReportController extends Controller
         $text .= "Demikian disampaikan, terima kasih.";
         
         return $text;
+    }
+
+    private function resolveReportTargetLabel(?User $user, string $fallbackName): ?string
+    {
+        if (!$user) {
+            return $fallbackName;
+        }
+
+        return $user->resolved_report_target_label ?? $fallbackName;
     }
 }
