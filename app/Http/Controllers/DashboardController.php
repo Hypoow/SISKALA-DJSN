@@ -59,8 +59,8 @@ class DashboardController extends Controller
                     'meeting_link' => $activity->meeting_link,
                     'meeting_id' => $activity->meeting_id,
                     'passcode' => $activity->passcode,
-                    'pic' => $activity->disposition_groups ?? $activity->pic, // Prefer computed groups
-                    'pic_details' => collect($activity->disposition_groups)->mapWithKeys(function ($group) use ($activity) {
+                    'pic' => $activity->display_pic_groups,
+                    'pic_details' => collect($activity->display_pic_groups)->mapWithKeys(function ($group) use ($activity) {
                         return [$group => $activity->getDispositionGroupMembers($group)];
                     })->toArray(),
                     'description' => $activity->dispo_note ?? '-',

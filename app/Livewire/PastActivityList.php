@@ -7,10 +7,18 @@ use App\Models\Activity;
 use Illuminate\Support\Facades\Storage;
 
 use Livewire\WithFileUploads;
+use Livewire\WithPagination;
 
 class PastActivityList extends Component
 {
-    use WithFileUploads;
+    use WithFileUploads, WithPagination;
+
+    public $perPage = 10;
+
+    public function updatingPerPage()
+    {
+        $this->resetPage();
+    }
 
     public $search = '';
     public $type = '';
@@ -228,7 +236,7 @@ class PastActivityList extends Component
     public $selectedSekretariat = []; // Manual Staff input
     public $selectedTA = []; // Manual Staff input
     public $documentationPhotos = [];
-    public $maxPhotos = 4;
+    public $maxPhotos = 8;
     public $newAssignmentFile = null;
     public $newAttachmentFile = null; 
     public $isModalOpen = false;
@@ -581,9 +589,13 @@ class PastActivityList extends Component
             $activity = Activity::find($this->activeActivityId);
             $currentCount = $activity->documentations()->count();
             $newCount = count($this->documentationPhotos);
+            if (($currentCount + $newCount) < 4) {
+                $this->addError('documentationPhotos', "Total dokumentasi kegiatan minimal harus 4 foto.");
+                return;
+            }
 
             if (($currentCount + $newCount) > $this->maxPhotos) {
-                $this->addError('documentationPhotos', "Maksimal {$this->maxPhotos} foto diperbolehkan.");
+                $this->addError('documentationPhotos', "Total dokumentasi tidak boleh melebihi {$this->maxPhotos} foto (Saat ini: {$currentCount} foto).");
                 return;
             }
 
@@ -664,7 +676,7 @@ class PastActivityList extends Component
         }
 
         // Use pagination
-        $activities = $query->paginate(15);
+        $activities = $query->paginate($this->perPage);
 
         // Group the records on the current page
         $groupedActivities = $activities->getCollection()->groupBy(function($item) {

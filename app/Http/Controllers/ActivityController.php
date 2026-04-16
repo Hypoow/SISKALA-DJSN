@@ -160,8 +160,12 @@ class ActivityController extends Controller
         $currentCount = $activity->documentations()->count();
         $newCount = is_array($request->file('file_path')) ? count($request->file('file_path')) : 1;
 
-        if (($currentCount + $newCount) > 4) {
-            return redirect()->back()->with('error', 'Maksimal total 4 foto dokumentasi per kegiatan.');
+        if (($currentCount + $newCount) < 4) {
+             return redirect()->back()->with('error', 'Total dokumentasi kegiatan minimal harus 4 foto.');
+        }
+
+        if (($currentCount + $newCount) > 8) {
+            return redirect()->back()->with('error', 'Total dokumentasi tidak boleh melebihi 8 foto (Saat ini: ' . $currentCount . ' foto).');
         }
 
         if ($request->hasFile('file_path')) {
@@ -342,43 +346,7 @@ class ActivityController extends Controller
 
     public function show(Activity $activity)
     {
-        // Load users referenced in disposition_to to determine their groups
-        $dispoNames = $activity->disposition_to ?? [];
-        $dispositionUsers = User::whereIn('name', $dispoNames)->orderBy('order', 'asc')->get();
-        
-        // Reuse the logic from create/edit
-        $groupedDisposition = $dispositionUsers->groupBy(function($user) {
-             if (in_array($user->role, ['Dewan', 'TA'])) {
-                $divisi = strtolower($user->divisi ?? '');
-                if (str_contains($divisi, 'ketua djsn')) return 'Ketua DJSN';
-                if (str_contains($divisi, 'pme') || str_contains($divisi, 'monitoring')) return 'Komisi PME';
-                if (str_contains($divisi, 'komjakum') || str_contains($divisi, 'kebijakan')) return 'Komjakum';
-                if (str_contains($divisi, 'komisi')) return ucwords($user->divisi);
-                
-                if ($user->role === 'Dewan') return 'Anggota Dewan Lainnya';
-                return 'Tenaga Ahli Lainnya';
-            }
-            return 'Sekretariat DJSN';
-        });
-
-        // Sort Groups
-        $groupOrder = [
-            'Ketua DJSN' => 1, 'Komisi PME' => 2, 'Komjakum' => 3, 'Anggota Dewan Lainnya' => 4,
-            'Sekretariat DJSN' => 5, 'Tata Usaha' => 6, 'Persidangan' => 7, 'Bagian Umum' => 8
-        ];
-        $groupedDisposition = $groupedDisposition->sortBy(function($items, $key) use ($groupOrder) {
-             return $groupOrder[$key] ?? 99;
-        });
-
-        // Filter Sekretariat DJSN to only show 'DJSN' role (Sekretaris) 
-        if ($groupedDisposition->has('Sekretariat DJSN')) {
-            $groupedDisposition['Sekretariat DJSN'] = $groupedDisposition['Sekretariat DJSN']->filter(function($user) {
-                // Only show Sekretaris DJSN (Imron Rosadi)
-                return $user->name === 'Imron Rosadi';
-            });
-            // If empty (e.g. only staff were selected previously), we can decide to keep empty or unset. 
-            // Keeping it consistent with "Only Secretary should appear".
-        }
+        $groupedDisposition = $activity->grouped_disposition_users;
 
         return view('activities.show', compact('activity', 'groupedDisposition'));
     }
@@ -551,28 +519,7 @@ class ActivityController extends Controller
      */
     private function deriveUnitKerjaFromDisposition(array $dispositionNames)
     {
-        $unitKerja = [];
-        $councilStructure = Activity::COUNCIL_STRUCTURE;
-
-        // Flatten mapping for easier lookup: Name => Commission
-        $nameToCommission = [];
-        foreach ($councilStructure as $commission => $members) {
-            foreach ($members as $member) {
-                $nameToCommission[$member] = $commission;
-            }
-        }
-
-        foreach ($dispositionNames as $name) {
-            if (isset($nameToCommission[$name])) {
-                $unitKerja[] = $nameToCommission[$name];
-            } else {
-                // If not in Council Structure (Dewan), assume Sekretariat DJSN
-                // This covers DJSN users and potentially others not explicitly listed in Council Structure
-                $unitKerja[] = 'Sekretariat DJSN';
-            }
-        }
-
-        return array_values(array_unique($unitKerja));
+        return Activity::derivePicGroupsFromDispositionNames($dispositionNames);
     }
 
     public function destroy(Activity $activity)

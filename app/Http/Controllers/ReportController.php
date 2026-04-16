@@ -15,49 +15,61 @@ class ReportController extends Controller
 
     public function index(Request $request)
     {
-        // Default to tomorrow if not specified
-        $dateStr = $request->input('date', Carbon::tomorrow()->format('Y-m-d'));
-        $date = Carbon::parse($dateStr);
+        // Default to tomorrow to tomorrow if not specified
+        $startDateStr = $request->input('start_date', Carbon::tomorrow()->format('Y-m-d'));
+        $endDateStr = $request->input('end_date', Carbon::tomorrow()->format('Y-m-d'));
         
-        $activities = Activity::whereDate('start_date', '<=', $date)
-                              ->whereDate('end_date', '>=', $date)
+        $startDate = Carbon::parse($startDateStr)->startOfDay();
+        $endDate = Carbon::parse($endDateStr)->endOfDay();
+        
+        $activities = Activity::whereDate('start_date', '<=', $endDate)
+                              ->whereDate('end_date', '>=', $startDate)
                               ->visibleToUser(auth()->user()) // Apply Visibility Scope
                               ->orderBy('start_date', 'asc')
                               ->orderBy('start_time', 'asc')
                               ->get();
                               
         // Generate Report Text
-        $reportText = $this->generateWhatsAppText($date, $activities);
+        $reportText = $this->generateWhatsAppText($startDate, $endDate, $activities);
 
-        return view('reports.h1', compact('dateStr', 'reportText', 'activities'));
+        return view('reports.h1', compact('startDateStr', 'endDateStr', 'reportText', 'activities'));
     }
 
     public function visualH1(Request $request)
     {
-        // Default to tomorrow if not specified
-        $dateStr = $request->input('date', Carbon::tomorrow()->format('Y-m-d'));
-        $date = Carbon::parse($dateStr);
+        // Default to tomorrow to tomorrow if not specified
+        $startDateStr = $request->input('start_date', Carbon::tomorrow()->format('Y-m-d'));
+        $endDateStr = $request->input('end_date', Carbon::tomorrow()->format('Y-m-d'));
         
-        $activities = Activity::whereDate('start_date', '<=', $date)
-                              ->whereDate('end_date', '>=', $date)
+        $startDate = Carbon::parse($startDateStr)->startOfDay();
+        $endDate = Carbon::parse($endDateStr)->endOfDay();
+        
+        $activities = Activity::whereDate('start_date', '<=', $endDate)
+                              ->whereDate('end_date', '>=', $startDate)
                               ->visibleToUser(auth()->user()) // Apply Visibility Scope
                               ->orderBy('start_date', 'asc')
                               ->orderBy('start_time', 'asc')
                               ->get();
 
-        return view('reports.h1_visual', compact('dateStr', 'activities'));
+        return view('reports.h1_visual', compact('startDateStr', 'endDateStr', 'activities'));
     }
 
-    private function generateWhatsAppText($date, $activities)
+    private function generateWhatsAppText($start, $end, $activities)
     {
         // Locale settings
         Carbon::setLocale('id');
         
-        $headerDate = $date->isoFormat('dddd, D MMMM YYYY');
-        $text = "Agenda DJSN untuk *{$headerDate}*. Kegiatan telah terinput di Google Calender, berikut terlampir :\n\n";
+        if ($start->isSameDay($end)) {
+            $headerDate = $start->isoFormat('dddd, D MMMM YYYY');
+            $text = "Agenda DJSN untuk *{$headerDate}*. Kegiatan telah terinput di Google Calender, berikut terlampir :\n\n";
+        } else {
+            $startStr = $start->isoFormat('D MMMM YYYY');
+            $endStr = $end->isoFormat('D MMMM YYYY');
+            $text = "Agenda DJSN untuk periode *{$startStr} s.d. {$endStr}*. Kegiatan telah terinput di Google Calender, berikut terlampir :\n\n";
+        }
 
         if ($activities->isEmpty()) {
-            $text .= "Tidak ada kegiatan terjadwal.\n";
+            $text .= "Tidak ada kegiatan terjadwal pada periode tersebut.\n";
             return $text;
         }
 

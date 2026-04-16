@@ -12,6 +12,13 @@ class FollowUpDashboard extends Component
 {
     use WithPagination;
 
+    public $perPage = 10;
+
+    public function updatingPerPage()
+    {
+        $this->resetPage();
+    }
+
     // Filters
     public $year;
     public $month = '';
@@ -113,7 +120,7 @@ class FollowUpDashboard extends Component
         $this->existingPics = ActivityFollowup::distinct()->whereNotNull('pic')->pluck('pic')->toArray();
 
         $query = Activity::query()
-            ->with(['followups' => function($q) {
+            ->with(['moms', 'materials', 'followups' => function($q) {
                 // Apply strict filtering to the eager loaded items
                 if ($this->status !== 'all') {
                     $q->where('status', $this->status);
@@ -170,7 +177,7 @@ class FollowUpDashboard extends Component
         }
 
         // Order by Newest First (Activity Date)
-        $activities = $query->orderBy('start_date', 'desc')->paginate(15);
+        $activities = $query->orderBy('start_date', 'desc')->paginate($this->perPage);
         
         // Group by Month-Year
         $groupedActivities = $activities->getCollection()->groupBy(function($date) {

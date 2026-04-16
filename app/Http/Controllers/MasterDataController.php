@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Division;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -38,22 +39,15 @@ class MasterDataController extends Controller
         // Grouping Logic (Identical to ActivityController + Admin/User fallback)
         $groupedUsers = $users->groupBy(function($user) {
              if (in_array($user->role, ['Dewan', 'TA', 'Persidangan'])) {
-                $divisi = strtolower($user->divisi ?? '');
+                $divisi = strtoupper($user->divisi ?? '');
                 
-                // Specific Commissions
-                if (str_contains($divisi, 'ketua djsn')) return 'Ketua DJSN';
-                if (str_contains($divisi, 'pme') || str_contains($divisi, 'monitoring')) return 'Komisi PME';
-                if (str_contains($divisi, 'komjakum') || str_contains($divisi, 'kebijakan')) return 'Komjakum';
+                // Simplified 3-tier Dewan Grouping
+                if (str_contains($divisi, 'KETUA DJSN')) return 'Ketua DJSN';
+                if (str_contains($divisi, 'PME')) return 'Komisi PME';
+                if (str_contains($divisi, 'KOMJAKUM') || str_contains($divisi, 'KEBIJAKAN')) return 'KOMJAKUM';
                 
-                // Dynamic Grouping for other Commissions
-                if (str_contains($divisi, 'komisi')) {
-                    return ucwords($user->divisi);
-                }
-                
-                // Fallbacks if Divisi doesn't match Commission logic
+                // Fallbacks
                 if ($user->role === 'Dewan') return 'Anggota Dewan Lainnya';
-                // If Persidangan/TA doesn't match above, fall through to separate group?
-                // Or maybe 'Sekretariat DJSN' if they are staff?
             }
 
             if ($user->role === 'admin') return 'Admin Utama';
@@ -69,7 +63,7 @@ class MasterDataController extends Controller
             'Admin Utama' => 0,
             'Ketua DJSN' => 1,
             'Komisi PME' => 2,
-            'Komjakum' => 3,
+            'KOMJAKUM' => 3,
             'Anggota Dewan Lainnya' => 4,
             'Sekretariat DJSN' => 5, // Access Level 1
             'Tata Usaha' => 6,
@@ -83,7 +77,9 @@ class MasterDataController extends Controller
             return $groupPriority[$key] ?? 99;
         });
             
-        return view('master-data.index', compact('groupedUsers'));
+        $divisions = Division::orderBy('category')->orderBy('order')->get();
+            
+        return view('master-data.index', compact('groupedUsers', 'divisions'));
     }
 
     public function topics()
@@ -99,15 +95,20 @@ class MasterDataController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
             'role' => ['required', Rule::in(User::ROLES)],
-            'divisi' => 'nullable|string|max:255',
+            'division_id' => 'nullable|exists:divisions,id',
+            'prefix' => 'nullable|string|max:20',
         ]);
 
         User::create([
             'name' => $request->name,
+            'prefix' => $request->prefix ?? 'Bapak',
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => $request->role,
-            'divisi' => $request->divisi,
+            'division_id' => $request->division_id,
+            // Mirror to divisi for backward compatibility if needed, 
+            // but we'll transition to division_id
+            'divisi' => Division::find($request->division_id)?->name,
         ]);
 
         return redirect()->route('master-data.index')->with('success', 'Akun berhasil dibuat.');
@@ -119,7 +120,8 @@ class MasterDataController extends Controller
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'role' => ['required', Rule::in(User::ROLES)],
-            'divisi' => 'nullable|string|max:255',
+            'division_id' => 'nullable|exists:divisions,id',
+            'prefix' => 'nullable|string|max:20',
         ];
         
         if ($request->filled('password')) {
@@ -132,7 +134,9 @@ class MasterDataController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'role' => $request->role,
-            'divisi' => $request->divisi,
+            'division_id' => $request->division_id,
+            'divisi' => Division::find($request->division_id)?->name,
+            'prefix' => $request->prefix ?? 'Bapak',
         ];
 
         if ($request->filled('password')) {
@@ -184,5 +188,67 @@ class MasterDataController extends Controller
 
         $user->delete();
         return redirect()->route('master-data.index')->with('success', 'Akun berhasil dihapus.');
+    }
+
+    // --- Division Management ---
+
+    public function divisions()
+    {
+        $divisions = Division::orderBy('category')
+            ->orderBy('order', 'asc')
+            ->get();
+            
+        return view('master-data.divisions', compact('divisions'));
+    }
+
+    public function storeDivision(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'category' => 'required|in:Ketua DJSN,Komisi,Sekretariat DJSN',
+            'order' => 'nullable|integer'
+        ]);
+
+        Division::create($request->all());
+
+        return redirect()->back()->with('success', 'Jabatan berhasil ditambahkan.');
+    }
+
+    public function updateDivision(Request $request, Division $division)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'category' => 'required|in:Ketua DJSN,Komisi,Sekretariat DJSN',
+            'order' => 'nullable|integer'
+        ]);
+
+        $division->update($request->all());
+
+        return redirect()->back()->with('success', 'Jabatan berhasil diperbarui.');
+    }
+
+    public function destroyDivision(Division $division)
+    {
+        // Check if any users are using this division
+        if ($division->users()->count() > 0) {
+            return redirect()->back()->with('error', 'Jabatan ini tidak dapat dihapus karena masih digunakan oleh pengguna.');
+        }
+
+        $division->delete();
+        return redirect()->back()->with('success', 'Jabatan berhasil dihapus.');
+    }
+
+    public function reorderDivision(Request $request)
+    {
+        $request->validate([
+            'order' => 'required|array',
+            'order.*' => 'exists:divisions,id',
+        ]);
+
+        foreach ($request->order as $index => $id) {
+            Division::where('id', $id)->update(['order' => $index]);
+        }
+
+        return response()->json(['success' => true]);
     }
 }
