@@ -9,21 +9,29 @@ return new class extends Migration
 {
     public function up(): void
     {
+        $isSqlite = Schema::getConnection()->getDriverName() === 'sqlite';
+
         Schema::table('activities', function (Blueprint $table) {
             $table->string('letter_number')->nullable()->after('type');
         });
 
-        // Modify enum using raw SQL for better compatibility
-        DB::statement("ALTER TABLE activities MODIFY COLUMN location_type ENUM('offline', 'online', 'hybrid') DEFAULT 'offline'");
+        if (! $isSqlite) {
+            // Modify enum using raw SQL for better compatibility
+            DB::statement("ALTER TABLE activities MODIFY COLUMN location_type ENUM('offline', 'online', 'hybrid') DEFAULT 'offline'");
+        }
     }
 
     public function down(): void
     {
+        $isSqlite = Schema::getConnection()->getDriverName() === 'sqlite';
+
         Schema::table('activities', function (Blueprint $table) {
             $table->dropColumn('letter_number');
         });
 
-        // Revert enum
-        DB::statement("ALTER TABLE activities MODIFY COLUMN location_type ENUM('offline', 'online') DEFAULT 'offline'");
+        if (! $isSqlite) {
+            // Revert enum
+            DB::statement("ALTER TABLE activities MODIFY COLUMN location_type ENUM('offline', 'online') DEFAULT 'offline'");
+        }
     }
 };

@@ -16,12 +16,6 @@
                     <div class="form-row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="small font-weight-bold text-muted">Label Ringkas</label>
-                                <input type="text" class="form-control shadow-sm" id="divisionShortLabel" name="short_label">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
                                 <label class="small font-weight-bold text-muted">Kelompok Struktur</label>
                                 <select class="form-control shadow-sm" id="divisionStructureGroup" name="structure_group" required>
                                     @foreach($divisionStructureGroups as $value => $label)
@@ -63,7 +57,7 @@
                         </select>
                     </div>
                     <div class="alert alert-light border" id="divisionCommissionAuto" style="display: none;">
-                        <div class="small text-muted mb-0">Kode komisi akan dibuat otomatis dari nama atau label ringkas unit.</div>
+                        <div class="small text-muted mb-0">Kode komisi akan dibuat otomatis dari nama unit.</div>
                     </div>
                     <div class="form-group mb-0">
                         <label class="small font-weight-bold text-muted">Deskripsi</label>

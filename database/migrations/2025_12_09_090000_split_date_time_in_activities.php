@@ -9,6 +9,8 @@ return new class extends Migration
 {
     public function up(): void
     {
+        $isSqlite = Schema::getConnection()->getDriverName() === 'sqlite';
+
         Schema::table('activities', function (Blueprint $table) {
             $table->date('start_date')->nullable()->after('name');
             $table->date('end_date')->nullable()->after('start_date');
@@ -37,11 +39,13 @@ return new class extends Migration
              $table->dropColumn('date_time');
         });
         
-        // Make non-nullable where appropriate
-        Schema::table('activities', function (Blueprint $table) {
-            $table->date('start_date')->nullable(false)->change();
-            $table->time('start_time')->nullable(false)->change();
-        });
+        if (! $isSqlite) {
+            // SQLite tests do not need the strict NOT NULL alteration here.
+            Schema::table('activities', function (Blueprint $table) {
+                $table->date('start_date')->nullable(false)->change();
+                $table->time('start_time')->nullable(false)->change();
+            });
+        }
     }
 
     public function down(): void

@@ -6,7 +6,7 @@ use App\Livewire\ActivityList;
 use App\Livewire\PastActivityList;
 use App\Models\Activity;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Livewire\Livewire;
 use Tests\TestCase;

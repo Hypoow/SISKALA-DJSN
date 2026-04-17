@@ -1887,11 +1887,16 @@ body.vertical.light {
     width: auto !important;
     min-height: var(--app-topnav-height);
     padding: 1rem var(--app-shell-gap) !important;
-    position: relative;
+    position: sticky;
+    top: 0;
     z-index: 2300;
     overflow: visible !important;
     will-change: margin-left;
     backface-visibility: hidden;
+    background: rgba(255, 255, 255, 0.94);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.85);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 18px 34px -30px rgba(15, 44, 89, 0.45);
     transition:
         margin-left var(--app-shell-motion),
         padding var(--app-shell-motion),

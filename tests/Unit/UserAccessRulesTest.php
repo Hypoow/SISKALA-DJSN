@@ -157,7 +157,7 @@ class UserAccessRulesTest extends TestCase
             'name' => 'Sekretaris DJSN',
             'access_profile' => User::ACCESS_PROFILE_SET_DJSN,
             'receives_disposition' => true,
-            'disposition_group_label' => 'Set.DJSN',
+            'disposition_group_label' => 'Sekretaris DJSN',
         ]);
 
         $user = $this->makeUser('Sekretaris DJSN', User::ROLE_SECRETARIAT, 'Sekretariat DJSN', 'Sekretariat DJSN', $position);
@@ -190,7 +190,7 @@ class UserAccessRulesTest extends TestCase
         $user = $this->makeUser('Sekretaris Baru', User::ROLE_USER, 'Sekretariat DJSN', 'Sekretariat DJSN', $position);
 
         $this->assertTrue($user->canReceiveDisposition());
-        $this->assertSame('Set.DJSN', $user->disposition_group_label);
+        $this->assertSame('Sekretaris DJSN', $user->disposition_group_label);
         $this->assertSame('Sekretaris DJSN', $user->resolved_report_target_label);
     }
 

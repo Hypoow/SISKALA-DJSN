@@ -323,17 +323,17 @@
       position: -webkit-sticky;
       /* Safari */
       position: sticky;
-      top: 70px;
-      z-index: 999;
-      background-color: rgba(255, 255, 255, 0.98);
-      border-bottom: 1px solid #e2e8f0;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      top: calc(var(--app-topnav-height, 76px) + 0.75rem) !important;
+      z-index: 2200 !important;
+      background-color: rgba(255, 255, 255, 0.94);
+      border-bottom: 1px solid rgba(226, 232, 240, 0.85);
+      box-shadow: 0 18px 34px -30px rgba(15, 44, 89, 0.28);
       margin-left: -15px;
       margin-right: -15px;
       padding-left: 2rem !important;
       padding-right: 2rem !important;
       transition: all 0.3s ease;
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(14px);
     }
 
     /* Premium Alert Styling */

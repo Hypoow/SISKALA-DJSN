@@ -276,6 +276,7 @@ class PastActivityList extends Component
     public $maxPhotos = 8;
     public $newAssignmentFile = null;
     public $newAttachmentFile = null; 
+    public $newMinutesFile = null;
     public $isModalOpen = false;
     public $activeTab = 'attendance'; 
 
@@ -369,6 +370,7 @@ class PastActivityList extends Component
         
         $this->newAssignmentFile = null; 
         $this->newAttachmentFile = null; 
+        $this->newMinutesFile = null;
         $this->activeTab = 'attendance';
         $this->dispatch('open-assignment-modal');
         
@@ -455,6 +457,35 @@ class PastActivityList extends Component
 
              $this->dispatch('alert', type: 'success', message: 'Surat Undangan berhasil diupload.');
              $this->newAttachmentFile = null;
+        }
+    }
+
+    public function updatedNewMinutesFile()
+    {
+        $this->ensureCanManagePostActivity();
+
+        $this->validate([
+            'newMinutesFile' => 'file|mimes:pdf|max:10240',
+        ]);
+
+        if ($this->activeActivityId && $this->newMinutesFile) {
+            $activity = $this->resolveVisibleActivity($this->activeActivityId);
+            if ($activity->minutes_path) {
+                Storage::disk('public')->delete($activity->minutes_path);
+            }
+
+            $originalName = $this->newMinutesFile->getClientOriginalName();
+            $path = $this->newMinutesFile->storeAs("minutes/{$this->activeActivityId}", $originalName, 'public');
+
+            $activity->update(['minutes_path' => $path]);
+
+            if (file_exists($this->newMinutesFile->getRealPath())) {
+                @unlink($this->newMinutesFile->getRealPath());
+            }
+
+            $this->activeTab = 'letter';
+            $this->dispatch('alert', type: 'success', message: 'Notulensi berhasil diupload.');
+            $this->newMinutesFile = null;
         }
     }
 

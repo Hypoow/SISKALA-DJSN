@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             DewanSeeder::class,
             SekretariatSeeder::class,
+            StaffSeeder::class,
             TopicSeeder::class,
         ]);
     }

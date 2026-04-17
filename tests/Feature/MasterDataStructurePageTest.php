@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Models\Division;
 use App\Models\Position;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 class MasterDataStructurePageTest extends TestCase
@@ -19,8 +19,8 @@ class MasterDataStructurePageTest extends TestCase
         ]);
 
         $division = Division::create([
-            'name' => 'Komisi Kebijakan Umum',
-            'short_label' => 'Komjakum',
+            'name' => 'Komjakum',
+            'short_label' => null,
             'category' => 'Komisi',
             'structure_group' => Division::STRUCTURE_GROUP_DEWAN,
             'access_profile' => User::ACCESS_PROFILE_DEWAN,
@@ -48,9 +48,11 @@ class MasterDataStructurePageTest extends TestCase
         $this->actingAs($admin)
             ->get(route('master-data.divisions'))
             ->assertOk()
-            ->assertSee('Builder Struktur Role')
-            ->assertSee('Kelompok Akun & Unit Kerja')
-            ->assertSee('Master Jabatan');
+            ->assertSeeText('Builder Struktur Role')
+            ->assertSeeText('Kelompok Akun')
+            ->assertSeeText('Unit Kerja')
+            ->assertSeeText('Master Jabatan')
+            ->assertDontSee('Label Ringkas');
 
         $this->actingAs($admin)
             ->get(route('master-data.create'))

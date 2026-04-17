@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="id">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -7,7 +8,8 @@
     <link rel="icon" href="{{ asset('images/logo.svg') }}">
     <title>Masuk - SISKALA</title>
     <!-- Fonts - Plus Jakarta Sans -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <!-- Icons -->
     <link rel="stylesheet" href="{{ asset('css/feather.css') }}">
     <style>
@@ -64,7 +66,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-image: 
+            background-image:
                 radial-gradient(circle at 20% 30%, rgba(37, 99, 235, 0.15) 0%, transparent 50%),
                 radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%);
             z-index: 1;
@@ -84,8 +86,8 @@
             backdrop-filter: blur(10px);
             border-radius: 24px;
             padding: 3rem 2rem;
-            box-shadow: 
-                0 20px 25px -5px rgba(0, 0, 0, 0.1), 
+            box-shadow:
+                0 20px 25px -5px rgba(0, 0, 0, 0.1),
                 0 8px 10px -6px rgba(0, 0, 0, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.5);
             transition: transform 0.3s ease;
@@ -98,7 +100,7 @@
         .brand-logo-large {
             height: 100px;
             margin-bottom: 1.5rem;
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
             /* Removed float animation to keep it steady in card */
         }
 
@@ -123,8 +125,10 @@
 
         /* Right Side - Login Form */
         .right-panel {
-            flex: 1; /* Both take 50% */
-            max-width: 600px; /* Limit width on very large screens for better UX */
+            flex: 1;
+            /* Both take 50% */
+            max-width: 600px;
+            /* Limit width on very large screens for better UX */
             background-color: var(--surface-color);
             display: flex;
             flex-direction: column;
@@ -203,7 +207,7 @@
             box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
         }
 
-        .form-control:focus + .input-icon {
+        .form-control:focus+.input-icon {
             color: var(--primary-color);
         }
 
@@ -346,7 +350,8 @@
             cursor: pointer;
             transition: all 0.3s;
             box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
-            position: relative; /* For loader if needed */
+            position: relative;
+            /* For loader if needed */
             overflow: hidden;
         }
 
@@ -389,7 +394,7 @@
             font-size: 0.9rem;
             margin-bottom: 0.25rem;
         }
-        
+
         .alert-content ul {
             margin: 0;
             padding-left: 1.25rem;
@@ -402,32 +407,38 @@
             .split-screen {
                 flex-direction: column;
             }
-            
+
             .left-panel {
-                flex: 0 0 30%; /* 30% height on mobile */
+                flex: 0 0 30%;
+                /* 30% height on mobile */
                 padding: 2rem;
             }
+
             .brand-logo-large {
                 height: 60px;
                 margin-bottom: 1rem;
             }
+
             .app-title-large {
                 font-size: 2rem;
             }
+
             .app-tagline-large {
                 font-size: 0.9rem;
-                display: none; /* Hide tagline on very small screens to save space */
+                display: none;
+                /* Hide tagline on very small screens to save space */
             }
 
             .right-panel {
-               flex: 1;
-               padding: 2rem;
-               max-width: 100%;
-               border-top-left-radius: 24px;
-               border-top-right-radius: 24px;
-               margin-top: -24px; /* Slight overlap */
-               background-color: var(--surface-color);
-               z-index: 10;
+                flex: 1;
+                padding: 2rem;
+                max-width: 100%;
+                border-top-left-radius: 24px;
+                border-top-right-radius: 24px;
+                margin-top: -24px;
+                /* Slight overlap */
+                background-color: var(--surface-color);
+                z-index: 10;
             }
         }
 
@@ -470,7 +481,8 @@
             width: 100%;
             height: 100%;
             border: 3px solid transparent;
-            border-top-color: #2563eb; /* Primary Blue from root */
+            border-top-color: #2563eb;
+            /* Primary Blue from root */
             border-radius: 50%;
             animation: spin 1s cubic-bezier(0.5, 0.1, 0.4, 0.9) infinite;
         }
@@ -483,7 +495,8 @@
             right: 5px;
             bottom: 5px;
             border: 3px solid transparent;
-            border-top-color: #C69749; /* Gold accent */
+            border-top-color: #C69749;
+            /* Gold accent */
             border-radius: 50%;
             animation: spin 2s linear infinite;
         }
@@ -497,13 +510,27 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         @keyframes pulse-logo {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.15); opacity: 0.85; }
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.15);
+                opacity: 0.85;
+            }
         }
 
         body.loading-active {
@@ -511,6 +538,7 @@
         }
     </style>
 </head>
+
 <body class="loading-active">
     <!-- Premium Loader -->
     <div id="loader-wrapper" class="loader-wrapper-hide">
@@ -527,7 +555,8 @@
                 <div class="branding-card">
                     <img src="{{ asset('images/logo.svg') }}" alt="DJSN Logo" class="brand-logo-large">
                     <h1 class="app-title-large">SISKALA</h1>
-                    <p class="app-tagline-large">Sistem Kelola Agenda, tindak Lanjut dan Administrasi<br>Dewan Jaminan Sosial Nasional</p>
+                    <p class="app-tagline-large">Sistem Kelola Agenda, tindak Lanjut dan Administrasi<br>Dewan Jaminan
+                        Sosial Nasional</p>
                 </div>
             </div>
         </div>
@@ -542,7 +571,7 @@
 
                 <form method="POST" action="{{ route('login') }}">
                     @csrf
-                    
+
                     @if($errors->any())
                         <div class="alert">
                             <i class="fe fe-alert-circle alert-icon"></i>
@@ -561,7 +590,8 @@
                         <label for="email" class="form-label">Email</label>
                         <div class="input-group">
                             <i class="fe fe-mail input-icon"></i>
-                            <input type="email" id="email" name="email" class="form-control" placeholder="Masukkan Email" required autofocus value="{{ old('email') }}">
+                            <input type="email" id="email" name="email" class="form-control"
+                                placeholder="Masukkan Email" required autofocus value="{{ old('email') }}">
                         </div>
                     </div>
 
@@ -569,7 +599,8 @@
                         <label for="password" class="form-label">Password</label>
                         <div class="input-group">
                             <i class="fe fe-lock input-icon"></i>
-                            <input type="password" id="password" name="password" class="form-control" placeholder="Masukkan password" required>
+                            <input type="password" id="password" name="password" class="form-control"
+                                placeholder="Masukkan password" required>
                         </div>
                     </div>
 
@@ -593,7 +624,7 @@
                             </span>
                             <span class="helper-link-copy">
                                 <span class="helper-link-label">Informasi</span>
-                                <span class="helper-link-title">Lihat halaman developer SISKALA</span>
+                                <span class="helper-link-title">Developer SISKALA</span>
                             </span>
                             <span class="helper-link-arrow" aria-hidden="true">
                                 <i class="fe fe-arrow-right"></i>
@@ -612,13 +643,13 @@
     <!-- Scripts -->
     <script src="{{ asset('js/jquery.min.js') }}"></script>
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             // Loader Elements
             const loader = $('#loader-wrapper');
             const body = $('body');
 
             // Toggle Password Visibility
-            $('#showPassword').change(function() {
+            $('#showPassword').change(function () {
                 var input = $('#password');
                 if ($(this).is(':checked')) {
                     input.attr('type', 'text');
@@ -628,14 +659,12 @@
             });
 
             // Show loader on form submit
-            $('form').on('submit', function() {
+            $('form').on('submit', function () {
                 loader.removeClass('loader-wrapper-hide');
                 body.addClass('loading-active');
             });
         });
     </script>
 </body>
+
 </html>
-
-
-

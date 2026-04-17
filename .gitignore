@@ -3,11 +3,10 @@
 /public/build
 /public/hot
 /public/storage
-/storage/app/backups
 /storage/*.key
 /vendor
 .env
-.env.backup
+.env.testing
 .env.production
 .phpunit.result.cache
 Homestead.json

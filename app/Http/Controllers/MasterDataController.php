@@ -273,7 +273,6 @@ class MasterDataController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'short_label' => 'nullable|string|max:255',
             'structure_group' => ['required', Rule::in(array_keys(Division::structureGroupOptions()))],
             'access_profile' => ['required', Rule::in(array_keys(User::accessProfileOptions()))],
             'commission_code' => 'nullable|string|max:255',
@@ -293,7 +292,6 @@ class MasterDataController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'short_label' => 'nullable|string|max:255',
             'structure_group' => ['required', Rule::in(array_keys(Division::structureGroupOptions()))],
             'access_profile' => ['required', Rule::in(array_keys(User::accessProfileOptions()))],
             'commission_code' => 'nullable|string|max:255',
@@ -470,10 +468,9 @@ class MasterDataController extends Controller
         $structureGroup = $request->input('structure_group');
         $isCommission = $request->boolean('is_commission');
         $name = trim((string) $request->name);
-        $shortLabel = trim((string) $request->input('short_label', ''));
         $commissionCode = $this->resolveDivisionCommissionCode(
             $request->input('commission_code'),
-            $shortLabel !== '' ? $shortLabel : $name,
+            $name,
             $isCommission,
             $structureGroup
         );
@@ -510,7 +507,7 @@ class MasterDataController extends Controller
 
         return [
             'name' => $name,
-            'short_label' => $shortLabel !== '' ? $shortLabel : null,
+            'short_label' => null,
             'category' => Division::legacyCategoryFor($structureGroup, $isCommission, $name),
             'structure_group' => $structureGroup,
             'access_profile' => $request->access_profile,
@@ -557,4 +554,5 @@ class MasterDataController extends Controller
 
         return $code;
     }
+
 }

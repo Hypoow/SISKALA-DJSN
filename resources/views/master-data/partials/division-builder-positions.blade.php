@@ -1,11 +1,11 @@
-<div class="card shadow-sm border-0 rounded-xl">
-    <div class="card-body p-4">
-        <div class="d-flex align-items-center justify-content-between flex-wrap mb-4">
+<div class="card builder-main-card border-0">
+    <div class="card-body p-4 p-lg-5">
+        <div class="d-flex align-items-center justify-content-between flex-wrap mb-4 pb-3 border-bottom">
             <div>
                 <h4 class="font-weight-bold text-dark mb-1">Master Jabatan</h4>
                 <p class="text-muted small mb-0">Jabatan bisa dipindah lintas kelompok agar pola role dan disposisi mudah disusun ulang.</p>
             </div>
-            <span class="badge badge-light border px-3 py-2 mt-3 mt-md-0">Drag lintas kolom aktif</span>
+            <span class="badge badge-secondary-soft px-3 py-2 mt-3 mt-md-0"><i class="fe fe-move mr-2"></i>Drag lintas kolom aktif</span>
         </div>
 
         <div class="row">

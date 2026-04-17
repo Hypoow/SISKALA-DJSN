@@ -127,7 +127,7 @@ class User extends Authenticatable
         return [
             self::ACCESS_PROFILE_SUPER_ADMIN => 'Super Admin',
             self::ACCESS_PROFILE_DEWAN => 'Dewan',
-            self::ACCESS_PROFILE_SET_DJSN => 'Set.DJSN',
+            self::ACCESS_PROFILE_SET_DJSN => 'Sekretaris DJSN',
             self::ACCESS_PROFILE_TATA_USAHA => 'Tata Usaha',
             self::ACCESS_PROFILE_PERSIDANGAN => 'Persidangan',
             self::ACCESS_PROFILE_PROTHUM => 'ProtHum',
@@ -146,7 +146,7 @@ class User extends Authenticatable
     {
         return [
             self::STRUCTURE_GROUP_DEWAN => 'Dewan',
-            self::STRUCTURE_GROUP_SET_DJSN => 'Set.DJSN',
+            self::STRUCTURE_GROUP_SET_DJSN => 'Sekretaris DJSN',
             self::STRUCTURE_GROUP_SEKRETARIAT => 'Sekretariat',
             self::STRUCTURE_GROUP_PENDAMPING => 'Pendamping Dewan',
             self::STRUCTURE_GROUP_LAINNYA => 'Lainnya',
@@ -427,7 +427,7 @@ class User extends Authenticatable
 
         if ($division?->is_commission) {
             $generatedCode = Division::normalizeCommissionCode(
-                $division->commission_code ?: ($division->short_label ?: $division->name)
+                $division->commission_code ?: $division->name
             );
 
             if ($generatedCode !== null) {
@@ -497,7 +497,7 @@ class User extends Authenticatable
 
         if ($division?->is_commission) {
             return Division::normalizeCommissionCode(
-                $division->commission_code ?: ($division->short_label ?: $division->name)
+                $division->commission_code ?: $division->name
             );
         }
 
@@ -854,7 +854,7 @@ class User extends Authenticatable
             return 'Dewan';
         }
 
-        return 'Set.DJSN';
+        return 'Sekretaris DJSN';
     }
 
     private function normalizeDispositionGroupLabel(string $label): string
@@ -867,7 +867,7 @@ class User extends Authenticatable
             'SEKRETARIAT DJSN',
             'SET DJSN',
         ], true)) {
-            return 'Set.DJSN';
+            return 'Sekretaris DJSN';
         }
 
         return trim($label);

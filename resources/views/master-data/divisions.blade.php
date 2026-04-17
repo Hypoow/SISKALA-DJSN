@@ -76,7 +76,6 @@
         .sortable-ghost { opacity: .45; }
     </style>
 @endpush
-@endif
 
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
@@ -97,13 +96,12 @@
             $('#divisionModal').modal('show');
         }
 
-        function editDivision(id, name, shortLabel, structureGroup, accessProfile, commissionCode, isCommission, description, order) {
+        function editDivision(id, name, structureGroup, accessProfile, commissionCode, isCommission, description, order) {
             resetDivisionModal();
             $('#divisionModalLabel').text('Edit Unit');
             $('#divisionForm').attr('action', '{{ url("master-data/divisions") }}/' + id);
             $('#divisionMethod').val('PUT');
             $('#divisionName').val(name);
-            $('#divisionShortLabel').val(shortLabel ?? '');
             $('#divisionStructureGroup').val(structureGroup ?? '');
             $('#divisionAccessProfile').val(accessProfile ?? '');
             $('#divisionCommissionCode').val(commissionCode ?? '');
@@ -542,7 +540,7 @@
                                     <option value="{{ $value }}">{{ $label }}</option>
                                 @endforeach
                             </select>
-                            <small class="text-muted mt-2 d-block">Tentukan akses utama unit ini, misalnya Dewan, Set.DJSN,
+                            <small class="text-muted mt-2 d-block">Tentukan akses utama unit ini, misalnya Dewan, Sekretaris DJSN,
                                 Tata Usaha, Persidangan, ProtHum, Keuangan, atau Tenaga Ahli.</small>
                         </div>
                         <div class="form-group mb-4">
@@ -603,7 +601,7 @@
                                 @endforeach
                             </select>
                             <small class="text-muted mt-2 d-block">Contoh: jabatan Dewan masuk grup Dewan, sedangkan
-                                Sekretaris/Kabag/Kasubag bisa masuk grup Set.DJSN.</small>
+                                Sekretaris DJSN masuk grup Sekretaris DJSN.</small>
                         </div>
                         <div class="form-group mb-4">
                             <label class="form-control-label small font-weight-bold">Default Profil Akses</label>
@@ -820,3 +818,5 @@
         }
     </style>
 @endpush
+
+@endif

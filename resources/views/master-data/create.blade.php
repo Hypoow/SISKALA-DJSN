@@ -217,7 +217,7 @@
                                             @php
                                             $roles = [
                                                 ['value' => 'super_admin', 'icon' => 'fe-shield', 'title' => 'Super Admin', 'desc' => 'Akses penuh ke seluruh sistem, master data, dan jobdesk.', 'color_class' => 'primary'],
-                                                ['value' => 'DJSN', 'icon' => 'fe-check-square', 'title' => 'Set.DJSN', 'desc' => 'Khusus Sekretaris DJSN atau pimpinan Set.DJSN yang memang perlu akses disposisi individual.', 'color_class' => 'success'],
+                                                ['value' => 'DJSN', 'icon' => 'fe-check-square', 'title' => 'Sekretaris DJSN', 'desc' => 'Khusus Sekretaris DJSN atau pimpinan sekretariat yang memang perlu akses disposisi individual.', 'color_class' => 'success'],
                                                 ['value' => 'Tata Usaha', 'icon' => 'fe-file-text', 'title' => 'Tata Usaha', 'desc' => 'Kelola Kegiatan & Surat Tugas (Level 2).', 'color_class' => 'info'],
                                                 ['value' => 'Persidangan', 'icon' => 'fe-users', 'title' => 'Persidangan', 'desc' => 'Notulensi, Absensi & Tindak Lanjut (Level 3).', 'color_class' => 'warning'],
                                                 ['value' => 'Bagian Umum', 'icon' => 'fe-image', 'title' => 'ProtHum', 'desc' => 'Kelola dokumentasi kegiatan dan pengunggahan foto.', 'color_class' => 'danger'],

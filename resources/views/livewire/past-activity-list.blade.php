@@ -1277,6 +1277,10 @@
 
                                 <!-- Minutes Upload Logic -->
                                 <div class="mb-2">
+                                    @php
+                                        $minutesDocuments = $activeActivity->minutes_documents;
+                                        $primaryMinutesDocument = $activeActivity->primary_minutes_document;
+                                    @endphp
                                      <p class="small text-muted font-weight-bold mb-2">Dokumen Pendukung:</p>
                                     
                                     <!-- Surat Undangan (Attachment) -->
@@ -1310,11 +1314,24 @@
 
                                     <!-- Notulensi (Minutes) -->
                                     <div class="d-flex align-items-center justify-content-between mb-1 p-2 bg-white border rounded">
-                                        <div class="d-flex align-items-center overflow-hidden">
-                                            @if($activeActivity->minutes_path)
-                                                <a href="{{ Storage::url($activeActivity->minutes_path) }}" target="_blank" class="badge badge-success mr-2 text-truncate" title="Lihat Notulensi">
-                                                    <i class="fe fe-file-text mr-1"></i> Notulensi
+                                        <div class="d-flex flex-column align-items-start overflow-hidden">
+                                            @if($primaryMinutesDocument)
+                                                <a href="{{ Storage::url($primaryMinutesDocument['file_path']) }}" target="_blank" class="badge badge-success mr-2 text-truncate" title="Lihat Notulensi">
+                                                    <i class="fe fe-file-text mr-1"></i> {{ $primaryMinutesDocument['label'] }}
                                                 </a>
+                                                @if($primaryMinutesDocument['source'] === 'mom')
+                                                    <small class="text-muted mt-1">
+                                                        Diambil dari MoM
+                                                        @if(!empty($primaryMinutesDocument['title']) && $primaryMinutesDocument['title'] !== $primaryMinutesDocument['label'])
+                                                            : {{ \Illuminate\Support\Str::limit($primaryMinutesDocument['title'], 40) }}
+                                                        @endif
+                                                        @if($minutesDocuments->count() > 1)
+                                                            • {{ $minutesDocuments->count() }} file
+                                                        @endif
+                                                    </small>
+                                                @elseif($minutesDocuments->count() > 1)
+                                                    <small class="text-muted mt-1">{{ $minutesDocuments->count() }} dokumen notulensi tersedia</small>
+                                                @endif
                                             @else
                                                 <span class="badge badge-light border mr-2 text-muted"><i class="fe fe-file-text mr-1"></i> Notulensi Kosong</span>
                                             @endif
@@ -1326,6 +1343,8 @@
                                                     <button class="btn btn-xs btn-link text-danger p-0 ml-2" title="Hapus Notulensi" onclick="confirmModalDelete('minutes')">
                                                         <i class="fe fe-trash-2"></i>
                                                     </button>
+                                                @elseif($primaryMinutesDocument && $primaryMinutesDocument['source'] === 'mom')
+                                                    <small class="text-muted mr-2">Kelola dari MoM</small>
                                                 @endif
                                                 
                                                 <label class="btn btn-xs btn-outline-secondary mb-0 ml-2" title="Ganti/Upload Notulensi" style="cursor: pointer;">

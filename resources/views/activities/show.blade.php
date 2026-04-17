@@ -3,11 +3,11 @@
 @section('title', 'Detail Kegiatan')
 
 @section('content')
-<div class="row justify-content-center">
+<div class="row justify-content-center activity-detail-page">
     <div class="col-12 col-xl-11">
         
         <!-- Sticky Action Header (Minimalist) -->
-        <div class="row align-items-center mb-4 p-2 border-bottom sticky-action-header bg-white shadow-sm" style="position: sticky; top: 70px; z-index: 99; transition: top 0.3s;">
+        <div class="row align-items-center mb-4 p-2 border-bottom sticky-action-header bg-white shadow-sm">
             <div class="col-6 col-md">
                 <h2 class="font-weight-bold mb-0 text-dark" style="font-size: clamp(1rem, 2vw, 1.25rem);">
                     Detail Kegiatan
@@ -776,11 +776,18 @@
 @push('styles')
 <link rel="stylesheet" href="{{ asset('tinydash/css/quill.snow.css') }}">
 <style>
+    .activity-detail-page .sticky-action-header {
+        top: calc(var(--app-topnav-height, 76px) + .75rem) !important;
+    }
     .activity-hero {
-        background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
+        background:
+            radial-gradient(circle at top right, rgba(198, 151, 73, 0.24), transparent 28%),
+            radial-gradient(circle at bottom left, rgba(255, 255, 255, 0.10), transparent 24%),
+            linear-gradient(135deg, var(--primary-color) 0%, #15396d 52%, var(--primary-dark) 100%);
         border-radius: 20px;
         padding: 1.75rem 2rem;
-        box-shadow: 0 20px 40px rgba(49, 46, 129, 0.25);
+        border: 1px solid rgba(198, 151, 73, 0.22);
+        box-shadow: 0 24px 46px -28px rgba(15, 44, 89, 0.45);
         position: relative;
         overflow: hidden;
     }
@@ -796,13 +803,13 @@
         z-index: 2;
     }
     .hero-eyebrow {
-        color: rgba(255, 255, 255, 0.85);
+        color: rgba(255, 236, 205, 0.92);
         letter-spacing: 1px;
-        font-weight: 600;
+        font-weight: 700;
     }
     .hero-chip {
-        background: rgba(255, 255, 255, 0.15);
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(198, 151, 73, 0.28);
         color: #fff;
         border-radius: 999px;
         padding: .4rem .8rem;
@@ -811,24 +818,25 @@
         backdrop-filter: blur(4px);
     }
     .hero-stats {
-        background: rgba(255, 255, 255, 0.12);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(198, 151, 73, 0.28);
         border-radius: 16px;
         padding: 1rem;
         backdrop-filter: blur(8px);
+        box-shadow: 0 18px 34px -28px rgba(15, 44, 89, 0.38);
     }
     .hero-stat {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        color: #fff;
+        color: var(--primary-color);
         padding: .5rem .25rem;
     }
     .hero-stat + .hero-stat {
-        border-top: 1px solid rgba(255, 255, 255, 0.15);
+        border-top: 1px solid rgba(15, 44, 89, 0.10);
     }
     .hero-stat small {
-        color: rgba(255,255,255,.8);
+        color: #64748b;
         text-transform: uppercase;
         letter-spacing: .5px;
         font-size: .7rem;
@@ -837,6 +845,7 @@
     .hero-stat strong {
         font-size: .9rem;
         font-weight: 700;
+        color: var(--primary-color);
     }
     .card {
         border-radius: 18px;
@@ -854,7 +863,7 @@
         padding-bottom: .9rem;
     }
     .section-card .card-title {
-        color: #13294b;
+        color: var(--primary-color);
         font-weight: 700;
     }
     .section-card .card-body {
@@ -872,10 +881,33 @@
     }
     .summary-card .card-body {
         min-height: 170px;
+        background: linear-gradient(180deg, #fffdfa 0%, #ffffff 100%);
     }
     .summary-card .markdown-content {
         line-height: 1.7;
         color: #2c3f5f;
+    }
+    .summary-card {
+        border: 1px solid rgba(198, 151, 73, 0.18);
+        box-shadow: 0 24px 40px -34px rgba(15, 44, 89, 0.38);
+    }
+    .summary-card .card-header {
+        background: linear-gradient(135deg, rgba(15, 44, 89, 0.05) 0%, rgba(198, 151, 73, 0.12) 100%);
+        border-bottom: 1px solid rgba(198, 151, 73, 0.18);
+    }
+    .summary-card .markdown-content h1,
+    .summary-card .markdown-content h2,
+    .summary-card .markdown-content h3,
+    .summary-card .markdown-content h4 {
+        color: var(--primary-color);
+    }
+    .summary-card .markdown-content blockquote {
+        border-left-color: var(--accent-color);
+        background: rgba(198, 151, 73, 0.08);
+        color: #5e4b2f;
+    }
+    .summary-card .markdown-content a {
+        color: var(--primary-color);
     }
     .doc-support-card .list-group-item {
         border-color: #eff3fa;

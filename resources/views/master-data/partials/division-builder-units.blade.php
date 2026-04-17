@@ -1,11 +1,11 @@
-<div class="card shadow-sm border-0 rounded-xl mb-5">
-    <div class="card-body p-4">
-        <div class="d-flex align-items-center justify-content-between flex-wrap mb-4">
+<div class="card builder-main-card border-0 mb-5">
+    <div class="card-body p-4 p-lg-5">
+        <div class="d-flex align-items-center justify-content-between flex-wrap mb-4 pb-3 border-bottom">
             <div>
-                <h4 class="font-weight-bold text-dark mb-1">Kelompok Akun &amp; Unit Kerja</h4>
+                <h4 class="font-weight-bold text-dark mb-1">Kelompok Akun & Unit Kerja</h4>
                 <p class="text-muted small mb-0">Tarik kartu unit ke grup yang tepat. Tandai unit sebagai komisi Dewan jika ingin dipakai sebagai acuan komisi dinamis.</p>
             </div>
-            <span class="badge badge-light border px-3 py-2 mt-3 mt-md-0">Drag lintas kolom aktif</span>
+            <span class="badge badge-secondary-soft px-3 py-2 mt-3 mt-md-0"><i class="fe fe-move mr-2"></i>Drag lintas kolom aktif</span>
         </div>
 
         <div class="row">
@@ -32,9 +32,6 @@
                                                 <strong class="text-dark">{{ $division->name }}</strong>
                                             </div>
                                             <div class="d-flex flex-wrap">
-                                                @if($division->short_label)
-                                                    <span class="badge badge-light border mr-2 mb-2">{{ $division->short_label }}</span>
-                                                @endif
                                                 <span class="badge badge-primary-soft mr-2 mb-2">{{ \App\Models\User::accessProfileLabel($division->access_profile) }}</span>
                                                 @if($division->is_commission)
                                                     <span class="badge badge-warning-soft mr-2 mb-2">Komisi</span>
@@ -44,7 +41,7 @@
                                             </div>
                                         </div>
                                         <div class="text-right">
-                                            <button type="button" class="btn btn-sm btn-link text-warning p-0 mr-2" onclick="editDivision({{ $division->id }}, @js($division->name), @js($division->short_label), @js($division->structure_group), @js($division->access_profile), @js($division->commission_code), @js($division->is_commission), @js($division->description), {{ $division->order }})">Edit</button>
+                                            <button type="button" class="btn btn-sm btn-link text-warning p-0 mr-2" onclick="editDivision({{ $division->id }}, @js($division->name), @js($division->structure_group), @js($division->access_profile), @js($division->commission_code), @js($division->is_commission), @js($division->description), {{ $division->order }})">Edit</button>
                                             <form action="{{ route('master-data.divisions.destroy', $division->id) }}" method="POST" class="d-inline delete-form">
                                                 @csrf
                                                 @method('DELETE')

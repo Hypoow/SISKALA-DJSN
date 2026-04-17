@@ -47,7 +47,7 @@ class Division extends Model
 
     public function getDisplayNameAttribute(): string
     {
-        $label = trim((string) ($this->short_label ?: $this->name));
+        $label = trim((string) $this->name);
 
         return $label !== '' ? $label : 'Tanpa Nama';
     }
@@ -125,7 +125,7 @@ class Division extends Model
             ->get()
             ->mapWithKeys(function (self $division) {
                 $code = $division->normalized_commission_code
-                    ?? self::normalizeCommissionCode($division->short_label ?: $division->name);
+                    ?? self::normalizeCommissionCode($division->name);
 
                 if ($code === null) {
                     return [];

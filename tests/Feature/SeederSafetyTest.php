@@ -2,11 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Models\Staff;
 use App\Models\User;
 use Database\Seeders\DewanSeeder;
 use Database\Seeders\SekretariatSeeder;
+use Database\Seeders\StaffSeeder;
 use Database\Seeders\UserSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
@@ -63,5 +65,20 @@ class SeederSafetyTest extends TestCase
             'id' => $customUser->id,
             'email' => 'custom.secretariat@example.com',
         ]);
+    }
+
+    public function test_staff_seeder_does_not_duplicate_existing_staff_records(): void
+    {
+        Staff::create([
+            'name' => 'Dwi Janatun Rahayu',
+            'type' => 'sekretariat',
+        ]);
+
+        (new StaffSeeder())->run();
+
+        $this->assertSame(1, Staff::where([
+            'name' => 'Dwi Janatun Rahayu',
+            'type' => 'sekretariat',
+        ])->count());
     }
 }

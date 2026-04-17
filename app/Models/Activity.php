@@ -168,7 +168,7 @@ class Activity extends Model
         $structure = [
             'Ketua DJSN' => [],
             'Komisi' => [],
-            'Set.DJSN' => []
+            'Sekretaris DJSN' => []
         ];
 
         foreach ($dewan as $user) {
@@ -257,6 +257,46 @@ class Activity extends Model
         }
 
         return self::sortInternalPicGroups($fallback);
+    }
+
+    public function getMinutesDocumentsAttribute(): Collection
+    {
+        $documents = collect();
+
+        if (filled($this->minutes_path)) {
+            $documents->push([
+                'key' => 'legacy-minutes',
+                'source' => 'minutes',
+                'label' => 'Notulensi',
+                'title' => 'Notulensi',
+                'file_path' => $this->minutes_path,
+            ]);
+        }
+
+        $moms = $this->relationLoaded('moms')
+            ? $this->moms
+            : $this->moms()->latest('created_at')->get();
+
+        foreach ($moms->sortByDesc('created_at') as $mom) {
+            $documents->push([
+                'key' => 'mom-' . $mom->id,
+                'source' => 'mom',
+                'label' => $mom->title ?: 'MoM',
+                'title' => $mom->title ?: basename($mom->file_path),
+                'file_path' => $mom->file_path,
+                'id' => $mom->id,
+            ]);
+        }
+
+        return $documents
+            ->filter(fn (array $document) => filled($document['file_path'] ?? null))
+            ->unique('file_path')
+            ->values();
+    }
+
+    public function getPrimaryMinutesDocumentAttribute(): ?array
+    {
+        return $this->minutes_documents->first();
     }
 
     public function getGroupedDispositionUsersAttribute()

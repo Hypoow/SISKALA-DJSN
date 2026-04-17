@@ -119,7 +119,7 @@
                                                                     $roleMeta = [
                                                                         'super_admin' => ['badge' => 'bg-primary-soft', 'text' => 'text-primary', 'icon' => 'fe-shield', 'label' => 'Super Admin'],
                                                                         'dewan' => ['badge' => 'bg-dark text-white', 'text' => 'text-white', 'icon' => 'fe-star', 'label' => 'Dewan'],
-                                                                        'set_djsn' => ['badge' => 'bg-success-soft', 'text' => 'text-success', 'icon' => 'fe-check-square', 'label' => 'Set.DJSN'],
+                                                                        'set_djsn' => ['badge' => 'bg-success-soft', 'text' => 'text-success', 'icon' => 'fe-check-square', 'label' => 'Sekretaris DJSN'],
                                                                         'tata_usaha' => ['badge' => 'bg-info-soft', 'text' => 'text-info', 'icon' => 'fe-file-text', 'label' => 'Tata Usaha'],
                                                                         'persidangan' => ['badge' => 'bg-warning-soft', 'text' => 'text-warning', 'icon' => 'fe-users', 'label' => 'Persidangan'],
                                                                         'prothum' => ['badge' => 'bg-danger-soft', 'text' => 'text-danger', 'icon' => 'fe-image', 'label' => 'ProtHum'],

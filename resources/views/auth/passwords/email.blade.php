@@ -460,7 +460,7 @@
                             </span>
                             <span class="helper-link-copy">
                                 <span class="helper-link-label">Informasi</span>
-                                <span class="helper-link-title">Lihat halaman developer SISKALA</span>
+                                <span class="helper-link-title">Developer SISKALA</span>
                             </span>
                             <span class="helper-link-arrow" aria-hidden="true">
                                 <i class="fe fe-arrow-right"></i>
