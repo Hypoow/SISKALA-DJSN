@@ -2,20 +2,20 @@
     <div class="card-header followup-header border-0">
         <div class="d-flex flex-wrap justify-content-between align-items-center">
             <div class="mb-2 mb-md-0">
-                <strong class="card-title mb-1 d-block text-white">
+                <strong class="card-title mb-1 d-block followup-title">
                     <span class="fe fe-check-square mr-2"></span>Arahan & Tindak Lanjut
                 </strong>
-                <small class="text-white-50">Kelola arahan, PIC, deadline, dan progres dalam satu tempat.</small>
+                <small class="followup-subtitle">Kelola arahan, PIC, deadline, dan progres dalam satu tempat.</small>
             </div>
             @if(!$isEditing && auth()->user()->canManageFollowUp())
-                <button type="button" wire:click="$toggle('showForm')" class="btn btn-sm btn-light text-primary font-weight-bold rounded-pill px-3" wire:loading.attr="disabled" wire:target="$toggle('showForm')">
+                <button type="button" wire:click="$toggle('showForm')" class="btn btn-sm btn-primary font-weight-bold rounded-pill px-3 shadow-sm" wire:loading.attr="disabled" wire:target="$toggle('showForm')">
                     <span wire:loading.remove wire:target="$toggle('showForm')"><i class="fe fe-plus mr-1"></i> Tambah Item</span>
                     <span wire:loading wire:target="$toggle('showForm')"><span class="spinner-border spinner-border-sm mr-1" role="status" aria-hidden="true"></span> Memuat...</span>
                 </button>
             @endif
         </div>
     </div>
-    <div class="card-body bg-white">
+    <div class="card-body followup-body">
 
     <div class="row mb-3">
         <div class="col-6 col-lg-3 mb-2">
@@ -283,14 +283,14 @@
                 <!-- PIC Header -->
                 <div class="d-flex align-items-center mb-3">
                     @php
-                        $badgeBg = 'bg-primary';
-                        if (str_contains(strtoupper($pic), 'PME')) $badgeBg = 'bg-success';
-                        elseif ($pic == 'Sekretaris DJSN' || $pic == 'Sekretariat DJSN') $badgeBg = 'bg-warning';
-                        elseif ($pic == 'Ketua DJSN') $badgeBg = 'bg-purple';
-                        elseif ($pic == 'Anggota DJSN') $badgeBg = 'bg-info';
-                        elseif ($pic == 'Komjakum') $badgeBg = 'bg-blue';
+                        $picChipClass = 'pic-chip-primary';
+                        if (str_contains(strtoupper($pic), 'PME')) $picChipClass = 'pic-chip-success';
+                        elseif ($pic == 'Sekretaris DJSN' || $pic == 'Sekretariat DJSN') $picChipClass = 'pic-chip-warning';
+                        elseif ($pic == 'Ketua DJSN') $picChipClass = 'pic-chip-purple';
+                        elseif ($pic == 'Anggota DJSN') $picChipClass = 'pic-chip-info';
+                        elseif ($pic == 'Komjakum') $picChipClass = 'pic-chip-blue';
                     @endphp
-                    <div class="d-inline-flex align-items-center px-3 py-2 rounded-lg shadow-sm text-white" style="background-color: var(--{{ $badgeBg }}, #0d6efd);">
+                    <div class="d-inline-flex align-items-center px-3 py-2 rounded-lg shadow-sm pic-chip {{ $picChipClass }}">
                         <i class="fe fe-users mr-2"></i>
                         <strong style="font-size: 0.95rem; letter-spacing: 0.5px;">{{ $pic ?: 'Tanpa PIC' }}</strong>
                     </div>
@@ -345,11 +345,11 @@
 
                                 <!-- Card Body: Instruction -->
                                 <div class="card-body py-3">
-                                    <div class="task-instruction markdown-content text-dark mb-3" style="font-size: 0.95rem; line-height: 1.6;">
+                                    <div class="task-instruction markdown-content mb-3">
                                         {!! \Illuminate\Support\Str::markdown($item->instruction) !!}
                                     </div>
                                     @if($item->progress_notes)
-                                        <div class="p-2 bg-light rounded-lg text-muted small border d-flex align-items-start">
+                                        <div class="task-progress-note d-flex align-items-start">
                                             <i class="fe fe-corner-down-right mr-2 mt-1 text-primary"></i> 
                                             <div>
                                                 <strong class="d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">Catatan Progress</strong>
@@ -401,11 +401,29 @@
 @push('styles')
 <style>
     .followup-shell {
-        border-radius: 16px;
+        border-radius: 20px;
+        border: 1px solid #e8eef7 !important;
+        box-shadow: 0 24px 44px -34px rgba(15, 44, 89, 0.24) !important;
     }
     .followup-header {
-        background: linear-gradient(135deg, #0d2f72 0%, #1b5bd6 100%);
+        background: linear-gradient(180deg, #ffffff 0%, #f6f9ff 100%);
         padding: 1rem 1.25rem;
+        border-bottom: 1px solid #edf2fb;
+    }
+    .followup-title {
+        color: #16325c;
+        font-size: 1.05rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+    }
+    .followup-subtitle {
+        display: block;
+        color: #6b7d99;
+        font-size: 0.84rem;
+        line-height: 1.65;
+    }
+    .followup-body {
+        background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
     }
     .followup-filter {
         border: 1px solid #e7ecf6;
@@ -413,6 +431,11 @@
         background: #fbfcff;
         color: #243a63;
         min-height: 76px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .followup-filter:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 22px -20px rgba(27, 91, 214, 0.3);
     }
     .followup-filter small {
         color: #8a99b5;
@@ -447,21 +470,113 @@
         border-style: dashed !important;
     }
     .task-card {
+        position: relative;
         border-radius: 16px;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
-        border: 1px solid #f3f4f6 !important;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03) !important;
+        border: 1px solid #edf2f7 !important;
+        box-shadow: 0 16px 28px -26px rgba(15, 44, 89, 0.18) !important;
+        background: linear-gradient(180deg, #ffffff 0%, #fcfdff 100%);
+        overflow: hidden;
+    }
+    .task-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #cfd8e6 0%, #aebfd8 100%);
+    }
+    .task-card .card-header,
+    .task-card .card-footer {
+        background: transparent;
     }
     .task-card:hover {
         transform: translateY(-3px);
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06) !important;
+        box-shadow: 0 22px 34px -28px rgba(15, 44, 89, 0.24) !important;
     }
     .task-completed {
-        opacity: 0.75;
-        background-color: #fafbfc !important;
+        background: linear-gradient(180deg, #fbfdfc 0%, #f4fbf6 100%) !important;
     }
-    .task-instruction p:last-child {
+    .task-card.task-completed::before {
+        background: linear-gradient(90deg, #22c55e 0%, #7dd3a4 100%);
+    }
+    .task-instruction {
+        color: #1f2f49 !important;
+        font-size: 0.96rem;
+        line-height: 1.72;
+    }
+    .task-instruction,
+    .task-instruction * {
+        color: #1f2f49 !important;
+    }
+    .task-instruction p,
+    .task-instruction ul,
+    .task-instruction ol,
+    .task-instruction blockquote {
+        margin-bottom: 0.7rem;
+    }
+    .task-instruction p:last-child,
+    .task-instruction ul:last-child,
+    .task-instruction ol:last-child,
+    .task-instruction blockquote:last-child {
         margin-bottom: 0;
+    }
+    .task-instruction strong,
+    .task-instruction h1,
+    .task-instruction h2,
+    .task-instruction h3,
+    .task-instruction h4 {
+        color: #102a52 !important;
+    }
+    .task-instruction a {
+        color: #1b5bd6 !important;
+        text-decoration: underline;
+    }
+    .task-instruction ul,
+    .task-instruction ol {
+        padding-left: 1.2rem;
+    }
+    .task-instruction blockquote {
+        padding: 0.75rem 0.9rem;
+        border-left: 4px solid rgba(27, 91, 214, 0.28);
+        border-radius: 0 12px 12px 0;
+        background: #f6f9ff;
+        color: #38527a !important;
+    }
+    .task-progress-note {
+        padding: 0.8rem 0.9rem;
+        border-radius: 14px;
+        background: #f8fbff;
+        border: 1px solid #e7eef9;
+        color: #5f6f87;
+        font-size: 0.82rem;
+        line-height: 1.65;
+    }
+    .task-progress-note strong {
+        color: #36527d;
+    }
+    .pic-chip {
+        color: #ffffff;
+        border-radius: 14px;
+    }
+    .pic-chip-primary {
+        background: linear-gradient(135deg, #1b5bd6 0%, #1848ac 100%);
+    }
+    .pic-chip-success {
+        background: linear-gradient(135deg, #1aa36f 0%, #17845b 100%);
+    }
+    .pic-chip-warning {
+        background: linear-gradient(135deg, #f59e0b 0%, #d47c00 100%);
+    }
+    .pic-chip-purple {
+        background: linear-gradient(135deg, #8b5cf6 0%, #6f3edf 100%);
+    }
+    .pic-chip-info {
+        background: linear-gradient(135deg, #06b6d4 0%, #0e8aa1 100%);
+    }
+    .pic-chip-blue {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
     }
     .status-dot {
         display: inline-block;
@@ -474,6 +589,21 @@
     }
     .bg-blue {
         background-color: #3b82f6 !important;
+    }
+    @media (max-width: 767.98px) {
+        .followup-header {
+            padding: 0.95rem 1rem;
+        }
+        .followup-title {
+            font-size: 0.98rem;
+        }
+        .task-card {
+            border-radius: 14px;
+        }
+        .task-instruction {
+            font-size: 0.93rem;
+            line-height: 1.68;
+        }
     }
 </style>
 @endpush

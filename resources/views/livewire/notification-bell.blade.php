@@ -1,6 +1,7 @@
-<li class="nav-item dropdown app-navbar-item-notif">
-    <a class="nav-link text-muted my-2" href="#" id="notificationDropdownTrigger" role="button" data-toggle="dropdown"
-        aria-haspopup="true" aria-expanded="false">
+<li class="nav-item dropdown app-navbar-item-notif nav-notif">
+    <a class="nav-link text-muted app-navbar-action app-navbar-action-notif d-inline-flex align-items-center justify-content-center"
+        href="#" id="notificationDropdownTrigger" role="button" data-toggle="dropdown" aria-haspopup="true"
+        aria-expanded="false" aria-label="Buka notifikasi">
         <span class="fe fe-bell fe-16"></span>
         @if($unreadCount > 0)
             <span class="dot dot-md bg-danger"></span>
@@ -26,8 +27,11 @@
                 @foreach($notifications as $notification)
                     @php
                         $isFollowUp = $notification->type === 'followup';
-                        $uniqueId = $isFollowUp ? 'followup-' . $notification->id : 'activity-' . $notification->id;
-                        $isRead = in_array($uniqueId, $readNotifications);
+                        $followupStage = $isFollowUp ? ($notification->notification_stage ?? 'general') : null;
+                        $uniqueId = $isFollowUp
+                            ? 'followup-' . $notification->id . '-' . $followupStage
+                            : 'activity-' . $notification->id;
+                        $isRead = in_array($uniqueId, $readNotifications, true);
 
                         // Redirect follow-ups to dashboard with highlight, others to show page
                         $url = $isFollowUp
@@ -37,9 +41,15 @@
                         $title = $isFollowUp ? $notification->instruction : $notification->name;
                         $date = $isFollowUp ? $notification->deadline : $notification->start_date;
                         $typeName = $isFollowUp ? 'Tindak Lanjut' : ucfirst($notification->type);
-                        $badgeClass = $isFollowUp ? 'badge-danger' : ($notification->type == 'internal' ? 'badge-primary' : 'badge-warning text-white');
+                        $badgeClass = $isFollowUp
+                            ? ($notification->notification_badge_class ?? 'badge-danger')
+                            : ($notification->type == 'internal' ? 'badge-primary' : 'badge-warning text-white');
                         $icon = $isFollowUp ? 'fe-check-square' : ($notification->type == 'activities.external' || $notification->type == 'external' ? 'fe-mail' : 'fe-briefcase');
-                        $iconBg = $isFollowUp ? 'bg-danger-light text-danger' : ($notification->type == 'internal' ? 'bg-primary-light text-primary' : 'bg-warning-light text-warning');
+                        $iconBg = $isFollowUp
+                            ? ($notification->notification_icon_bg ?? 'bg-danger-light text-danger')
+                            : ($notification->type == 'internal' ? 'bg-primary-light text-primary' : 'bg-warning-light text-warning');
+                        $followupNote = $isFollowUp ? ($notification->notification_label ?? 'Deadline mendekat!') : null;
+                        $followupTextClass = $isFollowUp ? ($notification->notification_text_class ?? 'text-danger') : null;
                     @endphp
                     <a href="javascript:void(0)" wire:click="markAsRead('{{ $uniqueId }}', '{{ $url }}')"
                         class="list-group-item list-group-item-action border-bottom py-3 px-4 d-flex align-items-start {{ $isRead ? 'bg-white' : 'bg-light' }}">
@@ -67,8 +77,8 @@
                                 style="max-width: 200px;">{{ $title }}</h6>
 
                             @if($isFollowUp)
-                                <p class="mb-0 small text-danger font-weight-bold {{ $isRead ? 'opacity-50' : '' }}">
-                                    <i class="fe fe-alert-triangle mr-1"></i> Deadline H-3!
+                                <p class="mb-0 small font-weight-bold {{ $followupTextClass }} {{ $isRead ? 'opacity-50' : '' }}">
+                                    <i class="fe fe-alert-triangle mr-1"></i> {{ $followupNote }}
                                 </p>
                             @elseif(auth()->user()->canManageActivities())
                                 <p class="mb-0 small text-danger font-weight-bold {{ $isRead ? 'opacity-50' : '' }}">

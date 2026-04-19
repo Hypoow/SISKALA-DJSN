@@ -3,7 +3,9 @@
         <div class="d-flex align-items-center justify-content-between flex-wrap mb-4 pb-3 border-bottom">
             <div>
                 <h4 class="font-weight-bold text-dark mb-1">Master Jabatan</h4>
-                <p class="text-muted small mb-0">Jabatan bisa dipindah lintas kelompok agar pola role dan disposisi mudah disusun ulang.</p>
+                <div class="markdown-content master-markdown-xs master-markdown-muted master-markdown-tight mb-0">
+                    {!! \Illuminate\Support\Str::markdown('Jabatan bisa dipindah lintas kelompok agar pola **role** dan disposisi lebih mudah disusun ulang.') !!}
+                </div>
             </div>
             <span class="badge badge-secondary-soft px-3 py-2 mt-3 mt-md-0"><i class="fe fe-move mr-2"></i>Drag lintas kolom aktif</span>
         </div>

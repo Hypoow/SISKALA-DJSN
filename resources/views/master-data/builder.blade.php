@@ -8,7 +8,7 @@
             <div class="row align-items-center">
                 <div class="col-lg-7">
                     <h2 class="h3 font-weight-bold text-dark mb-2">Builder Struktur Role</h2>
-                    <p class="text-muted mb-0">Kelola kelompok akun, komisi Dewan, unit pendamping, dan master jabatan dari satu layar yang lebih mudah di-drag dan diurutkan.</p>
+                    <p class="text-muted mb-0">Kelola kelompok akun, komisi Dewan, unit pendamping, dan master jabatan.</p>
                 </div>
                 <div class="col-lg-5 mt-3 mt-lg-0 text-lg-right">
                     <button type="button" class="btn btn-outline-primary rounded-pill px-4 mr-2 builder-btn" data-toggle="modal" data-target="#positionModal">

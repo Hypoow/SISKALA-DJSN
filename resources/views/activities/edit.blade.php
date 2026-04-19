@@ -547,10 +547,14 @@
                                 <div class="collapse mt-3" id="collapseMom">
                                     <div class="form-group">
                                         <input type="text" id="mom_title" class="form-control form-control-sm mb-2" placeholder="Judul MoM">
+
                                         <div class="custom-file">
-                                            <input type="file" class="custom-file-input" id="mom_file">
+                                            <input type="file" class="custom-file-input" id="mom_file" accept=".pdf,.doc,.docx">
                                             <label class="custom-file-label" text-truncate>Pilih File...</label>
                                         </div>
+                                        <small class="text-muted d-block mb-2">
+                                            Format file yang didukung: PDF, DOC, dan DOCX. Ukuran maksimal 20 MB per file.
+                                        </small>
                                         <button type="button" class="btn btn-sm btn-primary mt-3 btn-block" onclick="uploadMom()">Upload</button>
                                     </div>
                                 </div>
@@ -596,6 +600,9 @@
                                 <div class="collapse mt-3" id="collapseMaterial">
                                     <div class="form-group">
                                         <input type="text" id="material_title" class="form-control form-control-sm mb-2" placeholder="Judul Materi">
+                                        <small class="text-muted d-block mb-2">
+                                            Ukuran maksimal 20 MB per file. Format umum: PDF, DOC/DOCX, PPT/PPTX, XLS/XLSX, dan CSV.
+                                        </small>
                                         <div class="custom-file">
                                             <input type="file" class="custom-file-input" id="material_file">
                                             <label class="custom-file-label" text-truncate>Pilih File...</label>

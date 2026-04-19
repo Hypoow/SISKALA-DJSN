@@ -818,6 +818,9 @@
                                                     {{ $newMaterialFile ? $newMaterialFile->getClientOriginalName() : 'Pilih file...' }}
                                                 </label>
                                             </div>
+                                            <small class="text-muted d-block mb-2">
+                                                Format file: PDF, DOC/DOCX, PPT/PPTX, XLS/XLSX, dan CSV.
+                                            </small>
                                             @error('newMaterialFile') <span class="text-danger small">{{ $message }}</span> @enderror
                                             <div wire:loading wire:target="newMaterialFile" class="text-xs text-muted mt-1">
                                                 Uploading...
@@ -837,66 +840,68 @@
 
                     <!-- Material List -->
                     <h6 class="font-weight-bold mb-3">Daftar Materi Tersimpan</h6>
-                    <div class="table-responsive">
-                        <table class="table align-items-center">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th>Judul Materi</th>
-                                    <th>File</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($materialList as $material)
+                    @if(collect($materialList)->isNotEmpty())
+                        <div class="table-responsive">
+                            <table class="table align-items-center w-100">
+                                <thead class="thead-light">
                                     <tr>
-                                        <td class="font-weight-bold text-dark">{{ $material->title }}</td>
-                                        <td>
-                                            @php
-                                                $ext = strtolower(pathinfo($material->file_path, PATHINFO_EXTENSION));
-                                                $icon = 'fe-file';
-                                                $color = 'text-secondary';
-                                                
-                                                if(in_array($ext, ['ppt', 'pptx'])) {
-                                                    $icon = 'fe-monitor';
-                                                    $color = 'text-warning';
-                                                } elseif(in_array($ext, ['doc', 'docx'])) {
-                                                    $icon = 'fe-file-text';
-                                                    $color = 'text-primary';
-                                                } elseif($ext == 'pdf') {
+                                        <th>Judul Materi</th>
+                                        <th>File</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($materialList as $material)
+                                        <tr>
+                                            <td class="font-weight-bold text-dark">{{ $material->title }}</td>
+                                            <td>
+                                                @php
+                                                    $ext = strtolower(pathinfo($material->file_path, PATHINFO_EXTENSION));
                                                     $icon = 'fe-file';
-                                                    $color = 'text-danger';
-                                                } elseif(in_array($ext, ['xls', 'xlsx', 'csv'])) {
-                                                    $icon = 'fe-bar-chart-2';
-                                                    $color = 'text-success';
-                                                }
-                                            @endphp
-                                            <a href="{{ Storage::url($material->file_path) }}" target="_blank" class="d-flex align-items-center text-dark text-decoration-none">
-                                                <div class="avatar avatar-sm mr-2 {{ $color }} bg-light rounded">
-                                                    <i class="fe {{ $icon }} font-weight-bold" style="font-size: 1.2rem;"></i>
-                                                </div>
-                                                <div>
-                                                    <span class="d-block font-weight-bold small text-truncate" style="max-width: 200px;">{{ basename($material->file_path) }}</span>
-                                                    <span class="badge badge-light border text-uppercase" style="font-size: 10px;">{{ $ext }}</span>
-                                                </div>
-                                            </a>
-                                        </td>
-                                        <td>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDeleteFile('material', {{ $material->id }})" {{ !auth()->user()->canManagePostActivity() ? 'disabled' : '' }}>
-                                                <i class="fe fe-trash"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="3" class="text-center text-muted py-4">
-                                            <i class="fe fe-folder display-4 mb-3 d-block"></i>
-                                            Belum ada bahan materi yang diupload.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                                                    $color = 'text-secondary';
+                                                    
+                                                    if(in_array($ext, ['ppt', 'pptx'])) {
+                                                        $icon = 'fe-monitor';
+                                                        $color = 'text-warning';
+                                                    } elseif(in_array($ext, ['doc', 'docx'])) {
+                                                        $icon = 'fe-file-text';
+                                                        $color = 'text-primary';
+                                                    } elseif($ext == 'pdf') {
+                                                        $icon = 'fe-file';
+                                                        $color = 'text-danger';
+                                                    } elseif(in_array($ext, ['xls', 'xlsx', 'csv'])) {
+                                                        $icon = 'fe-bar-chart-2';
+                                                        $color = 'text-success';
+                                                    }
+                                                @endphp
+                                                <a href="{{ Storage::url($material->file_path) }}" target="_blank" class="d-flex align-items-center text-dark text-decoration-none">
+                                                    <div class="avatar avatar-sm mr-2 {{ $color }} bg-light rounded">
+                                                        <i class="fe {{ $icon }} font-weight-bold" style="font-size: 1.2rem;"></i>
+                                                    </div>
+                                                    <div>
+                                                        <span class="d-block font-weight-bold small text-truncate" style="max-width: 200px;">{{ basename($material->file_path) }}</span>
+                                                        <span class="badge badge-light border text-uppercase" style="font-size: 10px;">{{ $ext }}</span>
+                                                    </div>
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDeleteFile('material', {{ $material->id }})" {{ !auth()->user()->canManagePostActivity() ? 'disabled' : '' }}>
+                                                    <i class="fe fe-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div class="border rounded-lg bg-light text-center py-5 px-3 w-100">
+                            <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-white shadow-sm mb-3" style="width: 72px; height: 72px;">
+                                <i class="fe fe-folder text-secondary" style="font-size: 2rem;"></i>
+                            </div>
+                            <p class="text-muted mb-0">Belum ada bahan materi yang diupload.</p>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -939,12 +944,16 @@
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>File MoM (Max 20MB)</label>
+                                            
                                             <div class="custom-file">
-                                                <input type="file" wire:model="newMomFile" class="custom-file-input" id="momFile">
+                                                <input type="file" wire:model="newMomFile" class="custom-file-input" id="momFile" accept=".pdf,.doc,.docx">
                                                 <label class="custom-file-label" for="momFile">
                                                     {{ $newMomFile ? $newMomFile->getClientOriginalName() : 'Pilih file...' }}
                                                 </label>
                                             </div>
+                                            <small class="text-muted d-block mb-2">
+                                                Format file yang didukung: PDF, DOC, dan DOCX. Ukuran maksimal 20 MB per file.
+                                            </small>
                                             @error('newMomFile') <span class="text-danger small">{{ $message }}</span> @enderror
                                             <div wire:loading wire:target="newMomFile" class="text-xs text-muted mt-1">
                                                 Uploading...
@@ -964,66 +973,68 @@
 
                     <!-- MoM List -->
                     <h6 class="font-weight-bold mb-3">Daftar MoM Tersimpan</h6>
-                    <div class="table-responsive">
-                        <table class="table align-items-center">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th>Judul MoM</th>
-                                    <th>File</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($momList as $mom)
+                    @if(collect($momList)->isNotEmpty())
+                        <div class="table-responsive">
+                            <table class="table align-items-center w-100">
+                                <thead class="thead-light">
                                     <tr>
-                                        <td class="font-weight-bold text-dark">{{ $mom->title }}</td>
-                                        <td>
-                                            @php
-                                                $ext = strtolower(pathinfo($mom->file_path, PATHINFO_EXTENSION));
-                                                $icon = 'fe-file';
-                                                $color = 'text-secondary';
-                                                
-                                                if(in_array($ext, ['ppt', 'pptx'])) {
-                                                    $icon = 'fe-monitor';
-                                                    $color = 'text-warning';
-                                                } elseif(in_array($ext, ['doc', 'docx'])) {
-                                                    $icon = 'fe-file-text';
-                                                    $color = 'text-primary';
-                                                } elseif($ext == 'pdf') {
+                                        <th>Judul MoM</th>
+                                        <th>File</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($momList as $mom)
+                                        <tr>
+                                            <td class="font-weight-bold text-dark">{{ $mom->title }}</td>
+                                            <td>
+                                                @php
+                                                    $ext = strtolower(pathinfo($mom->file_path, PATHINFO_EXTENSION));
                                                     $icon = 'fe-file';
-                                                    $color = 'text-danger';
-                                                } elseif(in_array($ext, ['xls', 'xlsx', 'csv'])) {
-                                                    $icon = 'fe-bar-chart-2';
-                                                    $color = 'text-success';
-                                                }
-                                            @endphp
-                                            <a href="{{ Storage::url($mom->file_path) }}" target="_blank" class="d-flex align-items-center text-dark text-decoration-none">
-                                                <div class="avatar avatar-sm mr-2 {{ $color }} bg-light rounded">
-                                                    <i class="fe {{ $icon }} font-weight-bold" style="font-size: 1.2rem;"></i>
-                                                </div>
-                                                <div>
-                                                    <span class="d-block font-weight-bold small text-truncate" style="max-width: 200px;">{{ basename($mom->file_path) }}</span>
-                                                    <span class="badge badge-light border text-uppercase" style="font-size: 10px;">{{ $ext }}</span>
-                                                </div>
-                                            </a>
-                                        </td>
-                                        <td>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDeleteFile('mom', {{ $mom->id }})" {{ !auth()->user()->canManagePostActivity() ? 'disabled' : '' }}>
-                                                <i class="fe fe-trash"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="3" class="text-center text-muted py-4">
-                                            <i class="fe fe-file-text display-4 mb-3 d-block"></i>
-                                            Belum ada MoM yang diupload.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                                                    $color = 'text-secondary';
+                                                    
+                                                    if(in_array($ext, ['ppt', 'pptx'])) {
+                                                        $icon = 'fe-monitor';
+                                                        $color = 'text-warning';
+                                                    } elseif(in_array($ext, ['doc', 'docx'])) {
+                                                        $icon = 'fe-file-text';
+                                                        $color = 'text-primary';
+                                                    } elseif($ext == 'pdf') {
+                                                        $icon = 'fe-file';
+                                                        $color = 'text-danger';
+                                                    } elseif(in_array($ext, ['xls', 'xlsx', 'csv'])) {
+                                                        $icon = 'fe-bar-chart-2';
+                                                        $color = 'text-success';
+                                                    }
+                                                @endphp
+                                                <a href="{{ Storage::url($mom->file_path) }}" target="_blank" class="d-flex align-items-center text-dark text-decoration-none">
+                                                    <div class="avatar avatar-sm mr-2 {{ $color }} bg-light rounded">
+                                                        <i class="fe {{ $icon }} font-weight-bold" style="font-size: 1.2rem;"></i>
+                                                    </div>
+                                                    <div>
+                                                        <span class="d-block font-weight-bold small text-truncate" style="max-width: 200px;">{{ basename($mom->file_path) }}</span>
+                                                        <span class="badge badge-light border text-uppercase" style="font-size: 10px;">{{ $ext }}</span>
+                                                    </div>
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDeleteFile('mom', {{ $mom->id }})" {{ !auth()->user()->canManagePostActivity() ? 'disabled' : '' }}>
+                                                    <i class="fe fe-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div class="border rounded-lg bg-light text-center py-5 px-3 w-100">
+                            <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-white shadow-sm mb-3" style="width: 72px; height: 72px;">
+                                <i class="fe fe-file-text text-secondary" style="font-size: 2rem;"></i>
+                            </div>
+                            <p class="text-muted mb-0">Belum ada MoM yang diupload.</p>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

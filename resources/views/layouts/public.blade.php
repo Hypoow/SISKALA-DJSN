@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="SISKALA">
-    <link rel="icon" href="{{ asset('assets/images/logo.svg') }}">
+    <link rel="icon" href="{{ asset('images/logo.svg') }}">
     <title>@yield('title', 'SISKALA')</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('tinydash/css/feather.css') }}">
@@ -78,11 +78,14 @@
             background: linear-gradient(135deg, rgba(15, 44, 89, 0.08), rgba(198, 151, 73, 0.14));
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
             flex-shrink: 0;
+            overflow: hidden;
         }
 
         .public-brand-mark img {
             width: 24px;
             height: 24px;
+            display: block;
+            object-fit: contain;
         }
 
         .public-brand-copy {
@@ -168,7 +171,7 @@
         <header class="public-header">
             <a href="{{ route('developer') }}" class="public-brand" aria-label="Halaman developer SISKALA">
                 <span class="public-brand-mark">
-                    <img src="{{ asset('assets/images/logo.svg') }}" alt="Logo SISKALA">
+                    <img src="{{ asset('images/logo.svg') }}" alt="Logo SISKALA" width="24" height="24">
                 </span>
                 <span class="public-brand-copy">
                     <strong>SISKALA</strong>

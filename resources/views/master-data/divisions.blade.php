@@ -8,7 +8,9 @@
             <div>
                 <span class="text-uppercase text-muted small font-weight-bold d-block mb-1">Master Data</span>
                 <h2 class="h3 font-weight-bold text-dark mb-2">Builder Struktur Role</h2>
-                <p class="text-muted mb-0">Kelola kelompok akun, komisi Dewan, unit pendamping, dan master jabatan dari satu layar yang lebih mudah di-drag dan diurutkan.</p>
+                <div class="markdown-content master-markdown-sm master-markdown-muted master-markdown-tight mb-0">
+                    {!! \Illuminate\Support\Str::markdown('Kelola kelompok akun, komisi Dewan, unit pendamping, dan master jabatan dari satu layar yang lebih mudah di-drag dan diurutkan.') !!}
+                </div>
             </div>
             <div class="mt-3 mt-lg-0">
                 <button type="button" class="btn btn-outline-primary rounded-pill px-4 mr-2" data-toggle="modal" data-target="#positionModal">
@@ -28,7 +30,9 @@
                     <div class="card-body">
                         <small class="text-uppercase text-muted font-weight-bold d-block mb-2">Unit Kerja</small>
                         <h3 class="font-weight-bold text-dark mb-1">{{ $divisions->count() }}</h3>
-                        <p class="text-muted mb-0">Dipakai untuk penempatan akun dan pengelompokan struktur.</p>
+                        <div class="markdown-content master-markdown-xs master-markdown-muted master-markdown-tight mb-0">
+                            {!! \Illuminate\Support\Str::markdown('Dipakai untuk penempatan akun dan pengelompokan struktur.') !!}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -37,7 +41,9 @@
                     <div class="card-body">
                         <small class="text-uppercase text-muted font-weight-bold d-block mb-2">Komisi Dewan</small>
                         <h3 class="font-weight-bold text-dark mb-1">{{ $divisions->where('is_commission', true)->count() }}</h3>
-                        <p class="text-muted mb-0">Komisi aktif bisa langsung dipakai sebagai scope untuk Dewan, Persidangan, dan TA.</p>
+                        <div class="markdown-content master-markdown-xs master-markdown-muted master-markdown-tight mb-0">
+                            {!! \Illuminate\Support\Str::markdown('Komisi aktif bisa langsung dipakai sebagai scope untuk **Dewan**, **Persidangan**, dan **TA**.') !!}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -46,7 +52,9 @@
                     <div class="card-body">
                         <small class="text-uppercase text-muted font-weight-bold d-block mb-2">Master Jabatan</small>
                         <h3 class="font-weight-bold text-dark mb-1">{{ $positions->count() }}</h3>
-                        <p class="text-muted mb-0">Hak akses default, disposisi, dan label laporan diturunkan dari sini.</p>
+                        <div class="markdown-content master-markdown-xs master-markdown-muted master-markdown-tight mb-0">
+                            {!! \Illuminate\Support\Str::markdown('Hak akses default, disposisi, dan label laporan diturunkan dari sini.') !!}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -58,7 +66,7 @@
     </div>
 @endsection
 
-@push('styles')
+    @push('styles')
     <style>
         .rounded-xl { border-radius: 1.3rem; }
         .builder-column { background: #f9fbff; border: 1px solid #e4edf8; border-radius: 1.2rem; padding: 1rem; height: 100%; }
@@ -74,6 +82,13 @@
         .badge-warning-soft { background: rgba(255, 193, 7, .15); color: #9a6b00; }
         .badge-success-soft { background: rgba(40, 167, 69, .12); color: #1f7a38; }
         .sortable-ghost { opacity: .45; }
+        .builder-item-markdown {
+            min-height: 2.8rem;
+            overflow-wrap: anywhere;
+        }
+        .builder-item-markdown code {
+            word-break: break-word;
+        }
     </style>
 @endpush
 

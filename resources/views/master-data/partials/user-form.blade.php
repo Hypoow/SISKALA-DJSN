@@ -15,7 +15,9 @@
     <div>
         <span class="text-uppercase text-muted small font-weight-bold d-block mb-1">Master Data</span>
         <h2 class="h3 font-weight-bold text-dark mb-2">{{ $pageTitle }}</h2>
-        <p class="text-muted mb-0">{{ $pageDescription }}</p>
+        <div class="markdown-content master-markdown-sm master-markdown-muted master-markdown-tight mb-0">
+            {!! \Illuminate\Support\Str::markdown($pageDescription) !!}
+        </div>
     </div>
     <div class="mt-3 mt-lg-0">
         <a href="{{ route('master-data.index') }}" class="btn btn-outline-secondary rounded-pill px-4">
@@ -50,7 +52,9 @@
                     <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-md-between mb-4">
                         <div>
                             <h5 class="font-weight-bold text-dark mb-1">Informasi Akun</h5>
-                            <p class="text-muted small mb-0">Akun biasa cukup mengikuti unit kerja dan jabatan. Centang Super Admin hanya untuk akun pengelola penuh.</p>
+                            <div class="markdown-content master-markdown-xs master-markdown-muted master-markdown-tight mb-0">
+                                {!! \Illuminate\Support\Str::markdown('Akun biasa cukup mengikuti unit kerja dan jabatan. Centang **Super Admin** hanya untuk akun pengelola penuh.') !!}
+                            </div>
                         </div>
                         <label class="custom-control custom-switch mt-3 mt-md-0">
                             <input type="checkbox" class="custom-control-input" id="is_super_admin" name="is_super_admin" value="1" {{ $isSuperAdmin === '1' ? 'checked' : '' }}>
@@ -92,7 +96,9 @@
             <div class="card shadow-sm border-0 rounded-xl mb-4" id="structureCard">
                 <div class="card-body p-4">
                     <h5 class="font-weight-bold text-dark mb-1">Penempatan Struktur</h5>
-                    <p class="text-muted small mb-4">Struktur inilah yang dipakai untuk menurunkan role, akses halaman, perilaku dashboard, dan keterkaitan komisi.</p>
+                    <div class="markdown-content master-markdown-xs master-markdown-muted master-markdown-tight mb-4">
+                        {!! \Illuminate\Support\Str::markdown('Struktur inilah yang dipakai untuk menurunkan **role**, akses halaman, perilaku dashboard, dan keterkaitan komisi.') !!}
+                    </div>
 
                     <div class="form-row">
                         <div class="col-lg-6">
@@ -140,8 +146,8 @@
                     </div>
 
                     <div class="alert alert-light border mb-0">
-                        <div class="small text-muted">
-                            Dewan dan Sekretaris DJSN bersifat disposisi-based di dashboard kalender. Persidangan dan Tenaga Ahli akan mengikuti komisi Dewan yang didampingi.
+                        <div class="markdown-content master-markdown-xs master-markdown-muted master-markdown-tight mb-0">
+                            {!! \Illuminate\Support\Str::markdown('Dewan dan **Sekretaris DJSN** bersifat disposisi-based di dashboard kalender. Persidangan dan Tenaga Ahli akan mengikuti komisi Dewan yang didampingi.') !!}
                         </div>
                     </div>
                 </div>
@@ -150,7 +156,9 @@
             <div class="card shadow-sm border-0 rounded-xl">
                 <div class="card-body p-4">
                     <h5 class="font-weight-bold text-dark mb-1">Override Per Akun</h5>
-                    <p class="text-muted small mb-4">Biarkan kosong jika Anda ingin akun sepenuhnya mengikuti default unit dan jabatan.</p>
+                    <div class="markdown-content master-markdown-xs master-markdown-muted master-markdown-tight mb-4">
+                        {!! \Illuminate\Support\Str::markdown('Biarkan kosong jika Anda ingin akun sepenuhnya mengikuti default unit dan jabatan.') !!}
+                    </div>
 
                     <div class="form-row">
                         <div class="col-lg-4">
@@ -204,7 +212,7 @@
                     </div>
 
                     <div class="alert alert-light border mb-4">
-                        <div class="small text-muted" id="previewCalendar">Pilih unit dan jabatan untuk melihat ringkasan perilaku dashboard kalender.</div>
+                        <div class="small text-muted markdown-content master-markdown-xs master-markdown-muted master-markdown-tight mb-0" id="previewCalendar">Pilih unit dan jabatan untuk melihat ringkasan perilaku dashboard kalender.</div>
                     </div>
 
                     <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">

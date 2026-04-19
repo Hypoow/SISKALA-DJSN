@@ -62,6 +62,9 @@
                     <div class="form-group mb-0">
                         <label class="small font-weight-bold text-muted">Deskripsi</label>
                         <textarea class="form-control shadow-sm" id="divisionDescription" name="description" rows="3"></textarea>
+                        <div class="markdown-content master-markdown-xs master-markdown-muted master-markdown-tight mt-2">
+                            {!! \Illuminate\Support\Str::markdown('Mendukung **Markdown** untuk bullet list, penekanan, dan catatan singkat unit.') !!}
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-0">
@@ -135,6 +138,9 @@
                     <div class="form-group mb-0">
                         <label class="small font-weight-bold text-muted">Label Target Laporan</label>
                         <input type="text" class="form-control shadow-sm" id="positionReportTargetLabel" name="report_target_label">
+                        <div class="markdown-content master-markdown-xs master-markdown-muted master-markdown-tight mt-2">
+                            {!! \Illuminate\Support\Str::markdown('Gunakan label ini untuk override teks target laporan bila format jabatan perlu dibuat lebih spesifik.') !!}
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-0">

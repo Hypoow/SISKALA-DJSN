@@ -3,7 +3,9 @@
         <div class="d-flex align-items-center justify-content-between flex-wrap mb-4 pb-3 border-bottom">
             <div>
                 <h4 class="font-weight-bold text-dark mb-1">Kelompok Akun & Unit Kerja</h4>
-                <p class="text-muted small mb-0">Tarik kartu unit ke grup yang tepat. Tandai unit sebagai komisi Dewan jika ingin dipakai sebagai acuan komisi dinamis.</p>
+                <div class="markdown-content master-markdown-xs master-markdown-muted master-markdown-tight mb-0">
+                    {!! \Illuminate\Support\Str::markdown('Tarik kartu unit ke grup yang tepat. Tandai unit sebagai **komisi Dewan** jika ingin dipakai sebagai acuan komisi dinamis.') !!}
+                </div>
             </div>
             <span class="badge badge-secondary-soft px-3 py-2 mt-3 mt-md-0"><i class="fe fe-move mr-2"></i>Drag lintas kolom aktif</span>
         </div>
@@ -49,7 +51,9 @@
                                             </form>
                                         </div>
                                     </div>
-                                    <p class="text-muted small mb-2">{{ $division->description ?: 'Belum ada deskripsi khusus.' }}</p>
+                                    <div class="markdown-content master-markdown-xs master-markdown-muted master-markdown-tight builder-item-markdown mb-2">
+                                        {!! \Illuminate\Support\Str::markdown($division->description ?: '_Belum ada deskripsi khusus._') !!}
+                                    </div>
                                     <div class="small text-muted d-flex justify-content-between">
                                         <span>{{ $division->users_count }} akun</span>
                                         <span>Urutan {{ $division->order }}</span>

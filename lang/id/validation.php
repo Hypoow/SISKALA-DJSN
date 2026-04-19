@@ -163,8 +163,12 @@ return [
     */
 
     'custom' => [
-        'attribute-name' => [
-            'rule-name' => 'custom-message',
+        'newMaterialFile' => [
+            'max' => 'Ukuran file materi maksimal 20 MB.',
+        ],
+        'newMomFile' => [
+            'max' => 'Ukuran file MoM maksimal 20 MB.',
+            'mimes' => 'File MoM harus berformat PDF, DOC, atau DOCX.',
         ],
     ],
 
@@ -185,6 +189,10 @@ return [
         'title' => 'judul',
         'description' => 'deskripsi',
         'location' => 'lokasi',
+        'newMaterialTitle' => 'judul materi',
+        'newMaterialFile' => 'file materi',
+        'newMomTitle' => 'judul MoM',
+        'newMomFile' => 'file MoM',
     ],
 
 ];

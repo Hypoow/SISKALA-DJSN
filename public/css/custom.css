@@ -1942,6 +1942,46 @@ body.vertical.light {
     max-width: min(280px, calc(100vw - 1.25rem));
 }
 
+.app-shell .topnav .nav.align-items-center {
+    gap: 0.2rem;
+    flex-wrap: nowrap;
+}
+
+.app-shell .topnav .app-navbar-action {
+    position: relative;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0.35rem !important;
+    line-height: 1;
+}
+
+.app-shell .topnav .app-navbar-action-notif .dot {
+    position: absolute;
+    top: 0.8rem;
+    right: 0.55rem;
+}
+
+.app-shell .topnav .app-navbar-profile-trigger {
+    gap: 0.2rem;
+    padding-right: 0.35rem !important;
+    white-space: nowrap;
+}
+
+.app-shell .topnav .app-navbar-profile-trigger::after {
+    margin-left: 0 !important;
+    font-size: 0.72rem;
+    line-height: 1;
+    vertical-align: middle;
+}
+
+.app-shell .topnav .app-navbar-profile-avatar {
+    margin-top: 0 !important;
+}
+
+
 /* Keep every modal layer above the elevated sidebar/topnav stack. */
 .modal-backdrop {
     z-index: 2500 !important;
@@ -1975,11 +2015,22 @@ body.vertical.light {
     border-radius: 14px;
     background: linear-gradient(135deg, rgba(15, 44, 89, 0.08), rgba(198, 151, 73, 0.18));
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    overflow: hidden;
 }
 
 .app-shell-brand-mark img {
     width: 22px;
     height: 22px;
+    display: block;
+    object-fit: contain;
+}
+
+.app-shell-brand-image {
+    display: block;
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    flex-shrink: 0;
 }
 
 .app-shell-brand-copy {
@@ -2172,19 +2223,101 @@ body.vertical.light {
     text-decoration: none;
 }
 
+.sidebar-brand-link--mobile {
+    width: auto;
+    max-width: 100%;
+}
+
 .sidebar-brand-mark {
-    width: 40px;
-    height: 40px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.12);
+    overflow: hidden;
+}
+
+.sidebar-brand-mark--expanded {
+    width: clamp(168px, 62vw, 224px);
+    height: 64px;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
 }
 
 .sidebar-brand-mark img {
-    width: 20px;
-    height: 20px;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.sidebar-brand-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.sidebar-brand-image--expanded {
+    width: 100%;
+    height: 100%;
+    border-radius: 18px;
+}
+
+.app-sidebar-brand-link {
+    width: min(100%, 232px);
+}
+
+.app-sidebar-brand-expanded,
+.app-sidebar-brand-collapsed {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.app-sidebar-brand-expanded {
+    width: min(100%, 220px);
+    height: 66px;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.app-sidebar-brand-expanded-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 18px;
+}
+
+.app-sidebar-brand-collapsed {
+    display: none;
+    width: 46px;
+    height: 46px;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.app-sidebar-brand-collapsed-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 14px;
+}
+
+.app-avatar-logo {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: contain;
+    padding: 0.2rem;
+    background: #ffffff;
 }
 
 .sidebar-brand-copy {
@@ -2647,6 +2780,18 @@ body.vertical.light {
         padding-right: 0.2rem;
     }
 
+    .app-shell.app-sidebar-desktop-collapsed .app-sidebar-brand-link {
+        width: auto;
+    }
+
+    .app-shell.app-sidebar-desktop-collapsed .app-sidebar-brand-expanded {
+        display: none;
+    }
+
+    .app-shell.app-sidebar-desktop-collapsed .app-sidebar-brand-collapsed {
+        display: inline-flex;
+    }
+
     .app-shell.app-sidebar-desktop-collapsed .app-sidebar-group {
         margin-bottom: 0.3rem;
     }
@@ -2836,11 +2981,47 @@ body.vertical.light {
         align-items: center;
         justify-content: space-between;
         gap: 0.75rem;
-        padding: 0.25rem 0.3rem 0.95rem;
+        padding: 0.15rem 0.1rem 0.95rem 0.2rem;
     }
 
     .app-shell .sidebar-brand-shell {
-        display: none;
+        display: none !important;
+        min-height: 0;
+        margin: 0;
+        padding: 0;
+        border-bottom: 0;
+    }
+
+    .app-shell .sidebar-brand-link--mobile {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .app-shell .sidebar-brand-link--mobile .sidebar-brand-mark--expanded {
+        width: clamp(156px, 52vw, 210px);
+        height: 58px;
+    }
+
+    .app-shell .sidebar-mobile-close {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 36px;
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        min-height: 36px;
+        margin-top: 0.15rem;
+        padding: 0 !important;
+        border-radius: 12px !important;
+        line-height: 1;
+        background: rgba(255, 255, 255, 0.14);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    .app-shell .sidebar-mobile-close i {
+        font-size: 1rem;
+        line-height: 1;
     }
 
     .app-shell .sidebar-brand-text,
@@ -2891,6 +3072,25 @@ body.vertical.light {
     .app-shell .topnav {
         z-index: 2400;
     }
+
+    .app-shell .topnav .nav.align-items-center {
+        gap: 0.1rem;
+    }
+
+    .app-shell .topnav .app-navbar-action {
+        min-width: 2.5rem;
+        min-height: 2.5rem;
+        padding: 0.25rem !important;
+    }
+
+    .app-shell .topnav .app-navbar-profile-trigger {
+        padding-right: 0.25rem !important;
+    }
+
+    .app-shell .topnav .app-navbar-profile-trigger::after {
+        display: none;
+    }
+
 
     .app-shell .topnav .dropdown-menu,
     .app-shell .topnav .app-navbar-dropdown {

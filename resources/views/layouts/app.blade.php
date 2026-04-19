@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <meta name="description" content="SISKALA">
   <meta name="author" content="">
-  <link rel="icon" href="{{ asset('assets/images/logo.svg') }}">
+  <link rel="icon" href="{{ asset('images/logo.svg') }}">
   <title>@yield('title', 'SISKALA')</title>
   <!-- Simple bar CSS -->
   <!-- Simple bar CSS removed -->
@@ -489,7 +489,8 @@
         </button>
         <a href="{{ route('dashboard') }}" class="app-shell-brand text-decoration-none">
           <span class="app-shell-brand-mark">
-            <img src="{{ asset('assets/images/logo.svg') }}" alt="Logo SISKALA" class="img-fluid">
+            <img src="{{ asset('images/logo.svg') }}" alt="Logo SISKALA" class="app-shell-brand-image" width="22"
+              height="22">
           </span>
           <span class="app-shell-brand-copy">
             <strong>SISKALA</strong>
@@ -504,10 +505,13 @@
         <livewire:notification-bell />
 
         <li class="nav-item dropdown app-navbar-item-profile">
-          <a class="nav-link dropdown-toggle text-muted pr-0" href="#" id="profileDropdownTrigger" role="button"
-            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            <span class="avatar avatar-sm mt-2">
-              <img src="{{ asset('assets/images/logo.svg') }}" alt="..." class="avatar-img rounded-circle">
+          <a
+            class="nav-link dropdown-toggle text-muted pr-0 app-navbar-action app-navbar-profile-trigger d-inline-flex align-items-center justify-content-center"
+            href="#" id="profileDropdownTrigger" role="button" data-toggle="dropdown" aria-haspopup="true"
+            aria-expanded="false" aria-label="Buka menu profil">
+            <span class="avatar avatar-sm app-navbar-profile-avatar">
+              <img src="{{ asset('images/logo.svg') }}" alt="Logo SISKALA"
+                class="avatar-img rounded-circle app-avatar-logo">
             </span>
           </a>
           <div
@@ -515,7 +519,8 @@
             aria-labelledby="profileDropdownTrigger" style="min-width: 250px; border-radius: 12px;">
             <div class="dropdown-header d-flex align-items-center bg-light border-bottom py-3 px-3">
               <span class="avatar avatar-sm mt-0 mr-3">
-                <img src="{{ asset('assets/images/logo.svg') }}" alt="..." class="avatar-img rounded-circle">
+                <img src="{{ asset('images/logo.svg') }}" alt="Logo SISKALA"
+                  class="avatar-img rounded-circle app-avatar-logo">
               </span>
               <div class="user-info text-truncate">
                 <h6 class="mb-0 text-dark font-weight-bold">{{ auth()->user()->name ?? 'User' }}</h6>
@@ -635,6 +640,7 @@
       const storageKey = 'siskala.sidebar.collapsed';
       const cookieName = 'siskala_sidebar_collapsed';
       let sidebarLock = false;
+      let shellResizeFrame = null;
 
       if (!sidebar) {
         return;
@@ -674,6 +680,23 @@
         }, 360);
       }
 
+      function syncShellOffset() {
+        const sidebarWidth = isDesktop() ? Math.round(sidebar.getBoundingClientRect().width) : 0;
+        body.style.setProperty('--app-shell-offset', sidebarWidth + 'px');
+      }
+
+      function queueShellLayoutSync() {
+        if (shellResizeFrame !== null) {
+          window.cancelAnimationFrame(shellResizeFrame);
+        }
+
+        shellResizeFrame = window.requestAnimationFrame(function () {
+          syncShellOffset();
+          syncNotificationDropdownLayout();
+          shellResizeFrame = null;
+        });
+      }
+
       function setMobileOpen(isOpen) {
         const shouldOpen = isOpen && !isDesktop();
 
@@ -689,6 +712,7 @@
         }
 
         sidebar.setAttribute('aria-hidden', isDesktop() ? 'false' : String(!shouldOpen));
+        queueShellLayoutSync();
       }
 
       function setDesktopCollapsed(isCollapsed) {
@@ -705,6 +729,8 @@
             shouldCollapse ? 'Perluas menu desktop' : 'Ciutkan menu desktop'
           );
         }
+
+        queueShellLayoutSync();
       }
 
       function syncSidebarMode() {
@@ -715,6 +741,7 @@
           setMobileOpen(false);
           setDesktopCollapsed(savedDesktopState);
           sidebar.setAttribute('aria-hidden', 'false');
+          queueShellLayoutSync();
           return;
         }
 
@@ -726,6 +753,8 @@
           desktopToggle.setAttribute('aria-expanded', 'true');
           desktopToggle.setAttribute('aria-label', 'Ciutkan menu desktop');
         }
+
+        queueShellLayoutSync();
       }
 
       function isMobileViewport() {
@@ -856,7 +885,21 @@
         desktopQuery.addListener(syncSidebarMode);
       }
 
-      window.addEventListener('resize', syncNotificationDropdownLayout);
+      window.addEventListener('resize', queueShellLayoutSync);
+
+      sidebar.addEventListener('transitionend', function (event) {
+        if (['width', 'min-width', 'max-width', 'transform'].includes(event.propertyName)) {
+          queueShellLayoutSync();
+        }
+      });
+
+      if (typeof ResizeObserver === 'function') {
+        const sidebarResizeObserver = new ResizeObserver(function () {
+          queueShellLayoutSync();
+        });
+
+        sidebarResizeObserver.observe(sidebar);
+      }
 
       if (window.jQuery) {
         const $document = window.jQuery(document);
@@ -880,7 +923,7 @@
       }
 
       syncSidebarMode();
-      syncNotificationDropdownLayout();
+      queueShellLayoutSync();
     });
   </script>
   @stack('scripts')
