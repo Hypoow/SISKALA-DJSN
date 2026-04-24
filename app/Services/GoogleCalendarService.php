@@ -120,7 +120,7 @@ class GoogleCalendarService
         // Also trigger if 'Sekretariat DJSN' string is in disposition (legacy/group check)
         // Or if ANY non-Dewan is selected?
         // User implied split based on who is invited.
-        $hasSekretariat = $sekretariatUsers->count() > 0;
+        $hasSekretariat = self::hasSekretariatAudience($activity, $sekretariatUsers);
         
         // Logic for Undisposed Activities
         if ($dewanUsers->isEmpty() && !$hasSekretariat) {
@@ -202,6 +202,7 @@ class GoogleCalendarService
             $event->setSummary($activity->name);
             
             $event->setDescription($description);
+            self::applyDefaultReminders($event);
             
             // Color Logic
             if ($overrideColorId) {
@@ -284,8 +285,7 @@ class GoogleCalendarService
             // --- TEMPLATE 1 (External) ---
             // List Names Directly
             foreach ($invitedDewan as $member) {
-                $salutation = $member->prefix ?? 'Bapak';
-                $desc .= "{$salutation} {$member->name}\n";
+                $desc .= self::resolveExternalDewanCalendarLabel($member) . "\n";
             }
             $desc .= "\n";
             
@@ -412,45 +412,92 @@ class GoogleCalendarService
             }
         }
 
-        $desc .= "\nKegiatan ditujukan untuk:\n";
-        
-        // List Invitees (This logic works for both Template 2 and 4 as per request)
-        // We list ALL disposition targets
-        $disposition = $activity->disposition_to ?? [];
-        if (is_array($disposition) && count($disposition) > 0) {
-             // Fetch users to get their titles (divisi) and role
-             $users = User::with(['division', 'position'])->whereIn('name', $disposition)->get()->keyBy('name');
-
-             $lines = []; // Initialize an array to hold formatted lines
-             $number = 1; // Initialize counter for numbered list
-
-             foreach ($disposition as $name) {
-                 $user = $users->get($name);
-                 
-                 // SKIP if user is Dewan, as requested (focus on Sekretariat)
-                 if ($user && $user->isDewan()) {
-                     continue;
-                 }
-
-                 $label = $name;
-                 
-                 // Check if user has a title associated with "Kepala" (Head) or is "Sekretaris DJSN"
-                 // Usage based on "divisi" field in User model (as populated by SekretariatSeeder)
-                 if ($user && !empty($user->divisi)) {
-                     $title = $user->divisi;
-                     // Logic: If title contains 'Kepala' (e.g. Kepala Bagian, Kepala Sub) or is 'Sekretaris DJSN'
-                     // We use the title instead of the name.
-                     if (stripos($title, 'Kepala') !== false || stripos($title, 'Sekretaris DJSN') !== false) {
-                         $label = $title;
-                     }
-                 }
-                 
-                 $desc .= "{$label}\n";
-             }
+        $targetLabels = self::resolveSecretariatTargetLabels($activity);
+        if (!empty($targetLabels)) {
+            $desc .= "\nKegiatan ditujukan untuk: {$activity->secretary_disposition_status_label}\n";
+            $desc .= 'Rincian penerima: ' . implode(', ', $targetLabels) . "\n";
         }
         
         $desc .= "\nDemikian disampaikan, atas perhatian Bapak kami ucapkan terima kasih.";
         
         return $desc;
+    }
+
+    private static function hasSekretariatAudience(Activity $activity, $sekretariatUsers): bool
+    {
+        return $sekretariatUsers->count() > 0 || (bool) $activity->include_tenaga_ahli;
+    }
+
+    private static function resolveExternalDewanCalendarLabel(User $user): string
+    {
+        $label = trim((string) ($user->resolved_report_target_label ?? ''));
+        $name = trim((string) $user->name);
+
+        if ($label !== '' && $label !== $name) {
+            return $label;
+        }
+
+        $salutation = trim((string) ($user->prefix ?? 'Bapak'));
+
+        return trim($salutation . ' ' . ($label !== '' ? $label : $name));
+    }
+
+    private static function resolveSecretariatTargetLabels(Activity $activity): array
+    {
+        $disposition = $activity->disposition_to ?? [];
+        if (!is_array($disposition)) {
+            $disposition = [];
+        }
+
+        $users = empty($disposition)
+            ? collect()
+            : User::with(['division', 'position'])
+                ->whereIn('name', $disposition)
+                ->orderBy('order')
+                ->get()
+                ->keyBy('name');
+
+        $labels = [];
+
+        foreach ($disposition as $name) {
+            $user = $users->get($name);
+
+            if ($user && $user->isDewan()) {
+                continue;
+            }
+
+            $label = trim((string) (
+                $user?->disposition_secretariat_label
+                ?? $user?->resolved_report_target_label
+                ?? $name
+            ));
+
+            if ($label !== '' && !in_array($label, $labels, true)) {
+                $labels[] = $label;
+            }
+        }
+
+        if ($activity->include_tenaga_ahli && !in_array('Tenaga Ahli', $labels, true)) {
+            $labels[] = 'Tenaga Ahli';
+        }
+
+        return $labels;
+    }
+
+    private static function applyDefaultReminders(\Google_Service_Calendar_Event $event): void
+    {
+        $reminders = new \Google_Service_Calendar_EventReminders();
+        $reminders->setUseDefault(false);
+
+        $overrides = [];
+        foreach ([30, 120] as $minutes) {
+            $override = new \Google_Service_Calendar_EventReminder();
+            $override->setMethod('popup');
+            $override->setMinutes($minutes);
+            $overrides[] = $override;
+        }
+
+        $reminders->setOverrides($overrides);
+        $event->setReminders($reminders);
     }
 }

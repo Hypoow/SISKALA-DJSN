@@ -243,6 +243,17 @@ class User extends Authenticatable
         return $this->hasResolvedAccessProfile(self::ACCESS_PROFILE_SUPER_ADMIN);
     }
 
+    public function isPrimarySuperAdmin(): bool
+    {
+        if (!$this->isSuperAdmin()) {
+            return false;
+        }
+
+        $email = mb_strtolower(trim((string) $this->email));
+
+        return $this->id === 1 || $email === 'admin@djsn.com';
+    }
+
     public function isDewan()
     {
         return $this->hasResolvedAccessProfile(self::ACCESS_PROFILE_DEWAN);
@@ -325,6 +336,11 @@ class User extends Authenticatable
         return $this->divisionContainsAll(['PROTOKOL', 'HUMAS']);
     }
 
+    public function isPersidanganUnit()
+    {
+        return $this->divisionContainsAny(['PERSIDANGAN']);
+    }
+
     public function canAccessAdminArea()
     {
         return $this->isSuperAdmin();
@@ -391,6 +407,11 @@ class User extends Authenticatable
             || $this->isKeuangan();
     }
 
+    public function canViewInternalActivitiesWithoutDisposition(): bool
+    {
+        return $this->isDewan() || $this->isSetDjsn();
+    }
+
     public function canViewActivity(Activity $activity): bool
     {
         if ($this->canViewAllActivities()) {
@@ -401,6 +422,14 @@ class User extends Authenticatable
         $pic = is_array($activity->pic) ? $activity->pic : array_filter([(string) $activity->pic]);
 
         if (in_array($this->name, $dispositionTo, true) || in_array($this->name, $pic, true)) {
+            return true;
+        }
+
+        if (
+            $this->canViewInternalActivitiesWithoutDisposition()
+            && $activity->type === 'internal'
+            && !$activity->hasDispositionRecipients()
+        ) {
             return true;
         }
 
@@ -738,7 +767,7 @@ class User extends Authenticatable
             return self::ACCESS_PROFILE_TATA_USAHA;
         }
 
-        if ($this->hasRole(self::ROLE_PERSIDANGAN) || $this->isKabagPersidanganPosition()) {
+        if ($this->hasRole(self::ROLE_PERSIDANGAN) || $this->isKabagPersidanganPosition() || $this->isPersidanganUnit()) {
             return self::ACCESS_PROFILE_PERSIDANGAN;
         }
 

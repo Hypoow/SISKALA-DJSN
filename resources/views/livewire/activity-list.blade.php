@@ -58,8 +58,8 @@
                         </span>
                     </div>
                     <div class="flex-grow-1">
-                        <h4 class="alert-heading text-dark font-weight-bold mb-1" style="font-size: 1rem;">Perhatian: Kegiatan H-3 Belum Didisposisi</h4>
-                        <p class="mb-2 text-muted small">Terdapat <strong class="text-warning">{{ $this->urgentActivities->count() }}</strong> kegiatan yang akan dilaksanakan dalam 3 hari ke depan namun belum memiliki disposisi.</p>
+                        <h4 class="alert-heading text-dark font-weight-bold mb-1" style="font-size: 1rem;">Perhatian: Kegiatan H-3 Tanpa Disposisi</h4>
+                        <p class="mb-2 text-muted small">Terdapat <strong class="text-warning">{{ $this->urgentActivities->count() }}</strong> kegiatan yang akan dilaksanakan dalam 3 hari ke depan tanpa data disposisi.</p>
                         
                         <div class="list-group list-group-flush border-top border-warning-light mt-2 pt-2">
                             @foreach($this->urgentActivities as $urgent)
@@ -154,7 +154,7 @@
                     </div>
 
                     <!-- Sort -->
-                    <div class="col-12 col-md-3 px-1 mb-2 mb-md-0" x-data="{ open: false }" @click.away="open = false">
+                    <div class="col-12 col-md-2 px-1 mb-2 mb-md-0" x-data="{ open: false }" @click.away="open = false">
                         <div class="position-relative">
                             <button type="button" @click="open = !open" class="btn bg-white w-100 shadow-sm text-left d-flex align-items-center justify-content-between px-3 rounded-pill" style="border: 1px solid #e2e8f0; height: 38px;">
                                 <span class="text-truncate font-weight-bold text-dark" style="font-size: 0.9rem;" x-text="$wire.sortDirection === 'asc' ? 'Waktu Terdekat' : 'Waktu Terjauh'">Waktu Terdekat</span>
@@ -167,8 +167,23 @@
                         </div>
                     </div>
 
+                    <!-- Disposition -->
+                    <div class="col-12 col-md-2 px-1 mb-2 mb-md-0" x-data="{ open: false }" @click.away="open = false">
+                        <div class="position-relative">
+                            <button type="button" @click="open = !open" class="btn bg-white w-100 shadow-sm text-left d-flex align-items-center justify-content-between px-3 rounded-pill" style="border: 1px solid #e2e8f0; height: 38px;">
+                                <span class="text-truncate font-weight-bold text-dark" style="font-size: 0.9rem;" x-text="$wire.dispositionFilter === 'with_disposition' ? 'Ada Disposisi' : ($wire.dispositionFilter === 'without_disposition' ? 'Tanpa Disposisi' : 'Status Disposisi')">Status Disposisi</span>
+                                <i class="fe fe-chevron-down ml-1 text-muted flex-shrink-0" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
+                            </button>
+                            <div class="dropdown-menu custom-dropdown-menu shadow-lg w-100 rounded-lg mt-1" :class="{ 'd-block': open }" x-show="open" x-transition style="display: none; position: absolute; z-index: 1050;">
+                                <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.dispositionFilter === '' }" @click="$wire.set('dispositionFilter', ''); open = false">Semua</button>
+                                <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.dispositionFilter === 'with_disposition' }" @click="$wire.set('dispositionFilter', 'with_disposition'); open = false">Ada Disposisi</button>
+                                <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.dispositionFilter === 'without_disposition' }" @click="$wire.set('dispositionFilter', 'without_disposition'); open = false">Tanpa Disposisi</button>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Legends -->
-                    <div class="col-12 col-md-4 px-1 text-md-right mb-0">
+                    <div class="col-12 col-md-3 px-1 text-md-right mb-0">
                         <div class="d-flex align-items-center justify-content-center justify-content-md-end w-100 h-100" style="min-height: 38px;">
                             <span class="mr-2 small text-muted font-weight-bold d-none d-md-inline-block"><i class="fe fe-info mr-1"></i>Keterangan:</span>
                             <span class="badge badge-pill mr-2 shadow-sm d-flex align-items-center" style="background-color: rgba(0, 64, 133, 0.08); color: #004085; font-size: 0.75rem; padding: 0.35rem 0.7rem; border: 1px solid rgba(0,64,133,0.15); font-weight: 600;">
@@ -305,7 +320,7 @@
                                         @if($activity->type == 'external')
                                             @switch($activity->invitation_status)
                                                 @case(0) <small class="text-warning font-weight-bold"><i class="fe fe-clock mr-1"></i>Proses Disposisi</small> @break
-                                                @case(1) <small class="text-primary font-weight-bold"><i class="fe fe-check mr-1"></i>Sudah Disposisi</small> @break
+                                                @case(1) <small class="text-primary font-weight-bold"><i class="fe fe-check mr-1"></i>Ada Disposisi</small> @break
                                                 @case(2) <small class="text-danger font-weight-bold"><i class="fe fe-info mr-1"></i>Diketahui Ketua</small> @break
                                                 @case(3) <small class="text-success font-weight-bold"><i class="fe fe-user-check mr-1"></i>Terjadwal Hadir</small> @break
                                             @endswitch

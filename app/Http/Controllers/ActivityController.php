@@ -122,6 +122,10 @@ class ActivityController extends Controller
                 'title' => $request->title,
                 'file_path' => $path,
             ]);
+
+            if ($activity->has_no_materials) {
+                $activity->update(['has_no_materials' => false]);
+            }
         }
 
         return redirect()->back()->with('success', 'Bahan materi berhasil ditambahkan.');
@@ -150,12 +154,10 @@ class ActivityController extends Controller
         $currentCount = $activity->documentations()->count();
         $newCount = is_array($request->file('file_path')) ? count($request->file('file_path')) : 1;
 
-        if (($currentCount + $newCount) < 4) {
-             return redirect()->back()->with('error', 'Total dokumentasi kegiatan minimal harus 4 foto.');
-        }
+        $totalCount = $currentCount + $newCount;
 
-        if (($currentCount + $newCount) > 8) {
-            return redirect()->back()->with('error', 'Total dokumentasi tidak boleh melebihi 8 foto (Saat ini: ' . $currentCount . ' foto).');
+        if ($totalCount > Activity::DOCUMENTATION_MAX_COUNT) {
+            return redirect()->back()->with('error', 'Total dokumentasi tidak boleh melebihi ' . Activity::DOCUMENTATION_MAX_COUNT . ' foto (Saat ini: ' . $currentCount . ' foto).');
         }
 
         if ($request->hasFile('file_path')) {
@@ -174,7 +176,13 @@ class ActivityController extends Controller
             }
         }
 
-        return redirect()->back()->with('success', 'Dokumentasi berhasil ditambahkan.');
+        $message = 'Dokumentasi berhasil ditambahkan.';
+
+        if ($totalCount < Activity::DOCUMENTATION_MIN_COUNT) {
+            $message .= ' Saat ini baru ' . $totalCount . ' foto. Lengkapi minimal ' . Activity::DOCUMENTATION_MIN_COUNT . ' foto.';
+        }
+
+        return redirect()->back()->with('success', $message);
     }
 
     public function deleteDocumentation(\App\Models\ActivityDocumentation $documentation)
@@ -209,8 +217,8 @@ class ActivityController extends Controller
             'name' => 'required|string|max:255',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
-            'start_time' => 'required',
-            'end_time' => 'nullable',
+            'start_time' => $this->fiveMinuteTimeRules(),
+            'end_time' => $this->fiveMinuteTimeRules(required: false),
             'status' => 'required|integer',
             'invitation_status' => 'required|integer',
             'invitation_type' => 'required|in:inbound,outbound',
@@ -225,12 +233,14 @@ class ActivityController extends Controller
             'narasumber' => 'nullable|array', // Validasi Narasumber
             'organizer_name' => 'nullable|string',
             'dispo_note' => 'nullable|string',
-            'report_target_override' => 'nullable|string|max:2000',
+            'secretary_disposition_status' => 'nullable|in:disposisi,mengetahui',
+            'include_tenaga_ahli' => 'nullable|boolean',
             'disposition_to' => 'nullable|array',
             'dresscode' => 'nullable|string',
             'attachment_path' => 'nullable|file|mimes:pdf|max:10240',
             'minutes_path' => 'nullable|file|mimes:pdf|max:10240',
             'summary_content' => 'nullable|string',
+            'has_no_materials' => 'nullable|boolean',
         ]);
 
         // Map activity_type to type
@@ -272,6 +282,12 @@ class ActivityController extends Controller
             $validated['end_date'] = $validated['start_date'];
         }
 
+        $validated['secretary_disposition_status'] = Activity::normalizeSecretaryDispositionStatus(
+            $request->input('secretary_disposition_status')
+        );
+        $validated['include_tenaga_ahli'] = $request->boolean('include_tenaga_ahli');
+        $validated['has_no_materials'] = $request->boolean('has_no_materials');
+
         $activity = Activity::create($validated);
 
         // Create Google Calendar Event (Asynchronous)
@@ -311,8 +327,8 @@ class ActivityController extends Controller
             'name' => 'required|string|max:255',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
-            'start_time' => 'required',
-            'end_time' => 'nullable',
+            'start_time' => $this->fiveMinuteTimeRules(),
+            'end_time' => $this->fiveMinuteTimeRules(required: false),
             'status' => 'required|integer',
             'invitation_status' => 'required|integer',
             'invitation_type' => 'required|in:inbound,outbound',
@@ -327,13 +343,15 @@ class ActivityController extends Controller
             'narasumber' => 'nullable|array', // Validasi Narasumber
             'organizer_name' => 'nullable|string',
             'dispo_note' => 'nullable|string',
-            'report_target_override' => 'nullable|string|max:2000',
+            'secretary_disposition_status' => 'nullable|in:disposisi,mengetahui',
+            'include_tenaga_ahli' => 'nullable|boolean',
             'disposition_to' => 'nullable|array',
             'dresscode' => 'nullable|string',
             'attachment_path' => 'nullable|file|mimes:pdf|max:10240',
             'minutes_path' => 'nullable|file|mimes:pdf|max:10240',
             'assignment_letter_path' => 'nullable|file|mimes:pdf|max:10240',
             'summary_content' => 'nullable|string',
+            'has_no_materials' => 'nullable|boolean',
         ]);
 
         if ($request->hasFile('attachment_path')) {
@@ -389,6 +407,12 @@ class ActivityController extends Controller
         if (empty($validated['end_date'])) {
             $validated['end_date'] = $validated['start_date'];
         }
+
+        $validated['secretary_disposition_status'] = Activity::normalizeSecretaryDispositionStatus(
+            $request->input('secretary_disposition_status')
+        );
+        $validated['include_tenaga_ahli'] = $request->boolean('include_tenaga_ahli');
+        $validated['has_no_materials'] = $request->boolean('has_no_materials');
 
         if (isset($validated['disposition_to']) && !empty($validated['disposition_to'])) {
              if (intval($validated['invitation_status']) === 0) {
@@ -475,7 +499,7 @@ class ActivityController extends Controller
 
         $request->validate([
             'title' => 'required|string|max:255',
-            'file_path' => 'required|file|mimes:pdf,doc,docx|max:20480', // 20MB
+            'file_path' => 'required|file|mimes:pdf|max:20480', // 20MB
         ]);
 
         if ($request->hasFile('file_path')) {
@@ -503,43 +527,68 @@ class ActivityController extends Controller
     private function getDispositionUserGroups()
     {
         $users = User::with(['division', 'position'])
-            ->orderBy('order')
-            ->orderBy('name')
             ->get()
-            ->filter(fn (User $user) => $user->canReceiveDisposition());
+            ->filter(fn (User $user) => $user->canReceiveDisposition())
+            ->sortBy(fn (User $user) => $this->getDispositionUserSortKey($user));
 
         return $users
             ->groupBy(fn (User $user) => $user->disposition_group_label)
-            ->sortBy(function ($items, $key) {
-                return $this->getDispositionGroupSortOrder($key, $items->first());
-            });
+            ->sortBy(fn ($items, $key) => $this->getDispositionGroupSortOrder($key, $items));
     }
 
-    private function getDispositionGroupSortOrder(string $groupName, ?User $sampleUser = null): int
+    private function getDispositionUserSortKey(User $user): string
     {
-        $normalized = mb_strtoupper(trim($groupName));
+        return sprintf(
+            '%09d-%05d-%s',
+            $user->management_sort_order,
+            $user->order ?? 99999,
+            mb_strtolower($user->name)
+        );
+    }
 
-        if ($normalized === 'KETUA DJSN') {
-            return 1;
+    private function getDispositionGroupSortOrder(string $groupName, iterable $items): string
+    {
+        $groupUsers = collect($items)
+            ->filter(fn ($item) => $item instanceof User)
+            ->values();
+
+        $groupSortOrder = $groupUsers->min(fn (User $user) => $user->management_sort_order) ?? 999999999;
+        $userOrder = $groupUsers->min(fn (User $user) => $user->order ?? 99999) ?? 99999;
+
+        return sprintf(
+            '%09d-%05d-%s',
+            $groupSortOrder,
+            $userOrder,
+            mb_strtolower(trim($groupName))
+        );
+    }
+
+    private function fiveMinuteTimeRules(bool $required = true): array
+    {
+        $rules = [$required ? 'required' : 'nullable', 'date_format:H:i'];
+        $rules[] = function (string $attribute, mixed $value, \Closure $fail): void {
+            if (!filled($value)) {
+                return;
+            }
+
+            if (!$this->isFiveMinuteInterval((string) $value)) {
+                $label = $attribute === 'start_time' ? 'Jam mulai' : 'Jam selesai';
+                $fail($label . ' harus menggunakan interval kelipatan 5 menit.');
+            }
+        };
+
+        return $rules;
+    }
+
+    private function isFiveMinuteInterval(string $value): bool
+    {
+        try {
+            $time = \Carbon\Carbon::createFromFormat('H:i', $value);
+        } catch (\Throwable) {
+            return false;
         }
 
-        if ($sampleUser?->division?->structure_group === \App\Models\Division::STRUCTURE_GROUP_SECRETARY) {
-            return 50;
-        }
-
-        if ($sampleUser?->division?->is_commission) {
-            return 100 + ($sampleUser->division->order ?? 0);
-        }
-
-        if (in_array($normalized, ['SEKRETARIS DJSN', 'SET DJSN', 'SET.DJSN'], true)) {
-            return 50;
-        }
-
-        if ($sampleUser?->division) {
-            return 500 + ($sampleUser->division->order ?? 0);
-        }
-
-        return 10;
+        return ((int) $time->format('i')) % 5 === 0;
     }
 
     private function ensureActivityCapability(Activity $activity, string $capability, string $message): void

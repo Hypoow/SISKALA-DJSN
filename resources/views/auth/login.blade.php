@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="Sistem Informasi Penjadwalan DJSN">
+    <meta name="description" content="Sistem Kelola Agenda, Tindak Lanjut, dan Administrasi">
     <link rel="icon" href="{{ asset('images/logo.svg') }}">
     <title>Masuk - SISKALA</title>
     <!-- Fonts - Plus Jakarta Sans -->

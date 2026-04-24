@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
@@ -34,7 +35,8 @@ class Activity extends Model
         'meeting_id',
         'passcode',
         'dispo_note',
-        'report_target_override',
+        'secretary_disposition_status',
+        'include_tenaga_ahli',
         'disposition_to',
         'dresscode',
         'attachment_path',
@@ -48,6 +50,7 @@ class Activity extends Model
         'attendance_list',
         'updated_by',
         'attendance_details',
+        'has_no_materials',
     ];
 
     protected $casts = [
@@ -56,8 +59,21 @@ class Activity extends Model
         'pic' => 'array',
         'narasumber' => 'array',
         'disposition_to' => 'array',
+        'include_tenaga_ahli' => 'boolean',
         'attendance_list' => 'array',
         'attendance_details' => 'array',
+        'has_no_materials' => 'boolean',
+    ];
+
+    public const DOCUMENTATION_MIN_COUNT = 4;
+    public const DOCUMENTATION_MAX_COUNT = 8;
+
+    public const SECRETARY_DISPOSITION_STATUS_DISPOSISI = 'disposisi';
+    public const SECRETARY_DISPOSITION_STATUS_MENGETAHUI = 'mengetahui';
+
+    public const SECRETARY_DISPOSITION_STATUSES = [
+        self::SECRETARY_DISPOSITION_STATUS_DISPOSISI,
+        self::SECRETARY_DISPOSITION_STATUS_MENGETAHUI,
     ];
 
     /**
@@ -76,6 +92,24 @@ class Activity extends Model
     public function materials()
     {
         return $this->hasMany(ActivityMaterial::class);
+    }
+
+    public function hasMaterialEntries(): bool
+    {
+        if ($this->relationLoaded('materials')) {
+            return $this->materials->isNotEmpty();
+        }
+
+        if (!$this->exists || static::getConnectionResolver() === null) {
+            return false;
+        }
+
+        return $this->materials()->exists();
+    }
+
+    public function getShowsNoMaterialsNoticeAttribute(): bool
+    {
+        return (bool) $this->has_no_materials && !$this->hasMaterialEntries();
     }
 
     public function moms()
@@ -152,6 +186,36 @@ class Activity extends Model
             return null;
         }
         return \Carbon\Carbon::parse($this->start_date->format('Y-m-d') . ' ' . $this->start_time);
+    }
+
+    public function hasDispositionRecipients(): bool
+    {
+        $recipients = is_array($this->disposition_to)
+            ? array_filter($this->disposition_to, fn ($value) => filled($value))
+            : [];
+
+        return !empty($recipients);
+    }
+
+    public static function normalizeSecretaryDispositionStatus(?string $value): string
+    {
+        $normalized = Str::lower(trim((string) $value));
+
+        return $normalized === self::SECRETARY_DISPOSITION_STATUS_MENGETAHUI
+            ? self::SECRETARY_DISPOSITION_STATUS_MENGETAHUI
+            : self::SECRETARY_DISPOSITION_STATUS_DISPOSISI;
+    }
+
+    public static function secretaryDispositionStatusLabel(?string $value): string
+    {
+        return self::normalizeSecretaryDispositionStatus($value) === self::SECRETARY_DISPOSITION_STATUS_MENGETAHUI
+            ? 'Mengetahui'
+            : 'Disposisi';
+    }
+
+    public function getSecretaryDispositionStatusLabelAttribute(): string
+    {
+        return self::secretaryDispositionStatusLabel($this->secretary_disposition_status);
     }
     
     /**
@@ -659,7 +723,21 @@ class Activity extends Model
      * @param  \App\Models\User  $user
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopeVisibleToUser($query, $user)
+    public function scopeWithDispositionRecipients(Builder $query): Builder
+    {
+        return $query->whereNotNull('disposition_to')
+            ->where('disposition_to', '!=', '[]');
+    }
+
+    public function scopeWithoutDispositionRecipients(Builder $query): Builder
+    {
+        return $query->where(function (Builder $dispositionQuery) {
+            $dispositionQuery->whereNull('disposition_to')
+                ->orWhere('disposition_to', '[]');
+        });
+    }
+
+    public function scopeVisibleToUser(Builder $query, ?User $user): Builder
     {
         if (!$user) {
             return $query->whereRaw('1 = 0');
@@ -672,6 +750,13 @@ class Activity extends Model
         return $query->where(function ($q) use ($user) {
             $q->whereJsonContains('disposition_to', $user->name)
                 ->orWhereJsonContains('pic', $user->name);
+
+            if ($user->canViewInternalActivitiesWithoutDisposition()) {
+                $q->orWhere(function (Builder $internalQuery) {
+                    $internalQuery->where('type', 'internal')
+                        ->withoutDispositionRecipients();
+                });
+            }
 
             if ($user->isTA() || $user->isPersidangan()) {
                 foreach ($user->getCommissionDewanNames() as $member) {

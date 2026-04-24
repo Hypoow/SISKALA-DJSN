@@ -487,16 +487,6 @@
             <i class="fe fe-menu" style="font-size: 1.2rem; color: var(--primary-color);"></i>
           </span>
         </button>
-        <a href="{{ route('dashboard') }}" class="app-shell-brand text-decoration-none">
-          <span class="app-shell-brand-mark">
-            <img src="{{ asset('images/logo.svg') }}" alt="Logo SISKALA" class="app-shell-brand-image" width="22"
-              height="22">
-          </span>
-          <span class="app-shell-brand-copy">
-            <strong>SISKALA</strong>
-            <small>Sistem Informasi Kegiatan DJSN</small>
-          </span>
-        </a>
       </div>
       <ul class="nav align-items-center">
 

@@ -797,79 +797,44 @@
             line-height: 1.65;
         }
 
-        .helper-card {
+        .auth-footer-meta {
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
-            gap: 0.85rem;
-            padding: 0.95rem 1rem;
-            text-decoration: none;
-            background: rgba(255, 255, 255, 0.92);
-            border: 1px solid rgba(148, 163, 184, 0.2);
-            border-radius: 20px;
-            box-shadow: 0 20px 38px -32px rgba(15, 23, 42, 0.24);
-            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-            animation: rise-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
-            animation-delay: 0.1s;
-        }
-
-        .helper-card:hover {
-            transform: translateY(-1px);
-            border-color: rgba(37, 99, 235, 0.22);
-            box-shadow: 0 28px 38px -28px rgba(37, 99, 235, 0.28);
-        }
-
-        .helper-icon {
-            width: 2.65rem;
-            height: 2.65rem;
-            border-radius: 16px;
-            background: var(--auth-accent-soft);
-            color: var(--auth-accent);
-            display: grid;
-            place-items: center;
-            flex-shrink: 0;
-            font-size: 1rem;
-        }
-
-        .helper-copy {
-            min-width: 0;
-        }
-
-        .helper-label,
-        .helper-title,
-        .helper-caption {
-            display: block;
-        }
-
-        .helper-label {
-            margin-bottom: 0.14rem;
-            font-size: 0.72rem;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            font-weight: 800;
-            color: #94a3b8;
-        }
-
-        .helper-title {
-            font-weight: 800;
-            font-size: 0.95rem;
-            color: var(--auth-ink);
-        }
-
-        .helper-caption {
-            display: none;
-        }
-
-        .helper-arrow {
-            margin-left: auto;
-            color: #94a3b8;
-            font-size: 1rem;
-        }
-
-        .footer-note {
+            justify-content: center;
+            gap: 0.4rem;
             margin: 0;
             text-align: center;
             font-size: 0.82rem;
             color: #94a3b8;
+            line-height: 1.65;
+            animation: rise-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+            animation-delay: 0.1s;
+        }
+
+        .auth-footer-copy {
+            color: inherit;
+        }
+
+        .auth-footer-separator {
+            color: #c0cad8;
+        }
+
+        .auth-footer-link {
+            color: var(--auth-accent);
+            font-weight: 700;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .auth-footer-link:hover,
+        .auth-footer-link:focus-visible {
+            color: var(--auth-accent-strong);
+            text-decoration: none;
+        }
+
+        .auth-footer-link:focus-visible {
+            outline: none;
         }
 
         .error-message {
@@ -1035,13 +1000,9 @@
                 align-items: flex-start;
             }
 
-            .helper-card {
-                border-radius: 20px;
-                padding: 1rem;
-            }
-
-            .helper-title {
-                font-size: 0.95rem;
+            .auth-footer-meta {
+                font-size: 0.78rem;
+                line-height: 1.6;
             }
         }
 
@@ -1146,21 +1107,14 @@
                     @yield('after_form')
                 @endif
 
-                <a href="{{ route('developer') }}" class="helper-card">
-                    <span class="helper-icon" aria-hidden="true">
-                        <i class="fe fe-user"></i>
-                    </span>
-                    <span class="helper-copy">
-                        <span class="helper-label">Informasi</span>
-                        <span class="helper-title">Developer SISKALA</span>
-                        <span class="sr-only">Lihat halaman developer SISKALA</span>
-                    </span>
-                    <span class="helper-arrow" aria-hidden="true">
-                        <i class="fe fe-arrow-right"></i>
-                    </span>
-                </a>
-
-                <p class="footer-note">&copy; {{ date('Y') }} Dewan Jaminan Sosial Nasional</p>
+                <p class="auth-footer-meta">
+                    <span class="auth-footer-copy">&copy; {{ date('Y') }} Dewan Jaminan Sosial Nasional</span>
+                    <span class="auth-footer-separator" aria-hidden="true">|</span>
+                    <a href="{{ route('developer') }}" class="auth-footer-link"
+                        aria-label="Lihat halaman developer SISKALA">
+                        &lt;&gt; Pengembang
+                    </a>
+                </p>
             </div>
         </main>
     </div>

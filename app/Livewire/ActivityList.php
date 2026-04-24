@@ -45,6 +45,7 @@ class ActivityList extends Component
 
     public $search = '';
     public $type = '';
+    public $dispositionFilter = '';
 
     public $sortDirection = 'asc';
 
@@ -58,16 +59,14 @@ class ActivityList extends Component
     {
         return Activity::whereBetween('start_date', [now()->startOfDay(), now()->addDays(3)->endOfDay()])
                        ->where('status', '!=', Activity::STATUS_CANCELLED) // Assuming 3 is cancelled, but let's check constants or use logic
-                       ->where(function($q) {
-                           $q->whereNull('disposition_to')
-                             ->orWhere('disposition_to', '[]'); // For JSON/Array columns
-                       })
+                       ->withoutDispositionRecipients()
                        ->get();
     }
 
     protected $queryString = [
         'search' => ['except' => ''],
         'type' => ['except' => ''],
+        'dispositionFilter' => ['except' => ''],
         'sortDirection' => ['except' => 'asc']
     ];
 
@@ -78,6 +77,12 @@ class ActivityList extends Component
     }
 
     public function updatingType()
+    {
+        $this->resetSelectionState();
+        $this->resetPage();
+    }
+
+    public function updatingDispositionFilter()
     {
         $this->resetSelectionState();
         $this->resetPage();
@@ -209,6 +214,12 @@ class ActivityList extends Component
 
         if ($this->type && in_array($this->type, ['external', 'internal'])) {
             $query->where('type', $this->type);
+        }
+
+        if ($this->dispositionFilter === 'with_disposition') {
+            $query->withDispositionRecipients();
+        } elseif ($this->dispositionFilter === 'without_disposition') {
+            $query->withoutDispositionRecipients();
         }
 
         if ($this->search) {

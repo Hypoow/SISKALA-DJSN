@@ -65,6 +65,16 @@ class UserAccessRulesTest extends TestCase
         $this->assertSame(['pme'], $user->getCommissionKeys());
     }
 
+    public function test_legacy_persidangan_unit_name_is_recognized_for_post_activity_access(): void
+    {
+        $user = $this->makeUser('Staf Sidang PME', User::ROLE_SECRETARIAT, 'Persidangan Komisi PME');
+
+        $this->assertTrue($user->isPersidanganUnit());
+        $this->assertTrue($user->isPersidangan());
+        $this->assertTrue($user->canManagePostActivity());
+        $this->assertSame(['pme'], $user->getCommissionKeys());
+    }
+
     public function test_protokol_humas_and_keuangan_follow_their_jobdesk(): void
     {
         $protokol = $this->makeUser('Kasubag Protokol', User::ROLE_BAGIAN_UMUM, 'Kepala Sub Protokol dan Kehumasan');

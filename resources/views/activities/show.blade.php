@@ -382,24 +382,26 @@
                                             <i class="fe fe-briefcase"></i>
                                         </span>
                                     </div>
-                                    <div class="col pl-0">
+                                     <div class="col pl-0">
                                         <small class="text-muted d-block mb-1 font-weight-bold uppercase-label">Bahan Materi</small>
-                                        @if($activity->materials && $activity->materials->count() > 0)
-                                            <ul class="list-unstyled mb-0">
-                                                @foreach($activity->materials as $mat)
+                                         @if($activity->materials && $activity->materials->count() > 0)
+                                             <ul class="list-unstyled mb-0">
+                                                 @foreach($activity->materials as $mat)
                                                     <li class="mb-2 d-flex justify-content-between align-items-center bg-light p-2 rounded">
                                                         <a href="{{ Storage::url($mat->file_path) }}" target="_blank" class="text-dark font-weight-bold text-truncate" style="max-width: 200px;">
                                                             {{ $mat->title ?? basename($mat->file_path) }}
                                                         </a>
                                                         <a href="{{ Storage::url($mat->file_path) }}" target="_blank" class="text-primary"><i class="fe fe-download"></i></a>
-                                                    </li>
-                                                @endforeach
-                                            </ul>
-                                        @else
-                                            <span class="text-muted font-italic small">-</span>
-                                        @endif
-                                    </div>
-                                </div>
+                                                     </li>
+                                                 @endforeach
+                                             </ul>
+                                         @elseif($activity->shows_no_materials_notice)
+                                             <span class="badge badge-light border text-muted">Tidak ada bahan materi</span>
+                                         @else
+                                             <span class="text-muted font-italic small">-</span>
+                                         @endif
+                                     </div>
+                                 </div>
                             </div>
 
                             <!-- 4. Surat Tugas -->

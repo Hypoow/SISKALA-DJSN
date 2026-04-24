@@ -206,6 +206,21 @@
         background-color: #e2e6ea !important;
         color: #212529 !important;
     }
+
+    .secretary-status-toggle {
+        display: inline-flex;
+        width: auto;
+        max-width: 100%;
+        border-radius: 999px;
+        overflow: hidden;
+    }
+
+    .secretary-status-toggle .btn {
+        min-width: 132px;
+        padding: 0.5rem 1.2rem;
+        font-weight: 600;
+        flex: 0 0 auto;
+    }
 </style>
 @endpush
 
@@ -285,7 +300,12 @@
                                             <input type="date" class="form-control mb-2" name="start_date" value="{{ old('start_date', $activity->start_date->format('Y-m-d')) }}">
                                         </div>
                                         <div class="col-6">
-                                            <input type="time" class="form-control mb-2" name="start_time" value="{{ old('start_time', \Carbon\Carbon::parse($activity->start_time)->format('H:i')) }}">
+                                            @include('activities.partials.time-select', [
+                                                'name' => 'start_time',
+                                                'id' => 'start_time',
+                                                'value' => \Carbon\Carbon::parse($activity->start_time)->format('H:i'),
+                                                'required' => true,
+                                            ])
                                         </div>
                                     </div>
                                     <div class="form-row">
@@ -294,8 +314,13 @@
                                             <input type="date" class="form-control" name="end_date" value="{{ old('end_date', $activity->end_date->format('Y-m-d')) }}">
                                         </div>
                                         <div class="col-6">
-                                             <small class="text-muted d-block mb-1">Sampai Jam (Opsional)</small>
-                                            <input type="time" class="form-control" name="end_time" value="{{ old('end_time', $activity->end_time ? \Carbon\Carbon::parse($activity->end_time)->format('H:i') : '') }}">
+                                            <small class="text-muted d-block mb-1">Sampai Jam (Opsional, menit 00/05/10/...)</small>
+                                            @include('activities.partials.time-select', [
+                                                'name' => 'end_time',
+                                                'id' => 'end_time',
+                                                'value' => $activity->end_time ? \Carbon\Carbon::parse($activity->end_time)->format('H:i') : '',
+                                                'required' => false,
+                                            ])
                                         </div>
                                     </div>
                                 </div>
@@ -539,23 +564,27 @@
                                     <div class="list-group-item text-center text-muted small">Belum ada MoM</div>
                                 @endforelse
                              </div>
-                             
+
                              <div class="p-3 border-top">
                                 <button type="button" class="btn btn-sm btn-outline-primary btn-block" data-toggle="collapse" data-target="#collapseMom">
                                     <i class="fe fe-plus"></i> Tambah MoM
                                 </button>
                                 <div class="collapse mt-3" id="collapseMom">
                                     <div class="form-group">
-                                        <input type="text" id="mom_title" class="form-control form-control-sm mb-2" placeholder="Judul MoM">
+                                        <label for="mom_title" class="small font-weight-bold mb-1">Judul MoM <span class="text-danger">*</span></label>
+                                        <input type="text" id="mom_title" class="form-control form-control-sm mb-2" placeholder="Judul MoM" required>
 
                                         <div class="custom-file">
-                                            <input type="file" class="custom-file-input" id="mom_file" accept=".pdf,.doc,.docx">
-                                            <label class="custom-file-label" text-truncate>Pilih File...</label>
+                                            <input type="file" class="custom-file-input" id="mom_file" accept=".pdf,application/pdf">
+                                            <label class="custom-file-label" for="mom_file">Pilih File...</label>
                                         </div>
                                         <small class="text-muted d-block mb-2">
-                                            Format file yang didukung: PDF, DOC, dan DOCX. Ukuran maksimal 20 MB per file.
+                                            Format file yang didukung: PDF. Ukuran maksimal 20 MB per file.
                                         </small>
-                                        <button type="button" class="btn btn-sm btn-primary mt-3 btn-block" onclick="uploadMom()">Upload</button>
+                                        <div id="mom_uploading_hint" class="text-xs text-muted mt-1 d-none">
+                                            Uploading...
+                                        </div>
+                                        <button type="button" id="mom_upload_button" class="btn btn-sm btn-primary mt-3 btn-block" onclick="uploadMom()">Upload</button>
                                     </div>
                                 </div>
                              </div>
@@ -568,7 +597,12 @@
                             <div class="icon-shape bg-light text-primary rounded-circle mr-3">
                                 <i class="fe fe-layers"></i>
                             </div>
-                            <strong class="card-title">Bahan Materi</strong>
+                            <strong class="card-title">
+                                Bahan Materi
+                                @if($activity->shows_no_materials_notice)
+                                    <span class="badge badge-light text-muted border ml-2">Tidak Ada</span>
+                                @endif
+                            </strong>
                         </div>
                         <div class="card-body p-0">
                              <div class="list-group list-group-flush mb-3">
@@ -582,10 +616,36 @@
                                     </div>
                                 @empty
                                 <br>
-                                    <div class="list-group-item text-center text-muted small">Belum ada bahan materi</div>
+                                    <div class="list-group-item text-center text-muted small">
+                                        {{ $activity->shows_no_materials_notice ? 'Kegiatan ini ditandai tidak memiliki bahan materi.' : 'Belum ada bahan materi' }}
+                                    </div>
                                 @endforelse
                              </div>
-                             
+
+                             <div class="px-3 pb-3">
+                                <div class="custom-control custom-checkbox border rounded px-3 py-3 bg-light">
+                                    <input
+                                        type="checkbox"
+                                        class="custom-control-input"
+                                        id="has_no_materials"
+                                        name="has_no_materials"
+                                        value="1"
+                                        {{ old('has_no_materials', $activity->has_no_materials) ? 'checked' : '' }}
+                                        {{ $activity->materials->count() > 0 ? 'disabled' : '' }}
+                                    >
+                                    <label class="custom-control-label font-weight-bold" for="has_no_materials">
+                                        Kegiatan ini tidak memiliki bahan materi
+                                    </label>
+                                    <small class="text-muted d-block mt-2">
+                                        @if($activity->materials->count() > 0)
+                                            Hapus semua file materi terlebih dahulu jika ingin menandai kegiatan tanpa bahan materi.
+                                        @else
+                                            Centang jika kegiatan memang tidak memiliki file bahan materi.
+                                        @endif
+                                    </small>
+                                </div>
+                             </div>
+
                              <!-- Upload Form (handled externally via JS form submission or separate form) -->
                              <!-- To keep it simple inside the main form, we can just point to a separate modal or form, 
                                   but since we are inside one big UPDATE form, multiple file uploads are tricky if we want instant feedback.
@@ -599,7 +659,8 @@
                                 </button>
                                 <div class="collapse mt-3" id="collapseMaterial">
                                     <div class="form-group">
-                                        <input type="text" id="material_title" class="form-control form-control-sm mb-2" placeholder="Judul Materi">
+                                        <label for="material_title" class="small font-weight-bold mb-1">Judul Materi <span class="text-danger">*</span></label>
+                                        <input type="text" id="material_title" class="form-control form-control-sm mb-2" placeholder="Judul Materi" required>
                                         <small class="text-muted d-block mb-2">
                                             Ukuran maksimal 20 MB per file. Format umum: PDF, DOC/DOCX, PPT/PPTX, XLS/XLSX, dan CSV.
                                         </small>
@@ -660,13 +721,26 @@
                         </div>
                         <div class="card-body p-0">
                             <div class="px-3 pt-3 text-muted small">
-                                Checklist ini mengikuti konfigurasi akun dan jabatan pada menu Master Data.
+                                Kelompok disposisi ini mengikuti konfigurasi akun dan jabatan pada menu Master Data.
                             </div>
+                            @php
+                                $selectedDewan = old('disposition_to', (isset($activity) && is_array($activity->disposition_to)) ? $activity->disposition_to : []);
+                                $selectedSecretaryDispositionStatus = old('secretary_disposition_status', $activity->secretary_disposition_status ?? \App\Models\Activity::SECRETARY_DISPOSITION_STATUS_DISPOSISI);
+                                $includeTenagaAhli = old('include_tenaga_ahli', $activity->include_tenaga_ahli ?? false);
+                                $tenagaAhliControlRendered = false;
+                            @endphp
                             <!-- Accordion Style from Create Page -->
                             <div class="accordion" id="accordionDewan">
                                  @php $groupIndex = 0; @endphp
                                  @foreach($dewanUsers as $groupName => $members)
                                      @php $groupIndex++; @endphp
+                                     @php
+                                         $isSecretaryDispositionGroup = in_array(
+                                             mb_strtoupper(trim((string) $groupName)),
+                                             ['SEKRETARIS DJSN', 'SET DJSN', 'SET.DJSN'],
+                                             true
+                                         );
+                                     @endphp
                                      <div class="card shadow-none border-bottom mb-0 rounded-0">
                                          <div class="card-header bg-light d-flex justify-content-between align-items-center py-2" id="heading{{ $groupIndex }}" style="cursor: pointer;" data-toggle="collapse" data-target="#collapse{{ $groupIndex }}">
                                              <h2 class="mb-0 h6 font-weight-bold text-dark">
@@ -679,12 +753,25 @@
                                          </div>
                                          <div id="collapse{{ $groupIndex }}" class="collapse show" aria-labelledby="heading{{ $groupIndex }}">
                                              <div class="card-body py-2">
+                                                @if($isSecretaryDispositionGroup)
+                                                    <div class="border rounded bg-light px-3 py-3 mb-3">
+                                                        <label class="form-label-premium d-block mb-2">Status Disposisi Sekretaris DJSN</label>
+                                                        <div class="btn-group btn-group-toggle secretary-status-toggle" data-toggle="buttons">
+                                                            <label class="btn btn-outline-primary {{ $selectedSecretaryDispositionStatus === \App\Models\Activity::SECRETARY_DISPOSITION_STATUS_DISPOSISI ? 'active' : '' }}">
+                                                                <input type="radio" name="secretary_disposition_status" value="{{ \App\Models\Activity::SECRETARY_DISPOSITION_STATUS_DISPOSISI }}" autocomplete="off" {{ $selectedSecretaryDispositionStatus === \App\Models\Activity::SECRETARY_DISPOSITION_STATUS_DISPOSISI ? 'checked' : '' }}>
+                                                                Disposisi
+                                                            </label>
+                                                            <label class="btn btn-outline-primary {{ $selectedSecretaryDispositionStatus === \App\Models\Activity::SECRETARY_DISPOSITION_STATUS_MENGETAHUI ? 'active' : '' }}">
+                                                                <input type="radio" name="secretary_disposition_status" value="{{ \App\Models\Activity::SECRETARY_DISPOSITION_STATUS_MENGETAHUI }}" autocomplete="off" {{ $selectedSecretaryDispositionStatus === \App\Models\Activity::SECRETARY_DISPOSITION_STATUS_MENGETAHUI ? 'checked' : '' }}>
+                                                                Mengetahui
+                                                            </label>
+                                                        </div>
+                                                        <small class="text-muted d-block mt-2">Status ini akan ditulis ke deskripsi Google Calendar sekretariat.</small>
+                                                    </div>
+                                                @endif
                                                  <div class="row">
                                                      @foreach($members as $member)
                                                     @if(!$member->canReceiveDisposition()) @continue @endif
-                                                     @php 
-                                                         $selectedDewan = (isset($activity) && is_array($activity->disposition_to)) ? $activity->disposition_to : [];
-                                                     @endphp
                                                      <div class="col-md-6">
                                                          <div class="custom-control custom-checkbox mb-2">
                                                              <input type="checkbox" class="custom-control-input dewan-checkbox group-{{ $groupIndex }}" id="dewan_{{ $member->id }}" name="disposition_to[]" value="{{ $member->name }}" data-group-name="{{ $groupName }}" {{ in_array($member->name, $selectedDewan) ? 'checked' : '' }}>
@@ -699,7 +786,40 @@
                                              </div>
                                          </div>
                                      </div>
+                                     @if($isSecretaryDispositionGroup)
+                                         @php $tenagaAhliControlRendered = true; @endphp
+                                         <div class="card shadow-none border-bottom mb-0 rounded-0">
+                                             <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
+                                                 <h2 class="mb-0 h6 font-weight-bold text-dark">
+                                                     Tenaga Ahli
+                                                 </h2>
+                                             </div>
+                                             <div class="card-body py-3">
+                                                 <div class="custom-control custom-checkbox">
+                                                     <input type="checkbox" class="custom-control-input" id="include_tenaga_ahli" name="include_tenaga_ahli" value="1" {{ (bool) $includeTenagaAhli ? 'checked' : '' }}>
+                                                     <label class="custom-control-label font-weight-bold" for="include_tenaga_ahli">Tenaga Ahli</label>
+                                                     <small class="text-muted d-block mt-2">Centang jika Tenaga Ahli perlu ikut tercantum pada deskripsi Google Calendar.</small>
+                                                 </div>
+                                             </div>
+                                         </div>
+                                     @endif
                                  @endforeach
+                                 @if(!$tenagaAhliControlRendered)
+                                     <div class="card shadow-none border-bottom mb-0 rounded-0">
+                                         <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
+                                             <h2 class="mb-0 h6 font-weight-bold text-dark">
+                                                 Tenaga Ahli
+                                             </h2>
+                                         </div>
+                                         <div class="card-body py-3">
+                                             <div class="custom-control custom-checkbox">
+                                                 <input type="checkbox" class="custom-control-input" id="include_tenaga_ahli" name="include_tenaga_ahli" value="1" {{ (bool) $includeTenagaAhli ? 'checked' : '' }}>
+                                                 <label class="custom-control-label font-weight-bold" for="include_tenaga_ahli">Tenaga Ahli</label>
+                                                 <small class="text-muted d-block mt-2">Centang jika Tenaga Ahli perlu ikut tercantum pada deskripsi Google Calendar.</small>
+                                             </div>
+                                         </div>
+                                     </div>
+                                 @endif
                              </div>
                         </div>
                     </div>
@@ -718,17 +838,6 @@
                                 <input type="text" class="form-control" name="dresscode" value="{{ old('dresscode', $activity->dresscode) }}">
                             </div>
 
-                            <div class="form-group">
-                                <label class="form-label-premium">Format "Kegiatan ditujukan untuk" (Opsional)</label>
-                                <textarea
-                                    class="form-control"
-                                    name="report_target_override"
-                                    rows="3"
-                                    placeholder='Contoh: Ketua DJSN dan Wakil Ketua Komjakum, atau "Seluruh Anggota DJSN, Tim Sekretariat DJSN, dan TA DJSN"'
-                                >{{ old('report_target_override', $activity->report_target_override) }}</textarea>
-                                <small class="text-muted d-block mt-2">Kosongkan jika ingin otomatis dari disposisi dan master user.</small>
-                            </div>
-                            
                             <div class="form-group mb-0">
                                 <label class="form-label-premium">Keterangan</label>
                                 <div id="dispo-editor" style="height: 150px;">{!! old('dispo_note', $activity->dispo_note) !!}</div>
@@ -773,6 +882,11 @@
 <script src="{{ asset('tinydash/js/select2.min.js') }}"></script>
 <script src="{{ asset('tinydash/js/quill.min.js') }}"></script>
 <script>
+    function setMomUploadingState(isUploading) {
+        $('#mom_uploading_hint').toggleClass('d-none', !isUploading);
+        $('#mom_upload_button').prop('disabled', isUploading);
+    }
+
     // Delete Confirmation with SweetAlert
     function confirmDelete(url) {
         Swal.fire({
@@ -825,13 +939,8 @@
             var files = $('#doc_file')[0].files;
             var newCount = files.length;
             
-            if((currentCount + newCount) < 4) {
-                 Swal.fire('Error', 'Total dokumentasi kegiatan minimal harus 4 foto.', 'error');
-                 return;
-            }
-
-            if((currentCount + newCount) > 8) {
-                 Swal.fire('Error', 'Total dokumentasi tidak boleh melebihi 8 foto (Saat ini: ' + currentCount + ' foto).', 'error');
+            if((currentCount + newCount) > {{ \App\Models\Activity::DOCUMENTATION_MAX_COUNT }}) {
+                 Swal.fire('Error', 'Total dokumentasi tidak boleh melebihi {{ \App\Models\Activity::DOCUMENTATION_MAX_COUNT }} foto (Saat ini: ' + currentCount + ' foto).', 'error');
                  return;
             }
 
@@ -863,18 +972,26 @@
             Swal.fire('Error', 'Mohon isi Judul MoM dan pilih file.', 'error');
             return;
         }
+
+        if (!file.name.toLowerCase().endsWith('.pdf')) {
+            Swal.fire('Error', 'File MoM wajib berformat PDF.', 'error');
+            return;
+        }
         
         $('#hidden_mom_title').val(title);
         var fileInput = $('#mom_file').clone();
         fileInput.attr('id', 'hidden_mom_file');
         fileInput.attr('name', 'file_path');
         $('#hidden_mom_file').replaceWith(fileInput);
-        
+
+        setMomUploadingState(true);
         $('#momUploadForm').submit();
     }
 
     // Handle Form Submit
     $('#editForm').on('submit', function() {
+        syncTimeFieldFromSelects('start_time');
+        syncTimeFieldFromSelects('end_time');
         $('#summary_content').val(summaryQuill.root.innerHTML);
         $('#dispo_note').val(dispoQuill.root.innerHTML);
     });
@@ -911,6 +1028,104 @@
         tokenSeparators: [',']
     });
 
+    $('#mom_file').on('change', function() {
+        setMomUploadingState(this.files.length > 0);
+    });
+
+    function roundTimeToFiveMinutes(value) {
+        var match = String(value || '').trim().replace('.', ':').match(/(\d{1,2}):(\d{2})/);
+        if (!match) {
+            return '';
+        }
+
+        var hours = Math.max(0, Math.min(23, parseInt(match[1], 10)));
+        var minutes = Math.max(0, Math.min(59, parseInt(match[2], 10)));
+        var totalMinutes = (hours * 60) + minutes;
+
+        totalMinutes = Math.round(totalMinutes / 5) * 5;
+        totalMinutes = Math.max(0, Math.min((23 * 60) + 55, totalMinutes));
+
+        return String(Math.floor(totalMinutes / 60)).padStart(2, '0') + ':' + String(totalMinutes % 60).padStart(2, '0');
+    }
+
+    function setTimeFieldValue(fieldId, value) {
+        var hiddenInput = document.getElementById(fieldId);
+        var hourSelect = document.getElementById(fieldId + '_hour');
+        var minuteSelect = document.getElementById(fieldId + '_minute');
+        var normalized = roundTimeToFiveMinutes(value);
+
+        if (!hiddenInput || !hourSelect || !minuteSelect) {
+            return;
+        }
+
+        if (!normalized) {
+            hiddenInput.value = '';
+            hourSelect.value = '';
+            minuteSelect.value = '';
+            return;
+        }
+
+        hiddenInput.value = normalized;
+        hourSelect.value = normalized.slice(0, 2);
+        minuteSelect.value = normalized.slice(3, 5);
+    }
+
+    function syncTimeFieldFromSelects(fieldId) {
+        var hiddenInput = document.getElementById(fieldId);
+        var hourSelect = document.getElementById(fieldId + '_hour');
+        var minuteSelect = document.getElementById(fieldId + '_minute');
+
+        if (!hiddenInput || !hourSelect || !minuteSelect) {
+            return;
+        }
+
+        if (!hourSelect.value && !minuteSelect.value) {
+            hiddenInput.value = '';
+            return;
+        }
+
+        if (hourSelect.value && minuteSelect.value) {
+            hiddenInput.value = hourSelect.value + ':' + minuteSelect.value;
+            return;
+        }
+
+        hiddenInput.value = '';
+    }
+
+    function bindFiveMinuteTimeInputs() {
+        ['start_time', 'end_time'].forEach(function(fieldId) {
+            var hiddenInput = document.getElementById(fieldId);
+            var hourSelect = document.getElementById(fieldId + '_hour');
+            var minuteSelect = document.getElementById(fieldId + '_minute');
+
+            if (!hiddenInput || !hourSelect || !minuteSelect) {
+                return;
+            }
+
+            [hourSelect, minuteSelect].forEach(function(select) {
+                select.addEventListener('change', function() {
+                    syncTimeFieldFromSelects(fieldId);
+                });
+            });
+
+            setTimeFieldValue(fieldId, hiddenInput.value);
+        });
+    }
+
+    function syncGroupSelectAllState() {
+        $('.group-check-all').each(function() {
+            let targetClass = $(this).data('target');
+            let allInGroup = $(targetClass);
+
+            if (!allInGroup.length) {
+                return;
+            }
+
+            let checkedInGroup = $(targetClass + ':checked');
+            $(this).prop('checked', allInGroup.length === checkedInGroup.length);
+        });
+    }
+
     // File Inputs
      $('.custom-file-input').on('change', function() {
         let fileName = $(this).val().split('\\').pop();
@@ -936,6 +1151,7 @@
     }
 
     // Call on load
+    bindFiveMinuteTimeInputs();
     updateLocationInput();
     
     // Bind change event for Select2
@@ -956,6 +1172,8 @@
             selectAllBtn.prop('checked', allInGroup.length === checkedInGroup.length);
         }
     });
+
+    syncGroupSelectAllState();
 
     // PIC Auto-Select REMOVED (Handled automatically by backend)
 

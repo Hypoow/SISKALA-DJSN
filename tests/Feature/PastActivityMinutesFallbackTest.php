@@ -71,10 +71,12 @@ class PastActivityMinutesFallbackTest extends TestCase
 
         $file = UploadedFile::fake()->create('notulensi-rapat.pdf', 128, 'application/pdf');
 
-        Livewire::actingAs($user)
+        $component = Livewire::actingAs($user)
             ->test(PastActivityList::class)
-            ->call('openAssignmentModal', $activity->id)
-            ->set('newMinutesFile', $file);
+            ->call('openAssignmentModal', $activity->id);
+
+        $component->instance()->newMinutesFile = $file;
+        $component->instance()->updatedNewMinutesFile();
 
         $activity->refresh();
 

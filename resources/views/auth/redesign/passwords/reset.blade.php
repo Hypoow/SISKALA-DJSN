@@ -6,6 +6,10 @@
 @section('heading', 'Buat Password Baru')
 @section('subheading', 'Masukkan password baru.')
 
+@section('brand_panel')
+    @include('auth.redesign.partials.brand-slider')
+@endsection
+
 @section('alerts')
     @if ($errors->any())
         <div class="alert alert-danger">

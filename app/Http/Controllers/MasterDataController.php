@@ -223,9 +223,8 @@ class MasterDataController extends Controller
             return redirect()->route('master-data.index')->with('error', 'Anda tidak dapat menghapus akun sendiri.');
         }
 
-        // Prevent deleting Admin Utama
-        if ($user->isSuperAdmin() || $user->id === 1) {
-            return redirect()->route('master-data.index')->with('error', 'Akun Super Admin tidak dapat dihapus.');
+        if ($user->isPrimarySuperAdmin()) {
+            return redirect()->route('master-data.index')->with('error', 'Akun Super Admin Utama tidak dapat dihapus.');
         }
 
         $user->delete();

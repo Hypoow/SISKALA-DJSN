@@ -3,7 +3,7 @@
     <a class="sidebar-brand-link sidebar-brand-link--mobile" href="{{ route('dashboard') }}"
       aria-label="Dashboard SISKALA">
       <span class="sidebar-brand-mark sidebar-brand-mark--expanded">
-        <img src="{{ asset('images/logo-siskala-L.png') }}" alt="Logo SISKALA"
+        <img src="{{ asset('images/logo-siskala-sidebar.png') }}" alt="Logo SISKALA"
           class="sidebar-brand-image sidebar-brand-image--expanded">
       </span>
     </a>
@@ -17,7 +17,7 @@
       <a href="{{ route('dashboard') }}" aria-label="Dashboard SISKALA"
         class="app-sidebar-brand-link d-inline-flex align-items-center justify-content-center text-decoration-none">
         <span class="app-sidebar-brand-expanded" aria-hidden="true">
-          <img src="{{ asset('images/logo-siskala-L.png') }}" alt=""
+          <img src="{{ asset('images/logo-siskala-sidebar.png') }}" alt=""
             class="app-sidebar-brand-expanded-image">
         </span>
         <span class="app-sidebar-brand-collapsed" aria-hidden="true">
@@ -158,20 +158,13 @@
       </form>
 
       <section class="app-sidebar-group app-sidebar-group-meta">
-        <a class="app-sidebar-credit {{ request()->routeIs('developer') ? 'is-active' : '' }}"
-          href="{{ route('developer') }}" data-sidebar-label="Pengembang SISKALA"
-          aria-label="Lihat info pengembang SISKALA">
-          <span class="app-sidebar-credit-icon" aria-hidden="true">
-            <i class="fe fe-info fe-16"></i>
-          </span>
-          <span class="app-sidebar-credit-copy">
-            <strong class="app-sidebar-credit-title">Pengembang SISKALA</strong>
-          </span>
-          <span class="app-sidebar-credit-arrow" aria-hidden="true">
-            <i class="fe fe-chevron-right fe-16"></i>
-          </span>
-        </a>
-        <p class="app-sidebar-credit-note mb-0">SISKALA &copy; 2026</p>
+        <p class="app-sidebar-meta-line mb-0">
+          <span class="app-sidebar-meta-copy">SISKALA &copy; 2026</span>
+          <a class="app-sidebar-meta-link {{ request()->routeIs('developer') ? 'is-active' : '' }}"
+            href="{{ route('developer') }}" aria-label="Lihat info pengembang SISKALA">
+            | &lt;&gt; Pengembang
+          </a>
+        </p>
       </section>
     </div>
 

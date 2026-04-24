@@ -129,6 +129,21 @@
         margin-right: 5px;
     }
 
+    .secretary-status-toggle {
+        display: inline-flex;
+        width: auto;
+        max-width: 100%;
+        border-radius: 999px;
+        overflow: hidden;
+    }
+
+    .secretary-status-toggle .btn {
+        min-width: 132px;
+        padding: 0.5rem 1.2rem;
+        font-weight: 600;
+        flex: 0 0 auto;
+    }
+
     /* Premium Select2 Tags for Narasumber */
     .narasumber-container .select2-selection--multiple {
         border: 1px solid #e9ecef !important;
@@ -295,6 +310,12 @@
                                 <div class="spinner-border spinner-border-sm text-primary mr-2" role="status"></div>
                                 <span class="text-primary font-weight-bold">Sedang memproses surat...</span>
                             </div>
+
+                            <div id="attachment_preview_container" class="mt-2" style="display: none;">
+                                <a id="attachment_preview_link" href="#" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary rounded-pill">
+                                    <i class="fe fe-eye mr-1"></i> Lihat dokumen
+                                </a>
+                            </div>
                             
                             @if(isset($activity) && $activity->attachment_path)
                                 <div class="alert alert-glass alert-glass-success border-0 d-inline-block px-4 py-3 mt-2">
@@ -350,12 +371,26 @@
                             
                             <div class="col-md-6 mb-3">
                                 <label class="font-weight-bold">Jam (WIB)</label>
-                                <div class="input-group">
-                                    <input type="time" class="form-control" id="start_time" name="start_time" value="{{ old('start_time', isset($activity) ? \Carbon\Carbon::parse($activity->start_time)->format('H:i') : '09:00') }}" required>
-                                    <div class="input-group-prepend input-group-append">
-                                        <span class="input-group-text bg-white border-left-0 border-right-0">s/d</span>
+                                <div class="form-row align-items-center">
+                                    <div class="col">
+                                        @include('activities.partials.time-select', [
+                                            'name' => 'start_time',
+                                            'id' => 'start_time',
+                                            'value' => isset($activity) ? \Carbon\Carbon::parse($activity->start_time)->format('H:i') : '09:00',
+                                            'required' => true,
+                                        ])
                                     </div>
-                                    <input type="time" class="form-control" id="end_time" name="end_time" value="{{ old('end_time', (isset($activity) && $activity->end_time) ? \Carbon\Carbon::parse($activity->end_time)->format('H:i') : '') }}">
+                                    <div class="col-auto px-2">
+                                        <span class="text-muted font-weight-bold">s/d</span>
+                                    </div>
+                                    <div class="col">
+                                        @include('activities.partials.time-select', [
+                                            'name' => 'end_time',
+                                            'id' => 'end_time',
+                                            'value' => (isset($activity) && $activity->end_time) ? \Carbon\Carbon::parse($activity->end_time)->format('H:i') : '',
+                                            'required' => false,
+                                        ])
+                                    </div>
                                 </div>
                                 <small class="text-muted px-2">Kosongkan jam selesai jika "s/d Selesai".</small>
                             </div>
@@ -501,11 +536,32 @@
                         <!-- Disposition Accordion -->
                         <div class="form-group mb-0 mt-0">
                             <label class="font-weight-bold">Target Disposisi / Undangan</label>
-                            <small class="text-muted d-block mb-3">Checklist ini mengikuti konfigurasi akun dan jabatan pada menu Master Data.</small>
+                            <small class="text-muted d-block mb-3">Kelompok disposisi ini mengikuti konfigurasi akun dan jabatan pada menu Master Data.</small>
+                            @php
+                                $selectedDewan = old('disposition_to', (isset($activity) && is_array($activity->disposition_to)) ? $activity->disposition_to : []);
+                                $selectedSecretaryDispositionStatus = old(
+                                    'secretary_disposition_status',
+                                    isset($activity)
+                                        ? $activity->secretary_disposition_status
+                                        : \App\Models\Activity::SECRETARY_DISPOSITION_STATUS_DISPOSISI
+                                );
+                                $includeTenagaAhli = old(
+                                    'include_tenaga_ahli',
+                                    isset($activity) ? $activity->include_tenaga_ahli : false
+                                );
+                                $tenagaAhliControlRendered = false;
+                            @endphp
                              <div class="accordion" id="accordionDewan">
                                  @php $groupIndex = 0; @endphp
                                  @foreach($dewanUsers as $groupName => $members)
                                      @php $groupIndex++; @endphp
+                                     @php
+                                         $isSecretaryDispositionGroup = in_array(
+                                             mb_strtoupper(trim((string) $groupName)),
+                                             ['SEKRETARIS DJSN', 'SET DJSN', 'SET.DJSN'],
+                                             true
+                                         );
+                                     @endphp
                                      <div class="card mb-2 shadow-none border">
                                          <div class="card-header bg-light d-flex justify-content-between align-items-center py-2" id="heading{{ $groupIndex }}">
                                              <h2 class="mb-0">
@@ -520,12 +576,25 @@
                                          </div>
                                          <div id="collapse{{ $groupIndex }}" class="collapse show" aria-labelledby="heading{{ $groupIndex }}">
                                              <div class="card-body py-2">
+                                                @if($isSecretaryDispositionGroup)
+                                                    <div class="border rounded bg-light px-3 py-3 mb-3">
+                                                        <label class="font-weight-bold d-block mb-2">Status Disposisi Sekretaris DJSN</label>
+                                                        <div class="btn-group btn-group-toggle secretary-status-toggle" data-toggle="buttons">
+                                                            <label class="btn btn-outline-primary {{ $selectedSecretaryDispositionStatus === \App\Models\Activity::SECRETARY_DISPOSITION_STATUS_DISPOSISI ? 'active' : '' }}">
+                                                                <input type="radio" name="secretary_disposition_status" value="{{ \App\Models\Activity::SECRETARY_DISPOSITION_STATUS_DISPOSISI }}" autocomplete="off" {{ $selectedSecretaryDispositionStatus === \App\Models\Activity::SECRETARY_DISPOSITION_STATUS_DISPOSISI ? 'checked' : '' }}>
+                                                                Disposisi
+                                                            </label>
+                                                            <label class="btn btn-outline-primary {{ $selectedSecretaryDispositionStatus === \App\Models\Activity::SECRETARY_DISPOSITION_STATUS_MENGETAHUI ? 'active' : '' }}">
+                                                                <input type="radio" name="secretary_disposition_status" value="{{ \App\Models\Activity::SECRETARY_DISPOSITION_STATUS_MENGETAHUI }}" autocomplete="off" {{ $selectedSecretaryDispositionStatus === \App\Models\Activity::SECRETARY_DISPOSITION_STATUS_MENGETAHUI ? 'checked' : '' }}>
+                                                                Mengetahui
+                                                            </label>
+                                                        </div>
+                                                        <small class="text-muted d-block mt-2">Status ini akan tampil pada deskripsi Google Calendar sekretariat.</small>
+                                                    </div>
+                                                @endif
                                                  <div class="row">
                                                      @foreach($members as $member)
                                                     @if(!$member->canReceiveDisposition()) @continue @endif
-                                                     @php 
-                                                         $selectedDewan = (isset($activity) && is_array($activity->disposition_to)) ? $activity->disposition_to : [];
-                                                     @endphp
                                                      <div class="col-md-6">
                                                          <div class="custom-control custom-checkbox mb-2">
                                                              <input type="checkbox" class="custom-control-input dewan-checkbox group-{{ $groupIndex }}" id="dewan_{{ $member->id }}" name="disposition_to[]" value="{{ $member->name }}" data-group-name="{{ $groupName }}" {{ in_array($member->name, $selectedDewan) ? 'checked' : '' }}>
@@ -540,7 +609,44 @@
                                              </div>
                                          </div>
                                      </div>
+                                     @if($isSecretaryDispositionGroup)
+                                         @php $tenagaAhliControlRendered = true; @endphp
+                                         <div class="card mb-2 shadow-none border">
+                                             <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
+                                                 <h2 class="mb-0">
+                                                     <span class="btn btn-link btn-block text-left text-dark font-weight-bold text-decoration-none disabled" tabindex="-1" aria-disabled="true">
+                                                         Tenaga Ahli
+                                                     </span>
+                                                 </h2>
+                                             </div>
+                                             <div class="card-body py-3">
+                                                 <div class="custom-control custom-checkbox">
+                                                     <input type="checkbox" class="custom-control-input" id="include_tenaga_ahli" name="include_tenaga_ahli" value="1" {{ (bool) $includeTenagaAhli ? 'checked' : '' }}>
+                                                     <label class="custom-control-label font-weight-bold" for="include_tenaga_ahli">Tenaga Ahli</label>
+                                                     <small class="text-muted d-block mt-2">Centang jika Tenaga Ahli perlu ikut tercantum pada deskripsi Google Calendar.</small>
+                                                 </div>
+                                             </div>
+                                         </div>
+                                     @endif
                                  @endforeach
+                                 @if(!$tenagaAhliControlRendered)
+                                     <div class="card mb-2 shadow-none border">
+                                         <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
+                                             <h2 class="mb-0">
+                                                 <span class="btn btn-link btn-block text-left text-dark font-weight-bold text-decoration-none disabled" tabindex="-1" aria-disabled="true">
+                                                     Tenaga Ahli
+                                                 </span>
+                                             </h2>
+                                         </div>
+                                         <div class="card-body py-3">
+                                             <div class="custom-control custom-checkbox">
+                                                 <input type="checkbox" class="custom-control-input" id="include_tenaga_ahli" name="include_tenaga_ahli" value="1" {{ (bool) $includeTenagaAhli ? 'checked' : '' }}>
+                                                 <label class="custom-control-label font-weight-bold" for="include_tenaga_ahli">Tenaga Ahli</label>
+                                                 <small class="text-muted d-block mt-2">Centang jika Tenaga Ahli perlu ikut tercantum pada deskripsi Google Calendar.</small>
+                                             </div>
+                                         </div>
+                                     </div>
+                                 @endif
                              </div>
                         </div>
 
@@ -554,19 +660,6 @@
                          <div class="form-group mb-3">
                              <label for="dresscode" class="font-weight-bold">Dresscode</label>
                              <input type="text" class="form-control" id="dresscode" name="dresscode" value="{{ old('dresscode', $activity->dresscode ?? '') }}" placeholder="Contoh: Batik Lengan Panjang / Bebas Rapi">
-                         </div>
-                         <div class="form-group mb-3">
-                             <label for="report_target_override" class="font-weight-bold">Format "Kegiatan ditujukan untuk" (Opsional)</label>
-                             <textarea
-                                 class="form-control"
-                                 id="report_target_override"
-                                 name="report_target_override"
-                                 rows="3"
-                                 placeholder='Contoh: Ketua DJSN dan Wakil Ketua Komjakum, atau "Seluruh Anggota DJSN, Tim Sekretariat DJSN, dan TA DJSN"'
-                             >{{ old('report_target_override', $activity->report_target_override ?? '') }}</textarea>
-                             <small class="text-muted d-block mt-2">
-                                 Kosongkan jika ingin otomatis dari disposisi dan master user.
-                             </small>
                          </div>
                          <div class="form-group mb-0">
                              <label for="dispo_note" class="font-weight-bold">Keterangan / Catatan</label>
@@ -617,6 +710,8 @@
 
     // Form Submission
     $('#activityForm').on('submit', function() {
+        syncTimeFieldFromSelects('start_time');
+        syncTimeFieldFromSelects('end_time');
         $('#dispo_note').val(quill.root.innerHTML);
     });
 
@@ -794,6 +889,20 @@
         selectElement.trigger('change');
     }
 
+    function syncGroupSelectAllState() {
+        $('.group-check-all').each(function() {
+            let targetClass = $(this).data('target');
+            let allInGroup = $(targetClass);
+
+            if (!allInGroup.length) {
+                return;
+            }
+
+            let checkedInGroup = $(targetClass + ':checked');
+            $(this).prop('checked', allInGroup.length === checkedInGroup.length);
+        });
+    }
+
     // Initialize
     document.addEventListener('DOMContentLoaded', function() {
         updateFormType();
@@ -828,6 +937,8 @@
             }
         });
 
+        syncGroupSelectAllState();
+
         // PIC Checkbox Auto-Select Disposition Logic REMOVED
         // Since PIC is now auto-derived from Disposition, this interaction is no longer needed.
     });
@@ -849,6 +960,7 @@
         }
         
         const loading = document.getElementById('ocr-loading');
+        setOcrStatus('Sedang memproses surat...');
         loading.style.display = 'block';
 
         try {
@@ -1192,5 +1304,1022 @@
              console.log("Auto-filled Disposition for:", foundPersons);
         }
     }
+</script>
+<script>
+    let attachmentPreviewObjectUrl = null;
+
+    function clearAttachmentPreview() {
+        const previewContainer = document.getElementById('attachment_preview_container');
+        const previewLink = document.getElementById('attachment_preview_link');
+
+        if (attachmentPreviewObjectUrl) {
+            URL.revokeObjectURL(attachmentPreviewObjectUrl);
+            attachmentPreviewObjectUrl = null;
+        }
+
+        if (previewLink) {
+            previewLink.removeAttribute('href');
+        }
+
+        if (previewContainer) {
+            previewContainer.style.display = 'none';
+        }
+    }
+
+    function setAttachmentPreview(file) {
+        const previewContainer = document.getElementById('attachment_preview_container');
+        const previewLink = document.getElementById('attachment_preview_link');
+
+        if (!file || !previewContainer || !previewLink) {
+            clearAttachmentPreview();
+            return;
+        }
+
+        clearAttachmentPreview();
+        attachmentPreviewObjectUrl = URL.createObjectURL(file);
+        previewLink.href = attachmentPreviewObjectUrl;
+        previewContainer.style.display = 'block';
+    }
+
+    function normalizeTimeString(value) {
+        const match = String(value || '').trim().replace('.', ':').match(/(\d{1,2}):(\d{2})/);
+        if (!match) {
+            return '';
+        }
+
+        const hours = Math.max(0, Math.min(23, parseInt(match[1], 10)));
+        const minutes = Math.max(0, Math.min(59, parseInt(match[2], 10)));
+
+        return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+    }
+
+    function roundTimeToFiveMinutes(value) {
+        const normalized = normalizeTimeString(value);
+        if (!normalized) {
+            return '';
+        }
+
+        const [hours, minutes] = normalized.split(':').map(Number);
+        let totalMinutes = (hours * 60) + minutes;
+        totalMinutes = Math.round(totalMinutes / 5) * 5;
+        totalMinutes = Math.max(0, Math.min((23 * 60) + 55, totalMinutes));
+
+        const roundedHours = Math.floor(totalMinutes / 60);
+        const roundedMinutes = totalMinutes % 60;
+
+        return `${String(roundedHours).padStart(2, '0')}:${String(roundedMinutes).padStart(2, '0')}`;
+    }
+
+    function setTimeFieldValue(fieldId, value) {
+        const hiddenInput = document.getElementById(fieldId);
+        const hourSelect = document.getElementById(`${fieldId}_hour`);
+        const minuteSelect = document.getElementById(`${fieldId}_minute`);
+        const normalized = roundTimeToFiveMinutes(value);
+
+        if (!hiddenInput || !hourSelect || !minuteSelect) {
+            return;
+        }
+
+        if (!normalized) {
+            hiddenInput.value = '';
+            hourSelect.value = '';
+            minuteSelect.value = '';
+            return;
+        }
+
+        hiddenInput.value = normalized;
+        hourSelect.value = normalized.slice(0, 2);
+        minuteSelect.value = normalized.slice(3, 5);
+    }
+
+    function syncTimeFieldFromSelects(fieldId) {
+        const hiddenInput = document.getElementById(fieldId);
+        const hourSelect = document.getElementById(`${fieldId}_hour`);
+        const minuteSelect = document.getElementById(`${fieldId}_minute`);
+
+        if (!hiddenInput || !hourSelect || !minuteSelect) {
+            return;
+        }
+
+        if (!hourSelect.value && !minuteSelect.value) {
+            hiddenInput.value = '';
+            return;
+        }
+
+        if (hourSelect.value && minuteSelect.value) {
+            hiddenInput.value = `${hourSelect.value}:${minuteSelect.value}`;
+            return;
+        }
+
+        hiddenInput.value = '';
+    }
+
+    function bindFiveMinuteTimeInputs() {
+        ['start_time', 'end_time'].forEach(function(fieldId) {
+            const hiddenInput = document.getElementById(fieldId);
+            const hourSelect = document.getElementById(`${fieldId}_hour`);
+            const minuteSelect = document.getElementById(`${fieldId}_minute`);
+
+            if (!hiddenInput || !hourSelect || !minuteSelect) {
+                return;
+            }
+
+            [hourSelect, minuteSelect].forEach(function(select) {
+                select.addEventListener('change', function() {
+                    syncTimeFieldFromSelects(fieldId);
+                });
+            });
+
+            setTimeFieldValue(fieldId, hiddenInput.value);
+        });
+    }
+
+    function escapeRegex(value) {
+        return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    const AUTO_FILL_GUIDE_LABELS = [
+        'Nomor Surat',
+        'Nomor Kegiatan',
+        'Nama Kegiatan',
+        'Tanggal Pelaksanaan',
+        'Tanggal Kegiatan',
+        'Waktu Pelaksanaan',
+        'Jam Kegiatan',
+        'Lokasi',
+        'Lokasi Kegiatan',
+        'Disposisi'
+    ];
+
+    const DOCUMENT_FIELD_LABELS = [
+        'Nomor',
+        'No',
+        'No.',
+        'Sifat',
+        'Lampiran',
+        'Hal',
+        'Perihal',
+        'Yth',
+        'Hari/Tanggal',
+        'Hari',
+        'Tanggal',
+        'Waktu',
+        'Pukul',
+        'Jam',
+        'Tempat',
+        'Lokasi',
+        'Alamat',
+        'Venue',
+        'Media',
+        'Platform',
+        'Link',
+        'Tautan',
+        'Meeting ID',
+        'ID Meeting',
+        'ID Rapat',
+        'Passcode',
+        'Password',
+        'Kode Sandi',
+        'Agenda',
+        'Pimpinan'
+    ];
+
+    function normalizeOcrText(text) {
+        return String(text || '')
+            .replace(/\r/g, '\n')
+            .replace(/([a-z])([A-Z][a-z])/g, '$1\n$2')
+            .replace(/(\d)([A-Z][a-z])/g, '$1\n$2')
+            .replace(/[–—−]/g, '-')
+            .replace(/â€“/g, '-')
+            .replace(/[“”]/g, '"')
+            .replace(/[‘’]/g, "'")
+            .replace(/[“”]/g, '"')
+            .replace(/[‘’]/g, "'")
+            .replace(/[–—−]/g, '-')
+            .replace(/\bJI\./g, 'Jl.')
+            .replace(/[^\S\n]+/g, ' ')
+            .replace(/\n{3,}/g, '\n\n')
+            .replace(/^[:.\-\s]+|[:.\-\s]+$/g, '')
+            .trim();
+    }
+
+    function normalizeLabelKey(value) {
+        return cleanupExtractedValue(value)
+            .replace(/\s*\/\s*/g, '/')
+            .replace(/\.$/, '')
+            .toLowerCase();
+    }
+
+    function isAutoFillGuideLine(line) {
+        const normalizedLine = normalizeLabelKey(line);
+
+        return AUTO_FILL_GUIDE_LABELS.some(function(label) {
+            return normalizeLabelKey(label) === normalizedLine;
+        });
+    }
+
+    function getOcrLines(text) {
+        return normalizeOcrText(text)
+            .split('\n')
+            .map(function(line) {
+                return line.replace(/\s+/g, ' ').trim();
+            })
+            .filter(function(line) {
+                return !isAutoFillGuideLine(line);
+            })
+            .filter(Boolean);
+    }
+
+    function cleanupExtractedValue(value) {
+        return String(value || '')
+            .replace(/\s+/g, ' ')
+            .replace(/^[:.\-–\s]+|[:.\-–\s]+$/g, '')
+            .trim();
+    }
+
+    function labelMatches(label, labels) {
+        const normalizedLabel = normalizeLabelKey(label);
+
+        return labels.some(function(candidate) {
+            return normalizeLabelKey(candidate) === normalizedLabel;
+        });
+    }
+
+    function getKnownDocumentLabel(line) {
+        const cleaned = cleanupExtractedValue(line);
+
+        if (!cleaned || /^[:;]\s*/.test(cleaned)) {
+            return '';
+        }
+
+        const normalizedLine = normalizeLabelKey(cleaned);
+        const match = DOCUMENT_FIELD_LABELS.find(function(label) {
+            return normalizeLabelKey(label) === normalizedLine;
+        });
+
+        return match || '';
+    }
+
+    function truncateAtInlineStopLabels(value, stopLabels) {
+        let result = cleanupExtractedValue(value);
+
+        stopLabels.forEach(function(label) {
+            const pattern = new RegExp(`\\s+${escapeRegex(label)}\\s*[:.]?\\s+`, 'i');
+            const match = result.match(pattern);
+
+            if (match && match.index > 0) {
+                result = result.slice(0, match.index);
+            }
+        });
+
+        return cleanupExtractedValue(result);
+    }
+
+    function shouldStopFieldValue(line, stopPattern) {
+        if (isAutoFillGuideLine(line)) {
+            return true;
+        }
+
+        if (stopPattern && stopPattern.test(line)) {
+            return true;
+        }
+
+        if (/^[A-Z][A-Z\s]{6,}$/.test(line)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    function extractStackedLabelValue(lines, labels, stopLabels) {
+        const stopPattern = stopLabels.length
+            ? new RegExp(`^(?:${stopLabels.map(escapeRegex).join('|')})\\b`, 'i')
+            : null;
+
+        for (let index = 0; index < lines.length; index += 1) {
+            const firstLabel = getKnownDocumentLabel(lines[index]);
+
+            if (!firstLabel) {
+                continue;
+            }
+
+            const labelRun = [];
+            let pointer = index;
+
+            while (pointer < lines.length) {
+                const currentLabel = getKnownDocumentLabel(lines[pointer]);
+
+                if (!currentLabel) {
+                    break;
+                }
+
+                labelRun.push(currentLabel);
+                pointer += 1;
+
+                if (labelRun.length >= 12) {
+                    break;
+                }
+            }
+
+            const targetIndex = labelRun.findIndex(function(label) {
+                return labelMatches(label, labels);
+            });
+
+            if (targetIndex === -1 || pointer >= lines.length || !/^[:;]\s*/.test(lines[pointer])) {
+                continue;
+            }
+
+            const values = [];
+            let currentValue = null;
+
+            while (pointer < lines.length) {
+                const line = lines[pointer];
+                const valueMatch = line.match(/^[:;]\s*(.*)$/);
+
+                if (valueMatch) {
+                    currentValue = [cleanupExtractedValue(valueMatch[1])].filter(Boolean);
+                    values.push(currentValue);
+                    pointer += 1;
+                    continue;
+                }
+
+                if (!currentValue || shouldStopFieldValue(line, stopPattern)) {
+                    break;
+                }
+
+                if (getKnownDocumentLabel(line) && values.length >= labelRun.length) {
+                    break;
+                }
+
+                currentValue.push(cleanupExtractedValue(line));
+                pointer += 1;
+
+                if (currentValue.join(' ').length >= 220) {
+                    break;
+                }
+            }
+
+            if (values[targetIndex]) {
+                return truncateAtInlineStopLabels(values[targetIndex].join(' '), stopLabels);
+            }
+        }
+
+        return '';
+    }
+
+    function extractLabeledBlock(text, labels, stopLabels) {
+        const lines = getOcrLines(text);
+        const stackedValue = extractStackedLabelValue(lines, labels, stopLabels);
+
+        if (stackedValue) {
+            return stackedValue;
+        }
+
+        const labelPattern = new RegExp(`^(?:${labels.map(escapeRegex).join('|')})\\s*[:.]?\\s*(.*)$`, 'i');
+        const stopPattern = stopLabels.length
+            ? new RegExp(`^(?:${stopLabels.map(escapeRegex).join('|')})\\b`, 'i')
+            : null;
+
+        for (let index = 0; index < lines.length; index += 1) {
+            const match = lines[index].match(labelPattern);
+            if (!match) {
+                continue;
+            }
+
+            const values = [];
+            const firstValue = cleanupExtractedValue(match[1]);
+            if (firstValue) {
+                values.push(firstValue);
+            }
+
+            for (let pointer = index + 1; pointer < lines.length; pointer += 1) {
+                const currentLine = lines[pointer];
+
+                if (shouldStopFieldValue(currentLine, stopPattern)) {
+                    break;
+                }
+
+                values.push(cleanupExtractedValue(currentLine));
+                if (values.join(' ').length >= 220) {
+                    break;
+                }
+            }
+
+            const combined = truncateAtInlineStopLabels(values.join(' '), stopLabels);
+            if (combined) {
+                return combined;
+            }
+        }
+
+        return '';
+    }
+
+    function extractInlineSentenceValue(text, phrases) {
+        const normalizedText = normalizeOcrText(text);
+
+        for (const phrase of phrases) {
+            const match = normalizedText.match(new RegExp(`${escapeRegex(phrase)}\\s+([^\\n.]+)`, 'i'));
+            if (match && match[1]) {
+                const value = cleanupExtractedValue(match[1]);
+                if (value) {
+                    return value;
+                }
+            }
+        }
+
+        return '';
+    }
+
+    function detectOnlinePlatform(text) {
+        const source = String(text || '');
+        const lower = source.toLowerCase();
+
+        if (lower.includes('zoom')) {
+            return 'Zoom';
+        }
+
+        if (lower.includes('google meet') || lower.includes('meet.google')) {
+            return 'Google Meet';
+        }
+
+        if (lower.includes('microsoft teams') || lower.includes('ms teams') || /\bteams\b/i.test(source)) {
+            return 'Microsoft Teams';
+        }
+
+        return '';
+    }
+
+    function extractMeetingLink(text) {
+        const match = normalizeOcrText(text).match(/https?:\/\/[^\s<>"')]+/i);
+        return match ? cleanupExtractedValue(match[0]) : '';
+    }
+
+    function extractMeetingId(text) {
+        const match = normalizeOcrText(text).match(/(?:Meeting\s*ID|ID\s*Meeting|ID\s*Rapat)\s*[:.]?\s*([A-Za-z0-9 -]{5,})/i);
+        return match ? cleanupExtractedValue(match[1]) : '';
+    }
+
+    function extractPasscode(text) {
+        const match = normalizeOcrText(text).match(/(?:Passcode|Kode\s*Sandi|Password)\s*[:.]?\s*([A-Za-z0-9_-]{3,})/i);
+        return match ? cleanupExtractedValue(match[1]) : '';
+    }
+
+    function cleanupLocationValue(value) {
+        const cleaned = cleanupExtractedValue(
+            String(value || '')
+                .replace(/https?:\/\/\S+/ig, ' ')
+                .replace(/\b(?:zoom|google meet|meet\.google|microsoft teams|ms teams|meeting id|id meeting|id rapat|passcode|password|kode sandi)\b.*$/i, '')
+                .replace(/\b(?:agenda|pimpinan|mengingat|demikian|ketua\s+dewan|nomor\s+surat|nomor\s+kegiatan|nama\s+kegiatan|tanggal\s+(?:pelaksanaan|kegiatan)|waktu\s+pelaksanaan|jam\s+kegiatan|lokasi\s+kegiatan)\b.*$/i, '')
+                .replace(/\b(?:online|daring|virtual)\b/ig, ' ')
+        );
+
+        return cleaned.length > 180 ? cleanupExtractedValue(cleaned.slice(0, 180)) : cleaned;
+    }
+
+    function cleanupLetterNumber(value) {
+        return cleanupExtractedValue(
+            String(value || '')
+                .replace(/\s+(?:Jakarta|Bogor|Depok|Tangerang|Bekasi),?\s+\d{1,2}\s+[A-Za-z]+\s+\d{4}.*$/i, '')
+                .replace(/\s+(?:Sifat|Lampiran|Hal|Perihal)\b.*$/i, '')
+        );
+    }
+
+    function parseIndoDateEnhanced(dateStr) {
+        const months = {
+            'januari': '01', 'februari': '02', 'maret': '03', 'april': '04', 'mei': '05', 'juni': '06',
+            'juli': '07', 'agustus': '08', 'september': '09', 'oktober': '10', 'november': '11', 'desember': '12',
+            'jan': '01', 'feb': '02', 'mar': '03', 'apr': '04', 'may': '05', 'jun': '06',
+            'jul': '07', 'aug': '08', 'sep': '09', 'oct': '10', 'nov': '11', 'dec': '12'
+        };
+
+        const cleanStr = normalizeOcrText(dateStr).replace(/^[a-zA-Z]+,\s*/, '').trim();
+        const rangeMatch = cleanStr.match(/(\d{1,2})\s*(?:-|s\/d|s\.d\.|hingga)\s*(\d{1,2})\s+([a-zA-Z]+)\s+(\d{4})/i);
+        if (rangeMatch) {
+            const month = months[rangeMatch[3].toLowerCase()];
+            if (month) {
+                return {
+                    start: `${rangeMatch[4]}-${month}-${rangeMatch[1].padStart(2, '0')}`,
+                    end: `${rangeMatch[4]}-${month}-${rangeMatch[2].padStart(2, '0')}`,
+                };
+            }
+        }
+
+        const singleMatch = cleanStr.match(/(\d{1,2})\s+([a-zA-Z]+)\s+(\d{4})/i);
+        if (singleMatch) {
+            const month = months[singleMatch[2].toLowerCase()];
+            if (month) {
+                const date = `${singleMatch[3]}-${month}-${singleMatch[1].padStart(2, '0')}`;
+                return { start: date, end: date };
+            }
+        }
+
+        return null;
+    }
+
+    function extractLocationDetails(text) {
+        const normalizedText = normalizeOcrText(text);
+        const placeVal = cleanupLocationValue(
+            extractLabeledBlock(normalizedText, ['Tempat', 'Lokasi', 'Alamat', 'Venue'], ['Hari', 'Tanggal', 'Hari/Tanggal', 'Waktu', 'Pukul', 'Jam', 'Media', 'Platform', 'Link', 'Tautan', 'Meeting ID', 'ID Meeting', 'ID Rapat', 'Passcode', 'Password', 'Kode Sandi', 'Agenda', 'Pimpinan', 'Mengingat', 'Demikian', 'Ketua', 'Hal', 'Perihal', 'Lampiran', 'Nama Kegiatan', 'Nomor Surat', 'Nomor Kegiatan', 'Tanggal Kegiatan', 'Tanggal Pelaksanaan', 'Jam Kegiatan', 'Waktu Pelaksanaan', 'Lokasi Kegiatan'])
+            || extractInlineSentenceValue(normalizedText, ['bertempat di', 'dilaksanakan di', 'diselenggarakan di', 'akan dilaksanakan di'])
+        );
+        const meetingLink = extractMeetingLink(normalizedText);
+        const meetingId = extractMeetingId(normalizedText);
+        const passcode = extractPasscode(normalizedText);
+        const mediaSource = extractLabeledBlock(normalizedText, ['Media', 'Platform', 'Link', 'Tautan'], ['Hari', 'Tanggal', 'Hari/Tanggal', 'Waktu', 'Pukul', 'Jam', 'Tempat', 'Lokasi', 'Meeting ID', 'ID Meeting', 'ID Rapat', 'Passcode', 'Password', 'Kode Sandi', 'Agenda', 'Pimpinan', 'Mengingat', 'Demikian']) || normalizedText;
+        const mediaVal = detectOnlinePlatform(mediaSource) || (meetingLink ? 'Lainnya' : '');
+        const hasOnlineSignal = Boolean(mediaVal || meetingLink || meetingId || passcode || /(?:zoom|google meet|meet\.google|microsoft teams|ms teams|webex|online|daring|virtual)\b/i.test(normalizedText));
+        const hasPhysicalLocation = Boolean(placeVal) && !/(?:zoom|google meet|meet\.google|teams|https?:\/\/|online|daring|virtual)/i.test(placeVal);
+
+        let detectedType = 'offline';
+        if (/(?:hybrid|bauran|luring\s*(?:dan|\/|&)\s*daring)/i.test(normalizedText) || (hasPhysicalLocation && hasOnlineSignal)) {
+            detectedType = 'hybrid';
+        } else if (hasOnlineSignal && !hasPhysicalLocation) {
+            detectedType = 'online';
+        }
+
+        return {
+            detectedType,
+            placeVal,
+            mediaVal,
+            meetingLink,
+            meetingId,
+            passcode,
+        };
+    }
+
+    function applyLocationDetails(details) {
+        $('#location').val('');
+        $('#meeting_link').val('');
+        $('#meeting_id').val('');
+        $('#passcode').val('');
+        $('#media_online').val('').trigger('change');
+
+        $('#location_type').val(details.detectedType).trigger('change');
+
+        if ((details.detectedType === 'offline' || details.detectedType === 'hybrid') && details.placeVal) {
+            $('#location').val(details.placeVal);
+        }
+
+        if (details.detectedType === 'online' || details.detectedType === 'hybrid') {
+            if (details.mediaVal) {
+                $('#media_online').val(details.mediaVal).trigger('change');
+            }
+            if (details.meetingLink) {
+                $('#meeting_link').val(details.meetingLink);
+            }
+            if (details.meetingId) {
+                $('#meeting_id').val(details.meetingId);
+            }
+            if (details.passcode) {
+                $('#passcode').val(details.passcode);
+            }
+        }
+
+        updateLocationInput();
+    }
+
+    function populateSelect(selectElement, options, selectedValue) {
+        selectElement.empty();
+        options.forEach(function(option) {
+            const selected = selectedValue == option.id;
+            const newOption = new Option(option.text, option.id, false, selected);
+            $(newOption).attr('data-color', option.color);
+            selectElement.append(newOption);
+        });
+        selectElement.trigger('change');
+    }
+
+    function updateLocationInput() {
+        const type = document.getElementById('location_type').value;
+        const locInput = document.getElementById('location_input_group');
+        const linkInput = document.getElementById('link_input_group');
+        const mediaGroup = document.getElementById('media_online_group');
+        const meetingDetailsGroup = document.getElementById('meeting_details_group');
+
+        if (type === 'online') {
+            locInput.style.display = 'none';
+            linkInput.style.display = 'block';
+            mediaGroup.style.display = 'block';
+            meetingDetailsGroup.style.display = 'flex';
+        } else if (type === 'offline') {
+            locInput.style.display = 'block';
+            linkInput.style.display = 'none';
+            mediaGroup.style.display = 'none';
+            meetingDetailsGroup.style.display = 'none';
+        } else if (type === 'hybrid') {
+            locInput.style.display = 'block';
+            linkInput.style.display = 'block';
+            mediaGroup.style.display = 'block';
+            meetingDetailsGroup.style.display = 'flex';
+        }
+    }
+
+    function updateFormType() {
+        const selectedRadio = document.querySelector('input[name="activity_type"]:checked');
+        const type = selectedRadio ? selectedRadio.value : '';
+
+        if (type === 'internal') {
+            $('#label_internal').addClass('active bg-primary text-white').removeClass('bg-white text-dark');
+            $('#label_external').removeClass('active bg-primary text-white').addClass('bg-white text-dark');
+            $('.slide-up-hint').hide();
+            $('#main_form_container').fadeIn();
+        } else if (type === 'external') {
+            $('#label_external').addClass('active bg-warning text-white').removeClass('bg-white text-dark');
+            $('#label_internal').removeClass('active bg-warning text-white').addClass('bg-white text-dark');
+            $('.slide-up-hint').hide();
+            $('#main_form_container').fadeIn();
+        } else {
+            $('#main_form_container').hide();
+        }
+
+        if (type) {
+            $('#activity_type').val(type);
+        }
+
+        const picInternalWrapper = document.getElementById('pic_internal_wrapper');
+        const picExternalWrapper = document.getElementById('pic_external_wrapper');
+        const organizerWrapper = document.getElementById('organizer_wrapper');
+        const invStatus = $('#invitation_status');
+        const attachmentInput = document.getElementById('attachment_path');
+        const invTypeSelect = $('#invitation_type');
+        const attachmentGroup = document.getElementById('attachment_group');
+        const picAsterisk = document.getElementById('pic_asterisk');
+        const currentInvStatus = {{ isset($activity) ? $activity->invitation_status : '0' }};
+
+        if (attachmentInput) {
+            attachmentInput.disabled = !type;
+        }
+
+        if (type === 'external') {
+            picInternalWrapper.style.display = 'none';
+            picExternalWrapper.style.display = 'block';
+            if (organizerWrapper) {
+                organizerWrapper.style.display = 'block';
+            }
+            if (picAsterisk) {
+                picAsterisk.style.display = 'none';
+            }
+            if (attachmentGroup) {
+                attachmentGroup.style.display = 'block';
+            }
+
+            $('#smart_assist_title').html('<i class="fe fe-paperclip mr-2 text-warning"></i>Upload Surat Undangan');
+            $('#smart_assist_desc').text('Upload surat undangan (PDF/Gambar) untuk lampiran sekaligus membantu baca waktu dan lokasi.');
+            $('#ocr-loading').hide();
+            invTypeSelect.val('inbound').trigger('change');
+
+            populateSelect(invStatus, [
+                {id: 0, text: 'Sudah ada Disposisi', color: '#28a745'},
+                {id: 1, text: 'Proses Disposisi', color: '#ffc107'},
+                {id: 2, text: 'Untuk Diketahui Ketua', color: '#dc3545'},
+                {id: 3, text: 'Terjadwal Hadir', color: '#007bff'}
+            ], currentInvStatus);
+
+            $('#narasumber_wrapper').show();
+        } else if (type === 'internal') {
+            picInternalWrapper.style.display = 'flex';
+            picExternalWrapper.style.display = 'none';
+            if (organizerWrapper) {
+                organizerWrapper.style.display = 'none';
+            }
+            if (picAsterisk) {
+                picAsterisk.style.display = 'inline';
+            }
+            if (attachmentGroup) {
+                attachmentGroup.style.display = 'block';
+            }
+
+            $('#narasumber_wrapper').hide();
+            $('#smart_assist_title').html('<i class="fe fe-zap mr-2 text-warning"></i>Surat Undangan (Auto-Fill)');
+            $('#smart_assist_desc').text('Upload surat undangan (PDF/Gambar) untuk membantu mengisi form secara otomatis.');
+            invTypeSelect.val('outbound').trigger('change');
+
+            populateSelect(invStatus, [
+                {id: 0, text: 'Proses Terkirim', color: '#28a745'},
+                {id: 1, text: 'Proses TTD', color: '#007bff'},
+                {id: 2, text: 'Proses Drafting dan Acc', color: '#dc3545'}
+            ], currentInvStatus);
+        }
+    }
+
+    function autoFillDisposition(text) {
+        const councilKeywords = {
+            'Nunung Nuryartono': ['Nuryartono', 'Nunung Nuryartono'],
+            'Muttaqien': ['Muttaqien', 'MPH'],
+            'Nikodemus Beriman Purba': ['Nikodemus', 'Beriman Purba'],
+            'Sudarto': ['Sudarto'],
+            'Robben Rico': ['Robben Rico', 'Robben'],
+            'Mahesa Paranadipa Maykel': ['Mahesa Paranadipa', 'Paranadipa'],
+            'Syamsul Hidayat Pasaribu': ['Syamsul Hidayat', 'Pasaribu'],
+            'Hermansyah': ['Hermansyah'],
+            'Paulus Agung Pambudhi': ['Paulus Agung', 'Pambudhi'],
+            'Agus Taufiqurrohman': ['Agus', 'Taufiqurrohman', 'Agus Taufiqurrohman'],
+            'Kunta Wibawa Dasa Nugraha': ['Kunta Wibawa', 'Dasa Nugraha'],
+            'Indah Anggoro Putri': ['Indah Anggoro', 'Anggoro Putri'],
+            'Rudi Purwono': ['Rudi Purwono'],
+            'Mickael Bobby Hoelman': ['Mickael Bobby', 'Bobby Hoelman'],
+            'Royanto Purba': ['Royanto Purba', 'Royanto'],
+            'Imron Rosadi': ['Imron Rosadi'],
+            'Dwi Janatun Rahayu': ['Dwi Janatun', 'Janatun Rahayu'],
+            'Wenny Kartika Ayunungtyas': ['Wenny Kartika', 'Ayunungtyas'],
+            'Annisa': ['Annisa'],
+            'Eko Sudarmawan': ['Eko Sudarmawan', 'Sudarmawan']
+        };
+
+        const dispoStartMatch = text.match(/(?:DAFTAR UNDANGAN|Lampiran\s+[IVX]+)/i);
+        const dispoText = dispoStartMatch ? text.substring(dispoStartMatch.index) : text;
+        const foundPersons = [];
+
+        for (const [fullName, keywords] of Object.entries(councilKeywords)) {
+            const isMatch = keywords.some(function(keyword) {
+                return new RegExp(keyword, 'i').test(dispoText);
+            });
+
+            if (!isMatch) {
+                continue;
+            }
+
+            foundPersons.push(fullName);
+            const checkbox = $(`.dewan-checkbox[value="${fullName}"]`);
+            if (checkbox.length > 0) {
+                checkbox.prop('checked', true).trigger('change');
+            }
+        }
+
+        if (/(?:Sekretariat\s+Dewan\s+Jaminan\s+Sosial\s+Nasional|Sekretariat\s+DJSN)/i.test(dispoText)) {
+            $('.group-check-all').each(function() {
+                const groupHeader = $(this).closest('.card-header');
+                if (groupHeader.text().trim().toLowerCase().includes('sekretariat') && !$(this).prop('checked')) {
+                    $(this).prop('checked', true).trigger('change');
+                }
+            });
+        }
+
+        if (/\bTenaga\s+Ahli\s+DJSN\b/i.test(dispoText)) {
+            $('#include_tenaga_ahli').prop('checked', true).trigger('change');
+        }
+
+        syncGroupSelectAllState();
+
+        if (foundPersons.length > 0) {
+            console.log('Auto-filled disposition for:', foundPersons);
+        }
+    }
+
+    function parseAndFillForm(text, activityType) {
+        const normalizedText = normalizeOcrText(text);
+
+        const letterNumber = cleanupLetterNumber(
+            extractLabeledBlock(normalizedText, ['Nomor', 'No', 'No.'], ['Sifat', 'Lampiran', 'Hal', 'Perihal', 'Yth'])
+        );
+        if (letterNumber) {
+            $('#letter_number').val(letterNumber);
+        }
+
+        const agenda = extractLabeledBlock(normalizedText, ['Hal', 'Perihal'], ['Yth', 'Lampiran', 'Hari', 'Tanggal', 'Hari/Tanggal', 'Waktu', 'Tempat', 'Lokasi', 'Agenda']);
+        if (agenda) {
+            $('#name').val(agenda);
+        }
+
+        const dateSource = extractLabeledBlock(normalizedText, ['Hari/Tanggal', 'Tanggal', 'Hari'], ['Waktu', 'Pukul', 'Jam', 'Tempat', 'Lokasi', 'Media', 'Platform']);
+        const parsedDate = dateSource ? parseIndoDateEnhanced(dateSource) : null;
+        if (parsedDate) {
+            $('#start_date').val(parsedDate.start);
+            $('#end_date').val(parsedDate.end);
+        }
+
+        const timeSource = extractLabeledBlock(normalizedText, ['Waktu', 'Pukul', 'Jam'], ['Tempat', 'Lokasi', 'Media', 'Platform', 'Meeting ID', 'ID Meeting', 'ID Rapat', 'Passcode', 'Password']) || normalizedText;
+        const times = Array.from(timeSource.matchAll(/\b(\d{1,2}[.:]\d{2})\b/g)).map(function(match) {
+            return roundTimeToFiveMinutes(match[1]);
+        });
+
+        if (times[0]) {
+            setTimeFieldValue('start_time', times[0]);
+        }
+
+        if (times[1]) {
+            setTimeFieldValue('end_time', times[1]);
+        } else if (/selesai/i.test(timeSource)) {
+            setTimeFieldValue('end_time', '');
+        }
+
+        applyLocationDetails(extractLocationDetails(normalizedText));
+
+        if (activityType === 'internal') {
+            autoFillDisposition(normalizedText);
+        }
+    }
+
+    function setOcrStatus(message) {
+        const loading = document.getElementById('ocr-loading');
+        const statusText = loading ? loading.querySelector('span') : null;
+
+        if (statusText) {
+            statusText.textContent = message;
+        }
+    }
+
+    async function createOcrWorker() {
+        return Tesseract.createWorker('ind');
+    }
+
+    async function recognizeImageWithWorker(image, worker) {
+        const result = await worker.recognize(image);
+
+        return result.data.text || '';
+    }
+
+    async function extractTextFromImage(file) {
+        const worker = await createOcrWorker();
+
+        try {
+            setOcrStatus('Sedang membaca gambar...');
+            return await recognizeImageWithWorker(file, worker);
+        } finally {
+            await worker.terminate();
+        }
+    }
+
+    function buildPdfTextLines(items) {
+        const rows = [];
+
+        items.forEach(function(item) {
+            const text = String(item.str || '').trim();
+
+            if (!text) {
+                return;
+            }
+
+            const transform = item.transform || [0, 0, 0, 0, 0, 0];
+            const x = transform[4] || 0;
+            const y = Math.round((transform[5] || 0) * 2) / 2;
+            let row = rows.find(function(candidate) {
+                return Math.abs(candidate.y - y) <= 2;
+            });
+
+            if (!row) {
+                row = { y, items: [] };
+                rows.push(row);
+            }
+
+            row.items.push({ x, text });
+        });
+
+        return rows
+            .sort(function(a, b) {
+                return b.y - a.y;
+            })
+            .map(function(row) {
+                return row.items
+                    .sort(function(a, b) {
+                        return a.x - b.x;
+                    })
+                    .map(function(item) {
+                        return item.text;
+                    })
+                    .join(' ')
+                    .replace(/\s+([:;,.])/g, '$1')
+                    .replace(/([:;])(?=\S)/g, '$1 ')
+                    .trim();
+            })
+            .filter(Boolean)
+            .join('\n');
+    }
+
+    async function extractTextLayerFromPage(page) {
+        const textContent = await page.getTextContent();
+        const pageText = buildPdfTextLines(textContent.items || []);
+
+        return normalizeOcrText(pageText);
+    }
+
+    function hasUsablePdfText(text) {
+        return String(text || '').replace(/\s+/g, '').length >= 80;
+    }
+
+    async function renderPdfPageToBlob(page) {
+        const viewport = page.getViewport({ scale: 1.8 });
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d', { willReadFrequently: true });
+
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        await page.render({ canvasContext: context, viewport: viewport }).promise;
+
+        return new Promise(function(resolve) {
+            canvas.toBlob(resolve, 'image/png');
+        });
+    }
+
+    async function extractTextFromPDF(file) {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let fullText = '';
+        let worker = null;
+
+        try {
+            for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+                const page = await pdf.getPage(pageNumber);
+                setOcrStatus(`Membaca halaman ${pageNumber} dari ${pdf.numPages}...`);
+
+                const textLayerText = await extractTextLayerFromPage(page);
+                if (hasUsablePdfText(textLayerText)) {
+                    fullText += `${textLayerText}\n\n`;
+                    continue;
+                }
+
+                if (!worker) {
+                    worker = await createOcrWorker();
+                }
+
+                setOcrStatus(`OCR halaman ${pageNumber} dari ${pdf.numPages}...`);
+                const blob = await renderPdfPageToBlob(page);
+                fullText += `${await recognizeImageWithWorker(blob, worker)}\n\n`;
+            }
+        } finally {
+            if (worker) {
+                await worker.terminate();
+            }
+        }
+
+        return fullText;
+    }
+
+    async function handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (!file) {
+            clearAttachmentPreview();
+            return;
+        }
+
+        setAttachmentPreview(file);
+
+        const selectedRadio = document.querySelector('input[name="activity_type"]:checked');
+        const activityType = selectedRadio ? selectedRadio.value : '';
+        const loading = document.getElementById('ocr-loading');
+
+        if (!activityType) {
+            return;
+        }
+
+        loading.style.display = 'block';
+
+        try {
+            let text = '';
+
+            if (file.type === 'application/pdf') {
+                text = await extractTextFromPDF(file);
+            } else if (file.type.startsWith('image/')) {
+                text = await extractTextFromImage(file);
+            }
+
+            if (text) {
+                parseAndFillForm(text, activityType);
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'Form terisi otomatis dari surat!',
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+            } else {
+                Swal.fire({
+                    title: 'Info',
+                    text: 'Teks pada dokumen belum terbaca, silakan isi manual.',
+                    icon: 'info',
+                    confirmButtonText: 'OK'
+                });
+            }
+        } catch (error) {
+            console.error('OCR Error:', error);
+            Swal.fire({
+                title: 'Info',
+                text: 'Tidak dapat membaca teks otomatis, silakan isi manual.',
+                icon: 'info',
+                confirmButtonText: 'OK'
+            });
+        } finally {
+            loading.style.display = 'none';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        bindFiveMinuteTimeInputs();
+
+        $('.custom-file-input').on('change', function() {
+            const fileName = $(this).val().split('\\').pop();
+            $('#file_label').html(fileName ? fileName : 'Klik atau Tarik File Di Sini');
+            if (fileName) {
+                $('.smart-upload-area').addClass('border-primary bg-white');
+                $('.smart-upload-icon').removeClass('text-muted').addClass('text-primary');
+            } else {
+                clearAttachmentPreview();
+                $('.smart-upload-area').removeClass('border-primary bg-white');
+                $('.smart-upload-icon').removeClass('text-primary').addClass('text-muted');
+            }
+        });
+    });
 </script>
 @endpush

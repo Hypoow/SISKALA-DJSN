@@ -16,7 +16,7 @@
               </div>
               <div class="col">
                 <small><strong>Selamat datang di SISKALA</strong></small>
-                <div class="my-0 text-muted small">Sistem penjadwalan kegiatan</div>
+                <div class="my-0 text-muted small">Sistem Kelola Agenda, Tindak Lanjut, dan Administrasi</div>
                 <small class="badge badge-pill badge-light text-muted">Baru</small>
               </div>
             </div>

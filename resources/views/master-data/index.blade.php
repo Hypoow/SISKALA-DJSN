@@ -129,10 +129,11 @@
                                                                     ];
 
                                                                     $meta = $roleMeta[$user->resolved_access_profile] ?? ['badge' => 'bg-secondary', 'text' => 'text-muted', 'icon' => 'fe-user', 'label' => $user->display_role_label];
+                                                                    $roleLabel = $user->isPrimarySuperAdmin() ? 'Super Admin Utama' : $meta['label'];
                                                                 @endphp
                                      <span
                                                                     class="badge badge-pill master-users-role-badge {{ $meta['badge'] }} {{ $meta['text'] }} px-3 py-2 text-xs font-weight-bold shadow-sm d-inline-flex align-items-center">
-                                                                    <i class="fe {{ $meta['icon'] }} mr-2"></i> {{ $meta['label'] }}
+                                                                    <i class="fe {{ $meta['icon'] }} mr-2"></i> {{ $roleLabel }}
                                                                 </span>
                                                                 @if($user->resolved_report_target_label)
                                                                     <div class="small text-muted mt-2">{{ $user->resolved_report_target_label }}</div>
@@ -157,14 +158,24 @@
                                                                         <a class="dropdown-item" href="{{ route('master-data.edit', $user->id) }}">
                                                                             <i class="fe fe-edit-2 mr-2 text-warning"></i> Edit
                                                                         </a>
-                                                                        <form action="{{ route('master-data.destroy', $user->id) }}" method="POST"
-                                                                            class="d-inline delete-form">
-                                                                            @csrf
-                                                                            @method('DELETE')
-                                                                            <button type="button" class="dropdown-item delete-btn">
-                                                                                <i class="fe fe-trash-2 mr-2 text-danger"></i> Hapus
-                                                                            </button>
-                                                                        </form>
+                                                                        @if($user->isPrimarySuperAdmin())
+                                                                            <span class="dropdown-item text-muted disabled">
+                                                                                <i class="fe fe-shield mr-2 text-primary"></i> Super Admin Utama dilindungi
+                                                                            </span>
+                                                                        @elseif($user->id === auth()->id())
+                                                                            <span class="dropdown-item text-muted disabled">
+                                                                                <i class="fe fe-user mr-2"></i> Akun Anda
+                                                                            </span>
+                                                                        @else
+                                                                            <form action="{{ route('master-data.destroy', $user->id) }}" method="POST"
+                                                                                class="d-inline delete-form">
+                                                                                @csrf
+                                                                                @method('DELETE')
+                                                                                <button type="button" class="dropdown-item delete-btn">
+                                                                                    <i class="fe fe-trash-2 mr-2 text-danger"></i> Hapus
+                                                                                </button>
+                                                                            </form>
+                                                                        @endif
                                                                     </div>
                                                                 </div>
                                                             </td>

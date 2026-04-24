@@ -405,7 +405,7 @@
                 <div class="branding-card">
                     <img src="{{ asset('images/logo.svg') }}" alt="DJSN Logo" class="brand-logo-large">
                     <h1 class="app-title-large">SISKALA</h1>
-                    <p class="app-tagline-large">Sistem Informasi Penjadwalan & Kegiatan<br>Dewan Jaminan Sosial Nasional</p>
+                    <p class="app-tagline-large">Sistem Kelola Agenda, Tindak Lanjut, dan Administrasi<br>Dewan Jaminan Sosial Nasional</p>
                 </div>
             </div>
         </div>

@@ -437,21 +437,34 @@
                                                     Ringkasan Rapat Terisi
                                                 </small>
                                             @else
-                                                <small class="text-muted" 
-                                                    @if(auth()->user()->canManagePostActivity())
-                                                        style="cursor: pointer;" wire:click="openSummaryModal({{ $activity->id }})" title="Klik untuk isi ringkasan"
-                                                    @endif>
-                                                    <span wire:loading.remove wire:target="openSummaryModal({{ $activity->id }})"><i class="fe fe-edit-2 mr-1"></i></span>
-                                                    <span wire:loading wire:target="openSummaryModal({{ $activity->id }})" class="spinner-border spinner-border-sm mr-1" role="status" aria-hidden="true"></span>
-                                                    Ringkasan Rapat Belum Diisi
-                                                </small>
+                                                @if(auth()->user()->canManagePostActivity())
+                                                    <button
+                                                        type="button"
+                                                        class="btn btn-sm btn-outline-secondary rounded-pill shadow-sm px-3"
+                                                        wire:click="openSummaryModal({{ $activity->id }})"
+                                                        wire:loading.attr="disabled"
+                                                        wire:target="openSummaryModal({{ $activity->id }})"
+                                                        title="Isi ringkasan rapat"
+                                                    >
+                                                        <span wire:loading.remove wire:target="openSummaryModal({{ $activity->id }})">
+                                                            <i class="fe fe-edit-2 mr-1"></i> Isi Ringkasan
+                                                        </span>
+                                                        <span wire:loading wire:target="openSummaryModal({{ $activity->id }})">
+                                                            <span class="spinner-border spinner-border-sm mr-1" role="status" aria-hidden="true"></span> Membuka...
+                                                        </span>
+                                                    </button>
+                                                @else
+                                                    <span class="badge badge-light border text-muted px-3 py-2">
+                                                        <i class="fe fe-file-text mr-1"></i> Ringkasan Rapat Belum Diisi
+                                                    </span>
+                                                @endif
                                             @endif
                                         </div>
                                     </td>
                                     <td class="align-middle text-center" style="min-width: 170px;">
                                         <!-- MoM (Minutes of Meeting) Button -->
                                         <div class="mb-2">
-                                            <button wire:click="openMomModal({{ $activity->id }})" wire:loading.attr="disabled" class="btn btn-sm btn-outline-primary rounded-pill shadow-sm px-3 w-100 d-flex align-items-center justify-content-center text-nowrap">
+                                            <button type="button" onclick="$('#momModal').modal('show')" wire:click="openMomModal({{ $activity->id }})" wire:loading.attr="disabled" class="btn btn-sm btn-outline-primary rounded-pill shadow-sm px-3 w-100 d-flex align-items-center justify-content-center text-nowrap">
                                                 <span wire:loading.remove wire:target="openMomModal({{ $activity->id }})"><i class="fe fe-file-text mr-2"></i></span>
                                                 <span wire:loading wire:target="openMomModal({{ $activity->id }})" class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>
                                                 MoM
@@ -463,12 +476,14 @@
                                         
                                         <!-- Materials Button -->
                                         <div>
-                                            <button wire:click="openMaterialModal({{ $activity->id }})" wire:loading.attr="disabled" class="btn btn-sm btn-outline-info rounded-pill shadow-sm px-3 w-100 d-flex align-items-center justify-content-center text-nowrap">
+                                            <button type="button" onclick="$('#materialModal').modal('show')" wire:click="openMaterialModal({{ $activity->id }})" wire:loading.attr="disabled" class="btn btn-sm btn-outline-info rounded-pill shadow-sm px-3 w-100 d-flex align-items-center justify-content-center text-nowrap">
                                                 <span wire:loading.remove wire:target="openMaterialModal({{ $activity->id }})"><i class="fe fe-folder mr-2"></i></span>
                                                 <span wire:loading wire:target="openMaterialModal({{ $activity->id }})" class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>
                                                 Bahan Materi 
                                                 @if($activity->materials->count() > 0)
                                                     <span class="badge badge-info ml-2">{{ $activity->materials->count() }}</span>
+                                                @elseif($activity->shows_no_materials_notice)
+                                                    <span class="badge badge-secondary ml-2">Tidak Ada</span>
                                                 @endif
                                             </button>
                                         </div>
@@ -684,19 +699,63 @@
         
         window.addEventListener('open-material-modal', event => {
             $('#materialModal').modal('show');
+            window.setPastMaterialUploadNoticeName('');
         });
 
         window.addEventListener('close-material-modal', event => {
             $('#materialModal').modal('hide');
+            window.setPastMaterialUploadNoticeName('');
         });
 
         window.addEventListener('open-mom-modal', event => {
             $('#momModal').modal('show');
+            window.setPastMomUploadNoticeName('');
         });
         
         window.addEventListener('close-mom-modal', event => {
             $('#momModal').modal('hide');
+            window.setPastMomUploadNoticeName('');
         });
+
+        window.setPastMomUploadNoticeName = function (fileName) {
+            const nameEl = document.getElementById('past_mom_uploading_name');
+
+            if (!nameEl) {
+                return;
+            }
+
+            nameEl.textContent = fileName || 'File MoM sedang diproses';
+        };
+
+        window.handlePastMomFileSelection = function (input) {
+            var fileName = '';
+
+            if (input && input.files && input.files.length > 0) {
+                fileName = input.files[0].name;
+            }
+
+            window.setPastMomUploadNoticeName(fileName);
+        };
+
+        window.setPastMaterialUploadNoticeName = function (fileName) {
+            const nameEl = document.getElementById('past_material_uploading_name');
+
+            if (!nameEl) {
+                return;
+            }
+
+            nameEl.textContent = fileName || 'File materi sedang diproses';
+        };
+
+        window.handlePastMaterialFileSelection = function (input) {
+            var fileName = '';
+
+            if (input && input.files && input.files.length > 0) {
+                fileName = input.files[0].name;
+            }
+
+            window.setPastMaterialUploadNoticeName(fileName);
+        };
 
         document.addEventListener('livewire:initialized', () => {
              $('#assignmentModal').on('hidden.bs.modal', function () {
@@ -786,6 +845,38 @@
                     </button>
                 </div>
                 <div class="modal-body">
+                    @php $hasMaterialFiles = collect($materialList)->isNotEmpty(); @endphp
+
+                    @if(auth()->user()->canManagePostActivity())
+                    <div class="alert {{ $hasNoMaterials ? 'alert-warning' : 'alert-light' }} border shadow-sm d-flex justify-content-between align-items-start flex-column flex-md-row">
+                        <div class="pr-md-3">
+                            <div class="custom-control custom-checkbox">
+                                <input
+                                    type="checkbox"
+                                    class="custom-control-input"
+                                    id="pastHasNoMaterials"
+                                    wire:change="toggleNoMaterialStatus"
+                                    {{ $hasNoMaterials ? 'checked' : '' }}
+                                    {{ $hasMaterialFiles ? 'disabled' : '' }}
+                                >
+                                <label class="custom-control-label font-weight-bold" for="pastHasNoMaterials">
+                                    Kegiatan ini tidak memiliki bahan materi
+                                </label>
+                            </div>
+                            <small class="text-muted d-block mt-2">
+                                @if($hasMaterialFiles)
+                                    Hapus semua file bahan materi terlebih dahulu jika ingin menandai kegiatan tanpa bahan materi.
+                                @else
+                                    Centang jika kegiatan memang tidak memiliki file bahan materi.
+                                @endif
+                            </small>
+                        </div>
+                        @if($hasNoMaterials)
+                            <span class="badge badge-warning mt-3 mt-md-0">Tidak ada bahan materi</span>
+                        @endif
+                    </div>
+                    @endif
+
                     @if (session()->has('success_material'))
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
                             {{ session('success_material') }}
@@ -804,8 +895,8 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label>Judul Materi</label>
-                                            <input type="text" wire:model="newMaterialTitle" class="form-control" placeholder="Contoh: Slide Paparan Narasumber A">
+                                            <label>Judul Materi <span class="text-danger">*</span></label>
+                                            <input type="text" wire:model="newMaterialTitle" class="form-control" placeholder="Contoh: Slide Paparan Narasumber A" required>
                                             @error('newMaterialTitle') <span class="text-danger small">{{ $message }}</span> @enderror
                                         </div>
                                     </div>
@@ -813,7 +904,7 @@
                                         <div class="form-group">
                                             <label>File Materi (Max 20MB)</label>
                                             <div class="custom-file">
-                                                <input type="file" wire:model="newMaterialFile" class="custom-file-input" id="materialFile">
+                                                <input type="file" wire:model="newMaterialFile" class="custom-file-input" id="materialFile" onchange="window.handlePastMaterialFileSelection(this)">
                                                 <label class="custom-file-label" for="materialFile">
                                                     {{ $newMaterialFile ? $newMaterialFile->getClientOriginalName() : 'Pilih file...' }}
                                                 </label>
@@ -822,14 +913,26 @@
                                                 Format file: PDF, DOC/DOCX, PPT/PPTX, XLS/XLSX, dan CSV.
                                             </small>
                                             @error('newMaterialFile') <span class="text-danger small">{{ $message }}</span> @enderror
-                                            <div wire:loading wire:target="newMaterialFile" class="text-xs text-muted mt-1">
-                                                Uploading...
+                                            <div wire:loading.flex wire:target="newMaterialFile" class="mt-2 align-items-start border rounded bg-white shadow-sm px-3 py-2">
+                                                <div class="d-inline-flex align-items-center justify-content-center bg-light rounded mr-3 flex-shrink-0" style="width: 34px; height: 34px;">
+                                                    <i class="fe fe-folder text-info"></i>
+                                                </div>
+                                                <div class="flex-fill overflow-hidden">
+                                                    <div class="font-weight-bold text-dark small">Mengupload 1 item</div>
+                                                    <div class="text-muted small mb-2">Menyelesaikan upload...</div>
+                                                    <div class="d-flex align-items-center">
+                                                        <span id="past_material_uploading_name" class="small font-weight-bold text-dark text-truncate" style="max-width: 220px;">
+                                                            {{ $newMaterialFile ? $newMaterialFile->getClientOriginalName() : 'File materi sedang diproses' }}
+                                                        </span>
+                                                        <span class="spinner-border spinner-border-sm text-info ml-2" role="status" aria-hidden="true"></span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="text-right">
-                                    <button type="submit" class="btn btn-primary btn-sm" wire:loading.attr="disabled">
+                                    <button type="submit" class="btn btn-primary btn-sm" wire:loading.attr="disabled" wire:target="saveMaterial,newMaterialFile">
                                         <i class="fe fe-plus"></i> Tambahkan
                                     </button>
                                 </div>
@@ -899,7 +1002,12 @@
                             <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-white shadow-sm mb-3" style="width: 72px; height: 72px;">
                                 <i class="fe fe-folder text-secondary" style="font-size: 2rem;"></i>
                             </div>
-                            <p class="text-muted mb-0">Belum ada bahan materi yang diupload.</p>
+                            @if($hasNoMaterials)
+                                <p class="font-weight-bold text-muted mb-1">Kegiatan ini ditandai tidak memiliki bahan materi.</p>
+                                <p class="text-muted mb-0 small">Unggah file kapan saja jika status kegiatan berubah.</p>
+                            @else
+                                <p class="text-muted mb-0">Belum ada bahan materi yang diupload.</p>
+                            @endif
                         </div>
                     @endif
                 </div>
@@ -936,8 +1044,8 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label>Judul MoM</label>
-                                            <input type="text" wire:model="newMomTitle" class="form-control" placeholder="Contoh: Notulensi Rapat Internal">
+                                            <label>Judul MoM <span class="text-danger">*</span></label>
+                                            <input type="text" wire:model="newMomTitle" class="form-control" placeholder="Contoh: Notulensi Rapat Internal" required>
                                             @error('newMomTitle') <span class="text-danger small">{{ $message }}</span> @enderror
                                         </div>
                                     </div>
@@ -946,23 +1054,41 @@
                                             <label>File MoM (Max 20MB)</label>
                                             
                                             <div class="custom-file">
-                                                <input type="file" wire:model="newMomFile" class="custom-file-input" id="momFile" accept=".pdf,.doc,.docx">
+                                                <input
+                                                    type="file"
+                                                    wire:model="newMomFile"
+                                                    class="custom-file-input"
+                                                    id="momFile"
+                                                    accept=".pdf,application/pdf"
+                                                    onchange="window.handlePastMomFileSelection(this)">
                                                 <label class="custom-file-label" for="momFile">
                                                     {{ $newMomFile ? $newMomFile->getClientOriginalName() : 'Pilih file...' }}
                                                 </label>
                                             </div>
                                             <small class="text-muted d-block mb-2">
-                                                Format file yang didukung: PDF, DOC, dan DOCX. Ukuran maksimal 20 MB per file.
+                                                Format file yang didukung: PDF. Ukuran maksimal 20 MB per file.
                                             </small>
                                             @error('newMomFile') <span class="text-danger small">{{ $message }}</span> @enderror
-                                            <div wire:loading wire:target="newMomFile" class="text-xs text-muted mt-1">
-                                                Uploading...
+                                            <div wire:loading.flex wire:target="newMomFile" class="mt-2 align-items-start border rounded bg-white shadow-sm px-3 py-2">
+                                                <div class="d-inline-flex align-items-center justify-content-center bg-light rounded mr-3 flex-shrink-0" style="width: 34px; height: 34px;">
+                                                    <i class="fe fe-file-text text-primary"></i>
+                                                </div>
+                                                <div class="flex-fill overflow-hidden">
+                                                    <div class="font-weight-bold text-dark small">Mengupload 1 item</div>
+                                                    <div class="text-muted small mb-2">Menyelesaikan upload...</div>
+                                                    <div class="d-flex align-items-center">
+                                                        <span id="past_mom_uploading_name" class="small font-weight-bold text-dark text-truncate" style="max-width: 220px;">
+                                                            {{ $newMomFile ? $newMomFile->getClientOriginalName() : 'File MoM sedang diproses' }}
+                                                        </span>
+                                                        <span class="spinner-border spinner-border-sm text-primary ml-2" role="status" aria-hidden="true"></span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="text-right">
-                                    <button type="submit" class="btn btn-primary btn-sm" wire:loading.attr="disabled">
+                                    <button type="submit" class="btn btn-primary btn-sm" wire:loading.attr="disabled" wire:target="saveMom,newMomFile">
                                         <i class="fe fe-plus"></i> Tambahkan
                                     </button>
                                 </div>
@@ -985,8 +1111,24 @@
                                 </thead>
                                 <tbody>
                                     @foreach($momList as $mom)
-                                        <tr>
-                                            <td class="font-weight-bold text-dark">{{ $mom->title }}</td>
+                                        <tr wire:key="mom-row-{{ $mom->id }}">
+                                            <td class="align-middle">
+                                                @if($editingMomId === $mom->id)
+                                                    <div>
+                                                        <input
+                                                            type="text"
+                                                            wire:model.defer="editingMomTitle"
+                                                            wire:keydown.enter.prevent="updateMom"
+                                                            class="form-control form-control-sm"
+                                                            placeholder="Masukkan judul MoM">
+                                                        @error('editingMomTitle')
+                                                            <span class="text-danger small d-block mt-1">{{ $message }}</span>
+                                                        @enderror
+                                                    </div>
+                                                @else
+                                                    <span class="font-weight-bold text-dark">{{ $mom->title }}</span>
+                                                @endif
+                                            </td>
                                             <td>
                                                 @php
                                                     $ext = strtolower(pathinfo($mom->file_path, PATHINFO_EXTENSION));
@@ -1017,10 +1159,28 @@
                                                     </div>
                                                 </a>
                                             </td>
-                                            <td>
-                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDeleteFile('mom', {{ $mom->id }})" {{ !auth()->user()->canManagePostActivity() ? 'disabled' : '' }}>
-                                                    <i class="fe fe-trash"></i>
-                                                </button>
+                                            <td class="align-middle">
+                                                @if(auth()->user()->canManagePostActivity())
+                                                    <div class="btn-group btn-group-sm" role="group" aria-label="Aksi MoM">
+                                                        @if($editingMomId === $mom->id)
+                                                            <button type="button" class="btn btn-primary" wire:click="updateMom" wire:loading.attr="disabled" wire:target="updateMom">
+                                                                <i class="fe fe-save"></i>
+                                                            </button>
+                                                            <button type="button" class="btn btn-light border" wire:click="cancelEditingMom" wire:loading.attr="disabled" wire:target="updateMom">
+                                                                <i class="fe fe-x"></i>
+                                                            </button>
+                                                        @else
+                                                            <button type="button" class="btn btn-outline-primary" wire:click="startEditingMom({{ $mom->id }})">
+                                                                <i class="fe fe-edit-2"></i>
+                                                            </button>
+                                                            <button type="button" class="btn btn-outline-danger" onclick="confirmDeleteFile('mom', {{ $mom->id }})">
+                                                                <i class="fe fe-trash"></i>
+                                                            </button>
+                                                        @endif
+                                                    </div>
+                                                @else
+                                                    <span class="text-muted small">-</span>
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach
@@ -1405,7 +1565,7 @@
                      <div class="d-flex justify-content-between align-items-center mb-4">
                         <div>
                              <h6 class="font-weight-bold mb-1">{{ $activeActivity->name }}</h6>
-                             <small class="text-muted">Total: {{ $activeActivity->documentations->count() }} Foto  (Minimal 4, Maks 8 Foto)</small>
+                             <small class="text-muted">Total: {{ $activeActivity->documentations->count() }} Foto (Minimal {{ \App\Models\Activity::DOCUMENTATION_MIN_COUNT }}, Maks {{ \App\Models\Activity::DOCUMENTATION_MAX_COUNT }} Foto)</small>
                         </div>
                         @if(auth()->check() && auth()->user()->canManageDocumentation())
                         <div>

@@ -172,25 +172,19 @@ class ReportController extends Controller
             
             $text .= "\n";
             
-            // "Kegiatan ditujukan untuk :"
-            $targetOverride = trim((string) ($activity->report_target_override ?? ''));
-            if ($targetOverride !== '') {
-                $targetStr = $targetOverride;
-            } else {
-                $targets = [];
-                if (!empty($activity->disposition_to) && is_array($activity->disposition_to)) {
-                    foreach ($activity->disposition_to as $targetName) {
-                        $user = $dispositionUsers->get($targetName);
-                        $targetLabel = $this->resolveReportTargetLabel($user, $targetName);
+            $targets = [];
+            if (!empty($activity->disposition_to) && is_array($activity->disposition_to)) {
+                foreach ($activity->disposition_to as $targetName) {
+                    $user = $dispositionUsers->get($targetName);
+                    $targetLabel = $this->resolveReportTargetLabel($user, $targetName);
 
-                        if ($targetLabel !== null && !in_array($targetLabel, $targets, true)) {
-                            $targets[] = $targetLabel;
-                        }
+                    if ($targetLabel !== null && !in_array($targetLabel, $targets, true)) {
+                        $targets[] = $targetLabel;
                     }
                 }
-
-                $targetStr = empty($targets) ? '-' : implode(', ', $targets);
             }
+
+            $targetStr = empty($targets) ? '-' : implode(', ', $targets);
             
             // Fix "Bapak/Ibu" prefix if needed? 
             // User example: "Bapak Niko, Bapak Agus..."

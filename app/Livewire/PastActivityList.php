@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Activity;
+use App\Models\ActivityMom;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Storage;
 
@@ -273,7 +274,6 @@ class PastActivityList extends Component
     public $selectedSekretariat = []; // Manual Staff input
     public $selectedTA = []; // Manual Staff input
     public $documentationPhotos = [];
-    public $maxPhotos = 8;
     public $newAssignmentFile = null;
     public $newAttachmentFile = null; 
     public $newMinutesFile = null;
@@ -531,14 +531,16 @@ class PastActivityList extends Component
     public $materialList = [];
     public $newMaterialTitle = '';
     public $newMaterialFile = null;
+    public $hasNoMaterials = false;
 
     public function openMaterialModal($id)
     {
-        $this->resolveVisibleActivity($id);
+        $activity = $this->resolveVisibleActivity($id);
 
         $this->isModalOpen = true;
         $this->activeActivityId = $id;
         $this->loadMaterials($id);
+        $this->hasNoMaterials = (bool) ($activity?->has_no_materials);
         $this->newMaterialTitle = '';
         $this->newMaterialFile = null;
         $this->dispatch('open-material-modal');
@@ -548,6 +550,42 @@ class PastActivityList extends Component
     {
         $activity = $this->resolveVisibleActivity($id);
         $this->materialList = $activity ? $activity->materials()->get() : [];
+    }
+
+    public function toggleNoMaterialStatus()
+    {
+        $this->ensureCanManagePostActivity();
+
+        if (!$this->activeActivityId) {
+            return;
+        }
+
+        $activity = $this->resolveVisibleActivity($this->activeActivityId);
+        if (!$activity) {
+            return;
+        }
+
+        $nextValue = !$this->hasNoMaterials;
+
+        if ($nextValue && $activity->materials()->exists()) {
+            $this->dispatch('alert', type: 'warning', message: 'Hapus semua file bahan materi terlebih dahulu sebelum menandai kegiatan tidak memiliki bahan materi.');
+
+            return;
+        }
+
+        $activity->update([
+            'has_no_materials' => $nextValue,
+        ]);
+
+        $this->hasNoMaterials = $nextValue;
+
+        $this->dispatch(
+            'alert',
+            type: 'success',
+            message: $nextValue
+                ? 'Kegiatan ditandai tidak memiliki bahan materi.'
+                : 'Penanda bahan materi berhasil dihapus.'
+        );
     }
 
     public function saveMaterial()
@@ -560,6 +598,12 @@ class PastActivityList extends Component
         ]);
 
         if ($this->activeActivityId) {
+            $activity = $this->resolveVisibleActivity($this->activeActivityId);
+
+            if (!$activity) {
+                return;
+            }
+
             $originalName = $this->newMaterialFile->getClientOriginalName();
             $path = $this->newMaterialFile->storeAs("activity_materials/{$this->activeActivityId}", $originalName, 'public');
             
@@ -574,9 +618,14 @@ class PastActivityList extends Component
                 @unlink($this->newMaterialFile->getRealPath());
             }
 
+            if ($activity->has_no_materials) {
+                $activity->update(['has_no_materials' => false]);
+            }
+
             $this->dispatch('alert', type: 'success', message: 'Bahan materi berhasil ditambahkan.');
             
             // Reset fields and reload
+            $this->hasNoMaterials = false;
             $this->newMaterialTitle = '';
             $this->newMaterialFile = null;
             $this->loadMaterials($this->activeActivityId);
@@ -600,6 +649,8 @@ class PastActivityList extends Component
     public $momList = [];
     public $newMomTitle = '';
     public $newMomFile = null;
+    public $editingMomId = null;
+    public $editingMomTitle = '';
 
     public function openMomModal($id)
     {
@@ -608,15 +659,24 @@ class PastActivityList extends Component
         $this->isModalOpen = true;
         $this->activeActivityId = $id;
         $this->loadMoms($id);
-        $this->newMomTitle = '';
-        $this->newMomFile = null;
+        $this->resetMomUploadForm();
+        $this->cancelEditingMom();
         $this->dispatch('open-mom-modal');
     }
 
     public function loadMoms($id)
     {
         $activity = $this->resolveVisibleActivity($id);
-        $this->momList = $activity ? $activity->moms()->get() : [];
+        $this->momList = $activity ? $activity->moms()->latest('created_at')->get() : [];
+    }
+
+    public function updatedNewMomFile()
+    {
+        $this->ensureCanManagePostActivity();
+
+        $this->validate([
+            'newMomFile' => 'required|file|mimes:pdf|max:20480',
+        ]);
     }
 
     public function saveMom()
@@ -625,16 +685,24 @@ class PastActivityList extends Component
 
         $this->validate([
             'newMomTitle' => 'required|string|max:255',
-            'newMomFile' => 'required|file|mimes:pdf,doc,docx|max:20480', // 20MB
+            'newMomFile' => 'required',
         ]);
 
+        if (!is_object($this->newMomFile) || !method_exists($this->newMomFile, 'storeAs')) {
+            $this->addError('newMomFile', 'File MoM tidak valid. Silakan upload ulang.');
+
+            return;
+        }
+
         if ($this->activeActivityId) {
+            $activity = $this->resolveVisibleActivity($this->activeActivityId);
+            $title = trim((string) $this->newMomTitle);
             $originalName = $this->newMomFile->getClientOriginalName();
             $path = $this->newMomFile->storeAs("activity_moms/{$this->activeActivityId}", $originalName, 'public');
             
-            \App\Models\ActivityMom::create([
+            $mom = ActivityMom::create([
                 'activity_id' => $this->activeActivityId,
-                'title' => $this->newMomTitle,
+                'title' => $title,
                 'file_path' => $path
             ]);
 
@@ -645,20 +713,63 @@ class PastActivityList extends Component
 
             $this->dispatch('alert', type: 'success', message: 'MoM berhasil ditambahkan.');
             
-            // Reset fields and reload
-            $this->newMomTitle = '';
-            $this->newMomFile = null;
-            $this->loadMoms($this->activeActivityId);
+            // Reset form and enter edit mode immediately on the newest row.
+            $this->resetMomUploadForm();
+            $this->editingMomId = $mom->id;
+            $this->editingMomTitle = $mom->title;
+            $this->loadMoms($activity->id);
         }
+    }
+
+    public function startEditingMom($momId)
+    {
+        $this->ensureCanManagePostActivity();
+
+        $mom = $this->resolveActiveMom($momId);
+        $this->editingMomId = $mom->id;
+        $this->editingMomTitle = $mom->title;
+        $this->resetValidation('editingMomTitle');
+    }
+
+    public function cancelEditingMom()
+    {
+        $this->editingMomId = null;
+        $this->editingMomTitle = '';
+        $this->resetValidation('editingMomTitle');
+    }
+
+    public function updateMom()
+    {
+        $this->ensureCanManagePostActivity();
+
+        if (!$this->editingMomId) {
+            return;
+        }
+
+        $this->validate([
+            'editingMomTitle' => 'required|string|max:255',
+        ]);
+
+        $mom = $this->resolveActiveMom($this->editingMomId);
+        $mom->update([
+            'title' => trim((string) $this->editingMomTitle),
+        ]);
+
+        $this->loadMoms($this->activeActivityId);
+        $this->cancelEditingMom();
+        $this->dispatch('alert', type: 'success', message: 'Judul MoM berhasil diperbarui.');
     }
 
     public function deleteMom($momId)
     {
         $this->ensureCanManagePostActivity();
 
-        $mom = \App\Models\ActivityMom::find($momId);
+        $mom = $this->resolveActiveMom($momId);
         if ($mom) {
             Storage::disk('public')->delete($mom->file_path);
+            if ($this->editingMomId === $mom->id) {
+                $this->cancelEditingMom();
+            }
             $mom->delete();
             $this->dispatch('alert', type: 'success', message: 'MoM berhasil dihapus.');
             $this->loadMoms($this->activeActivityId);
@@ -687,13 +798,10 @@ class PastActivityList extends Component
             $activity = $this->resolveVisibleActivity($this->activeActivityId);
             $currentCount = $activity->documentations()->count();
             $newCount = count($this->documentationPhotos);
-            if (($currentCount + $newCount) < 4) {
-                $this->addError('documentationPhotos', "Total dokumentasi kegiatan minimal harus 4 foto.");
-                return;
-            }
+            $totalCount = $currentCount + $newCount;
 
-            if (($currentCount + $newCount) > $this->maxPhotos) {
-                $this->addError('documentationPhotos', "Total dokumentasi tidak boleh melebihi {$this->maxPhotos} foto (Saat ini: {$currentCount} foto).");
+            if ($totalCount > Activity::DOCUMENTATION_MAX_COUNT) {
+                $this->addError('documentationPhotos', "Total dokumentasi tidak boleh melebihi " . Activity::DOCUMENTATION_MAX_COUNT . " foto (Saat ini: {$currentCount} foto).");
                 return;
             }
 
@@ -713,7 +821,13 @@ class PastActivityList extends Component
             }
 
             $this->documentationPhotos = [];
-            $this->dispatch('alert', type: 'success', message: 'Foto Dokumentasi berhasil diupload.');
+            $message = 'Foto dokumentasi berhasil diupload.';
+
+            if ($totalCount < Activity::DOCUMENTATION_MIN_COUNT) {
+                $message .= ' Saat ini baru ' . $totalCount . ' foto. Lengkapi minimal ' . Activity::DOCUMENTATION_MIN_COUNT . ' foto.';
+            }
+
+            $this->dispatch('alert', type: 'success', message: $message);
         }
     }
 
@@ -860,6 +974,22 @@ class PastActivityList extends Component
         abort_unless(auth()->user()->canViewActivity($activity), 403);
 
         return $activity;
+    }
+
+    private function resolveActiveMom($momId): ActivityMom
+    {
+        abort_unless($this->activeActivityId, 404);
+
+        $activity = $this->resolveVisibleActivity($this->activeActivityId);
+
+        return $activity->moms()->findOrFail($momId);
+    }
+
+    private function resetMomUploadForm(): void
+    {
+        $this->newMomTitle = '';
+        $this->newMomFile = null;
+        $this->resetValidation(['newMomTitle', 'newMomFile']);
     }
 
     private function ensureCanManageActivities(): void

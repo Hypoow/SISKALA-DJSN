@@ -32,6 +32,7 @@ trait RefreshDatabase
             return $schema->hasTable('migrations')
                 && $schema->hasTable('users')
                 && $schema->hasTable('activities')
+                && $schema->hasColumn('activities', 'has_no_materials')
                 && $schema->hasTable('divisions')
                 && $schema->hasTable('positions')
                 && $schema->hasTable('staff');
