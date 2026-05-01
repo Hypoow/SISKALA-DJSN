@@ -117,7 +117,9 @@ class ActivityController extends Controller
         ]);
 
         if ($request->hasFile('file_path')) {
-            $path = $request->file('file_path')->store('materials', 'public');
+            $file = $request->file('file_path');
+            $filename = $activity->nextMaterialFilename($file->getClientOriginalExtension());
+            $path = $file->storeAs($activity->materialStorageDirectory(), $filename, 'public');
             $activity->materials()->create([
                 'title' => $request->title,
                 'file_path' => $path,
@@ -552,7 +554,11 @@ class ActivityController extends Controller
             ->filter(fn ($item) => $item instanceof User)
             ->values();
 
-        $groupSortOrder = $groupUsers->min(fn (User $user) => $user->management_sort_order) ?? 999999999;
+        $groupSortOrder = Activity::getInternalPicPriority($groupName);
+        if ($groupSortOrder >= 900000) {
+            $groupSortOrder = $groupUsers->min(fn (User $user) => $user->management_sort_order) ?? 999999999;
+        }
+
         $userOrder = $groupUsers->min(fn (User $user) => $user->order ?? 99999) ?? 99999;
 
         return sprintf(

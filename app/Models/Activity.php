@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class Activity extends Model
@@ -188,6 +189,50 @@ class Activity extends Model
         return \Carbon\Carbon::parse($this->start_date->format('Y-m-d') . ' ' . $this->start_time);
     }
 
+    public function materialStorageDirectory(): string
+    {
+        return "activity_materials/{$this->getKey()}";
+    }
+
+    public function nextMaterialFilename(?string $extension = null, string $disk = 'public'): string
+    {
+        $baseName = $this->materialFilenameBase();
+        $normalizedExtension = Str::of((string) $extension)
+            ->ltrim('.')
+            ->lower()
+            ->value();
+
+        $suffix = $normalizedExtension !== '' ? ".{$normalizedExtension}" : '';
+        $candidate = "{$baseName}{$suffix}";
+        $counter = 2;
+
+        while (Storage::disk($disk)->exists($this->materialStorageDirectory() . '/' . $candidate)) {
+            $candidate = "{$baseName}_{$counter}{$suffix}";
+            $counter++;
+        }
+
+        return $candidate;
+    }
+
+    public function materialFilenameBase(): string
+    {
+        $datePart = filled($this->start_date)
+            ? \Carbon\Carbon::parse($this->start_date)->format('Ymd')
+            : now()->format('Ymd');
+
+        $normalizedName = Str::of((string) $this->name)
+            ->ascii()
+            ->replaceMatches('/[^A-Za-z0-9]+/', ' ')
+            ->trim()
+            ->value();
+
+        $namePart = $normalizedName !== ''
+            ? Str::studly($normalizedName)
+            : 'Kegiatan';
+
+        return "{$datePart}_{$namePart}";
+    }
+
     public function hasDispositionRecipients(): bool
     {
         $recipients = is_array($this->disposition_to)
@@ -195,6 +240,16 @@ class Activity extends Model
             : [];
 
         return !empty($recipients);
+    }
+
+    public function shouldNotifyKetuaDjsnForUndisposed(): bool
+    {
+        return $this->shouldNotifyDewanLeadsForUndisposed();
+    }
+
+    public function shouldNotifyDewanLeadsForUndisposed(): bool
+    {
+        return $this->type === 'external' && !$this->hasDispositionRecipients();
     }
 
     public static function normalizeSecretaryDispositionStatus(?string $value): string
@@ -462,7 +517,7 @@ class Activity extends Model
                 'key' => 'ketua-djsn',
                 'label' => 'Ketua DJSN',
                 'type' => 'ketua',
-                'priority' => 1,
+                'priority' => self::getInternalPicPriority('Ketua DJSN'),
             ];
         }
 
@@ -471,7 +526,7 @@ class Activity extends Model
                 'key' => 'sekretaris-djsn',
                 'label' => 'Sekretaris DJSN',
                 'type' => 'sekretariat',
-                'priority' => 2,
+                'priority' => self::getInternalPicPriority('Sekretaris DJSN'),
             ];
         }
 
@@ -481,7 +536,7 @@ class Activity extends Model
                 'key' => 'komisi:' . self::normalizeVisualizationGroupKey($commissionLabel),
                 'label' => $commissionLabel,
                 'type' => 'komisi',
-                'priority' => 3,
+                'priority' => self::getInternalPicPriority($commissionLabel),
             ];
         }
 
@@ -489,7 +544,7 @@ class Activity extends Model
             'key' => 'sekretariat-djsn',
                 'label' => 'Sekretariat DJSN',
                 'type' => 'sekretariat',
-                'priority' => 4,
+                'priority' => self::getInternalPicPriority('Sekretariat DJSN'),
             ];
     }
 
@@ -586,6 +641,11 @@ class Activity extends Model
             return null;
         }
 
+        $configuredGroup = trim((string) $user->disposition_group_label);
+        if ($configuredGroup !== '') {
+            return $configuredGroup;
+        }
+
         return self::normalizeInternalPicLabel(
             $user->division?->display_name ?? $user->division?->name ?? $user->divisi,
             $user->role,
@@ -661,33 +721,184 @@ class Activity extends Model
         $groups = array_values(array_unique(array_filter($groups)));
 
         usort($groups, function ($a, $b) {
-            return self::getInternalPicPriority($a) <=> self::getInternalPicPriority($b);
+            $priorityComparison = self::getInternalPicPriority($a) <=> self::getInternalPicPriority($b);
+
+            return $priorityComparison !== 0
+                ? $priorityComparison
+                : strnatcasecmp((string) $a, (string) $b);
         });
 
         return $groups;
     }
 
+    public static function withoutSecretariatPicGroups(array $groups): array
+    {
+        $filtered = [];
+
+        foreach ($groups as $group) {
+            $label = self::normalizeDivisionDisplayName($group);
+
+            if ($label === '' || self::isSecretariatPicGroup($label)) {
+                continue;
+            }
+
+            if (!in_array($label, $filtered, true)) {
+                $filtered[] = $label;
+            }
+        }
+
+        return $filtered;
+    }
+
+    public static function isSecretariatPicGroup(?string $groupName): bool
+    {
+        $normalized = strtoupper(self::normalizeDivisionDisplayName($groupName));
+        $normalizedWords = trim((string) preg_replace('/[^A-Z0-9]+/u', ' ', $normalized));
+
+        return $normalized !== ''
+            && (
+                str_contains($normalizedWords, 'SEKRETARIAT')
+                || str_contains($normalizedWords, 'SEKRETARIS')
+                || str_contains($normalizedWords, 'SET DJSN')
+            );
+    }
+
     public static function getInternalPicPriority(?string $groupName)
     {
-        $normalized = strtoupper(trim((string) $groupName));
+        $label = self::normalizeDivisionDisplayName($groupName);
+        $normalized = strtoupper($label);
 
-        $division = Division::findByDisplayLabel($groupName);
-        if ($division?->is_commission) {
-            return 100 + ($division->order ?? 0);
+        if ($normalized === '') {
+            return 999999;
         }
 
-        if ($division?->structure_group === Division::STRUCTURE_GROUP_SECRETARY) {
-            return 50;
+        $masterPriority = self::resolveInternalPicPriorityFromMasterData($label);
+        if ($masterPriority !== null) {
+            return $masterPriority;
         }
 
-        return match ($normalized) {
-            'KETUA DJSN' => 1,
-            'SEKRETARIS DJSN' => 50,
-            'KOMISI PME' => 102,
-            'KOMJAKUM' => 103,
-            'SEKRETARIAT DJSN', 'SET DJSN', 'SET.DJSN' => 900,
-            default => 99,
+        return self::getFallbackInternalPicPriority($normalized);
+    }
+
+    public static function internalPicOptions(): array
+    {
+        $labels = self::INTERNAL_PICS;
+
+        if (Division::getConnectionResolver() !== null) {
+            try {
+                $divisionLabels = Division::query()
+                    ->whereIn('structure_group', [
+                        Division::STRUCTURE_GROUP_DEWAN,
+                        Division::STRUCTURE_GROUP_SECRETARY,
+                    ])
+                    ->orderBy('order')
+                    ->orderBy('name')
+                    ->get()
+                    ->map(fn (Division $division) => $division->display_name)
+                    ->all();
+
+                $positionLabels = Position::query()
+                    ->whereNotNull('disposition_group_label')
+                    ->where('disposition_group_label', '!=', '')
+                    ->orderBy('order')
+                    ->pluck('disposition_group_label')
+                    ->all();
+
+                $labels = array_merge($labels, $divisionLabels, $positionLabels);
+            } catch (\Throwable) {
+                // Fall back to the static options when the database is unavailable.
+            }
+        }
+
+        return self::sortInternalPicGroups($labels);
+    }
+
+    private static function resolveInternalPicPriorityFromMasterData(string $label): ?int
+    {
+        if (Division::getConnectionResolver() === null) {
+            return null;
+        }
+
+        try {
+            $division = Division::findByDisplayLabel($label);
+
+            if (!$division) {
+                $division = Division::findCommissionDefinition(Division::inferCommissionCode($label));
+            }
+
+            if ($division) {
+                return self::getDivisionPicPriority($division);
+            }
+
+            $position = Position::query()
+                ->where(function ($query) use ($label) {
+                    $query->where('disposition_group_label', $label)
+                        ->orWhere('name', $label)
+                        ->orWhere('report_target_label', $label);
+                })
+                ->orderBy('order')
+                ->first();
+
+            if ($position) {
+                return self::getPositionPicPriority($position);
+            }
+        } catch (\Throwable) {
+            return null;
+        }
+
+        return null;
+    }
+
+    private static function getDivisionPicPriority(Division $division): int
+    {
+        return (Division::structureGroupSortOrder($division->structure_group) * 100000)
+            + (($division->order ?? 99999) * 100);
+    }
+
+    private static function getPositionPicPriority(Position $position): int
+    {
+        return (self::getPositionStructureGroupSortOrder($position->structure_group) * 100000)
+            + (($position->order ?? 99999) * 100);
+    }
+
+    private static function getPositionStructureGroupSortOrder(?string $structureGroup): int
+    {
+        return match ($structureGroup) {
+            User::STRUCTURE_GROUP_DEWAN => 1,
+            User::STRUCTURE_GROUP_SET_DJSN => 2,
+            User::STRUCTURE_GROUP_SEKRETARIAT => 3,
+            User::STRUCTURE_GROUP_PENDAMPING => 4,
+            default => 9,
         };
+    }
+
+    private static function getFallbackInternalPicPriority(string $normalized): int
+    {
+        if (str_contains($normalized, 'KETUA DJSN')) {
+            return 100000;
+        }
+
+        if (str_contains($normalized, 'PME') || str_contains($normalized, 'MONITORING')) {
+            return 100100;
+        }
+
+        if (str_contains($normalized, 'KOMJAKUM') || str_contains($normalized, 'KEBIJAKAN')) {
+            return 100200;
+        }
+
+        if (str_contains($normalized, 'SEKRETARIS DJSN')) {
+            return 200000;
+        }
+
+        if (str_contains($normalized, 'SEKRETARIAT') || str_contains($normalized, 'SET DJSN')) {
+            return 300000;
+        }
+
+        if (str_contains($normalized, 'TENAGA AHLI') || preg_match('/\bTA\b/u', $normalized)) {
+            return 400000;
+        }
+
+        return 900000;
     }
 
     // Internal PIC Options
@@ -754,6 +965,13 @@ class Activity extends Model
             if ($user->canViewInternalActivitiesWithoutDisposition()) {
                 $q->orWhere(function (Builder $internalQuery) {
                     $internalQuery->where('type', 'internal')
+                        ->withoutDispositionRecipients();
+                });
+            }
+
+            if ($user->canViewUndisposedExternalActivities()) {
+                $q->orWhere(function (Builder $undisposedQuery) {
+                    $undisposedQuery->where('type', 'external')
                         ->withoutDispositionRecipients();
                 });
             }

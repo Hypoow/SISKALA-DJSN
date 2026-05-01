@@ -51,6 +51,353 @@
     .tooltip, .tooltip-inner {
         z-index: 105000 !important;
     }
+
+    .dashboard-event-modal {
+        max-width: 760px;
+    }
+
+    .dashboard-event-modal .modal-content {
+        border: 0;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24);
+    }
+
+    .dashboard-event-modal .modal-header {
+        align-items: center;
+        background: #ffffff;
+        border-bottom: 1px solid #e6edf5;
+        padding: 1.2rem 1.4rem;
+    }
+
+    .dashboard-event-modal .modal-title-wrap {
+        align-items: center;
+        display: flex;
+        min-width: 0;
+    }
+
+    .dashboard-event-modal .min-width-0 {
+        min-width: 0;
+    }
+
+    .dashboard-event-modal .modal-title-icon {
+        align-items: center;
+        background: #eaf2ff;
+        border: 1px solid #d6e5fb;
+        border-radius: 8px;
+        color: #0b4c9c;
+        display: inline-flex;
+        flex: 0 0 44px;
+        height: 44px;
+        justify-content: center;
+        margin-right: 0.9rem;
+        width: 44px;
+    }
+
+    .dashboard-event-modal .modal-eyebrow {
+        color: #64748b;
+        display: block;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0;
+        line-height: 1.2;
+        margin-bottom: 0.2rem;
+        text-transform: uppercase;
+    }
+
+    .dashboard-event-modal .modal-title {
+        color: #0f172a;
+        font-size: 1.05rem;
+        font-weight: 800;
+        line-height: 1.2;
+        margin: 0;
+    }
+
+    .dashboard-event-modal .close {
+        align-items: center;
+        background: #f1f5f9;
+        border-radius: 999px;
+        color: #334155;
+        display: inline-flex;
+        height: 40px;
+        justify-content: center;
+        margin: 0;
+        opacity: 1;
+        padding: 0;
+        text-shadow: none;
+        width: 40px;
+    }
+
+    .dashboard-event-modal .modal-body {
+        background: #f8fafc;
+        padding: 1.4rem;
+    }
+
+    .event-detail-hero {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 1.25rem;
+    }
+
+    .event-detail-type {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        margin-bottom: 0.85rem;
+    }
+
+    .event-detail-type .badge {
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0;
+        padding: 0.42rem 0.7rem;
+    }
+
+    .event-detail-title {
+        color: #0f172a;
+        font-size: 1.35rem;
+        font-weight: 800;
+        line-height: 1.35;
+        margin: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .event-detail-grid {
+        display: grid;
+        gap: 0.85rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin-top: 1rem;
+    }
+
+    .event-detail-item {
+        align-items: flex-start;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        display: flex;
+        min-width: 0;
+        padding: 1rem;
+    }
+
+    .event-detail-item.event-detail-item-full {
+        grid-column: 1 / -1;
+    }
+
+    .event-detail-icon {
+        align-items: center;
+        border-radius: 8px;
+        display: inline-flex;
+        flex: 0 0 38px;
+        height: 38px;
+        justify-content: center;
+        margin-right: 0.85rem;
+        width: 38px;
+    }
+
+    .event-detail-icon-time {
+        background: #eff6ff;
+        color: #0b63ce;
+    }
+
+    .event-detail-icon-location {
+        background: #fff1f2;
+        color: #e11d48;
+    }
+
+    .event-detail-icon-pic {
+        background: #ecfeff;
+        color: #0891b2;
+    }
+
+    .event-detail-label {
+        color: #64748b;
+        display: block;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0;
+        margin-bottom: 0.3rem;
+        text-transform: uppercase;
+    }
+
+    .event-detail-value {
+        color: #0f172a;
+        font-size: 0.95rem;
+        font-weight: 600;
+        line-height: 1.45;
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .event-detail-location-mode {
+        border-radius: 999px;
+        display: inline-flex;
+        font-size: 0.72rem;
+        font-weight: 800;
+        margin-bottom: 0.45rem;
+        padding: 0.3rem 0.55rem;
+    }
+
+    .event-detail-location-mode.offline {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    .event-detail-location-mode.online {
+        background: #e0f2fe;
+        color: #0369a1;
+    }
+
+    .event-detail-location-mode.hybrid {
+        background: #ecfdf5;
+        color: #047857;
+    }
+
+    .event-detail-meeting {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        margin-top: 0.65rem;
+        padding: 0.7rem;
+    }
+
+    .event-detail-meeting a {
+        font-weight: 700;
+        word-break: break-all;
+    }
+
+    .event-detail-meeting-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.65rem;
+    }
+
+    .event-detail-muted {
+        color: #64748b;
+        font-size: 0.86rem;
+    }
+
+    .event-detail-pic-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+    }
+
+    .event-detail-pic-list .badge {
+        border-radius: 999px;
+        font-size: 0.74rem;
+        font-weight: 800;
+        line-height: 1.1;
+        padding: 0.42rem 0.62rem;
+    }
+
+    .event-detail-notes {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        margin-top: 1rem;
+        padding: 1rem;
+    }
+
+    .event-detail-notes-title {
+        align-items: center;
+        color: #475569;
+        display: flex;
+        font-size: 0.76rem;
+        font-weight: 800;
+        letter-spacing: 0;
+        margin-bottom: 0.65rem;
+        text-transform: uppercase;
+    }
+
+    .event-detail-notes-title i {
+        color: #0b4c9c;
+        margin-right: 0.45rem;
+    }
+
+    .event-detail-description {
+        color: #334155;
+        font-size: 0.94rem;
+        line-height: 1.6;
+        min-height: 44px;
+        overflow-wrap: anywhere;
+    }
+
+    .event-detail-empty {
+        align-items: center;
+        background: #f8fafc;
+        border: 1px dashed #cbd5e1;
+        border-radius: 8px;
+        color: #64748b;
+        display: flex;
+        min-height: 58px;
+        padding: 0.9rem;
+    }
+
+    .dashboard-event-modal .modal-footer {
+        background: #ffffff;
+        border-top: 1px solid #e6edf5;
+        padding: 1rem 1.4rem;
+    }
+
+    .dashboard-event-modal .modal-footer .btn {
+        border-radius: 999px;
+        font-weight: 800;
+        min-width: 132px;
+        padding: 0.68rem 1rem;
+    }
+
+    .dashboard-event-modal .btn-event-detail {
+        background: #0b214a;
+        border-color: #071936;
+        box-shadow: 0 10px 22px rgba(11, 33, 74, 0.2);
+        color: #ffffff;
+    }
+
+    .dashboard-event-modal .btn-event-detail:hover {
+        background: #071936;
+        color: #ffffff;
+    }
+
+    .dashboard-event-modal .btn-event-edit {
+        background: #f59e0b;
+        border-color: #d97706;
+        color: #111827;
+    }
+
+    @media (max-width: 767.98px) {
+        .dashboard-event-modal {
+            margin: 0.75rem;
+            max-width: none;
+        }
+
+        .dashboard-event-modal .modal-header,
+        .dashboard-event-modal .modal-body,
+        .dashboard-event-modal .modal-footer {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        .event-detail-title {
+            font-size: 1.15rem;
+        }
+
+        .event-detail-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .dashboard-event-modal .modal-footer {
+            align-items: stretch;
+            flex-direction: column-reverse;
+        }
+
+        .dashboard-event-modal .modal-footer .btn {
+            margin: 0.25rem 0;
+            width: 100%;
+        }
+    }
 </style>
 @endpush
 
@@ -75,7 +422,7 @@
                     <div class="row">
                         <div class="col">
                             <h6 class="text-muted text-uppercase font-weight-bold mb-0">Total Kegiatan</h6>
-                            <span class="h2 font-weight-bold mb-0 text-dark">{{ $totalActivities }}</span>
+                            <span id="dashboard-total-activities" class="h2 font-weight-bold mb-0 text-dark">{{ $totalActivities }}</span>
                             <div class="mt-2 mb-0 text-muted text-xs">
                                 <span class="text-success mr-2"><i class="fe fe-arrow-up"></i> Bulan Ini</span>
                             </div>
@@ -95,7 +442,7 @@
                     <div class="row">
                         <div class="col">
                             <h6 class="text-muted text-uppercase font-weight-bold mb-0">Hari Ini</h6>
-                            <span class="h2 font-weight-bold mb-0 text-dark">{{ $todayActivities }}</span>
+                            <span id="dashboard-today-activities" class="h2 font-weight-bold mb-0 text-dark">{{ $todayActivities }}</span>
                              <div class="mt-2 mb-0 text-muted text-xs">
                                 <span class="text-nowrap">Agenda aktif</span>
                             </div>
@@ -115,7 +462,7 @@
                     <div class="row">
                         <div class="col">
                             <h6 class="text-muted text-uppercase font-weight-bold mb-0">Internal</h6>
-                            <span class="h2 font-weight-bold mb-0 text-dark">{{ $internalActivities }}</span>
+                            <span id="dashboard-internal-activities" class="h2 font-weight-bold mb-0 text-dark">{{ $internalActivities }}</span>
                             <div class="mt-2 mb-0 text-muted text-xs">
                                 <span class="text-nowrap">Bulan Ini</span>
                             </div>
@@ -135,7 +482,7 @@
                     <div class="row">
                         <div class="col">
                             <h6 class="text-muted text-uppercase font-weight-bold mb-0">Eksternal</h6>
-                            <span class="h2 font-weight-bold mb-0 text-dark">{{ $externalActivities }}</span>
+                            <span id="dashboard-external-activities" class="h2 font-weight-bold mb-0 text-dark">{{ $externalActivities }}</span>
                             <div class="mt-2 mb-0 text-muted text-xs">
                                 <span class="text-nowrap">Bulan Ini</span>
                             </div>
@@ -188,62 +535,73 @@
 
 <!-- Modal Detail Kegiatan -->
 <div class="modal fade" id="eventDetailModal" tabindex="-1" role="dialog" aria-labelledby="eventDetailModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" role="document">
-    <div class="modal-content shadow-lg border-0">
-      <div class="modal-header bg-light border-0">
-        <h5 class="modal-title font-weight-bold text-dark" id="eventDetailModalLabel">Detail Kegiatan</h5>
+  <div class="modal-dialog modal-dialog-centered dashboard-event-modal" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+            <div class="modal-title-icon">
+                <i class="fe fe-calendar fe-18"></i>
+            </div>
+            <div class="min-width-0">
+                <span class="modal-eyebrow">Agenda Kalender</span>
+                <h5 class="modal-title" id="eventDetailModalLabel">Detail Kegiatan</h5>
+            </div>
+        </div>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
+          <span aria-hidden="true"><i class="fe fe-x fe-18"></i></span>
         </button>
       </div>
-      <div class="modal-body p-4">
-        <div id="eventDetailType" class="mb-2"></div>
-        <h4 id="eventDetailTitle" class="mb-4 font-weight-bold text-dark" style="line-height:1.4;"></h4>
+      <div class="modal-body">
+        <div class="event-detail-hero">
+            <div id="eventDetailType" class="event-detail-type"></div>
+            <h4 id="eventDetailTitle" class="event-detail-title"></h4>
+        </div>
         
-        <div class="card bg-light border-0 mb-4 rounded-lg">
-            <div class="card-body p-3">
-                <div class="d-flex mb-3 align-items-start">
-                    <div class="mr-3 text-center" style="width: 24px;">
-                        <i class="fe fe-clock text-primary fe-16"></i>
-                    </div>
-                    <div>
-                        <small class="text-uppercase text-muted font-weight-bold d-block">Waktu</small>
-                        <span id="eventDetailTime" class="text-dark font-weight-bold"></span>
-                    </div>
+        <div class="event-detail-grid">
+            <div class="event-detail-item">
+                <div class="event-detail-icon event-detail-icon-time">
+                    <i class="fe fe-clock fe-16"></i>
                 </div>
-                <div class="d-flex mb-3 align-items-start">
-                    <div class="mr-3 text-center" style="width: 24px;">
-                        <i class="fe fe-map-pin text-danger fe-16"></i>
-                    </div>
-                    <div>
-                        <small class="text-uppercase text-muted font-weight-bold d-block">Lokasi</small>
-                        <div id="eventDetailLocation" class="text-dark font-weight-medium"></div>
-                    </div>
+                <div class="event-detail-value">
+                    <span class="event-detail-label">Waktu</span>
+                    <span id="eventDetailTime"></span>
                 </div>
-                <div class="d-flex align-items-start">
-                    <div class="mr-3 text-center" style="width: 24px;">
-                        <i class="fe fe-users text-info fe-16"></i>
-                    </div>
-                    <div>
-                         <small class="text-uppercase text-muted font-weight-bold d-block mb-1">PIC / Disposisi</small>
-                        <div id="eventDetailPic"></div>
-                    </div>
+            </div>
+
+            <div class="event-detail-item">
+                <div class="event-detail-icon event-detail-icon-location">
+                    <i class="fe fe-map-pin fe-16"></i>
+                </div>
+                <div class="event-detail-value">
+                    <span class="event-detail-label">Lokasi</span>
+                    <div id="eventDetailLocation"></div>
+                </div>
+            </div>
+
+            <div class="event-detail-item event-detail-item-full">
+                <div class="event-detail-icon event-detail-icon-pic">
+                    <i class="fe fe-users fe-16"></i>
+                </div>
+                <div class="event-detail-value">
+                    <span class="event-detail-label">PIC / Disposisi</span>
+                    <div id="eventDetailPic" class="event-detail-pic-list"></div>
                 </div>
             </div>
         </div>
 
-        <div class="form-group mb-0">
-            <label class="text-muted small text-uppercase font-weight-bold mb-2">Keterangan Tambahan</label>
-            <div class="bg-white p-3 rounded border">
-                <p id="eventDetailDescription" class="mb-0 text-secondary"></p>
+        <div class="event-detail-notes">
+            <div class="event-detail-notes-title">
+                <i class="fe fe-file-text fe-15"></i>
+                <span>Keterangan Tambahan</span>
             </div>
+            <div id="eventDetailDescription" class="event-detail-description"></div>
         </div>
       </div>
-      <div class="modal-footer border-0 bg-light">
+      <div class="modal-footer">
         @if(Auth::user()->canManageActivities())
-            <a href="#" id="eventDetailEditBtn" class="btn btn-warning shadow-sm"><i class="fe fe-edit-2 mr-1"></i> Edit</a>
+            <a href="#" id="eventDetailEditBtn" class="btn btn-event-edit"><i class="fe fe-edit-2 mr-1"></i> Edit</a>
         @endif
-        <a href="#" id="eventDetailLinkBtn" class="btn btn-primary shadow-sm"><i class="fe fe-eye mr-1"></i> Lihat Detail</a>
+        <a href="#" id="eventDetailLinkBtn" class="btn btn-event-detail"><i class="fe fe-eye mr-1"></i> Lihat Detail</a>
       </div>
     </div>
   </div>
@@ -255,8 +613,221 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   var calendarEl = document.getElementById('calendar');
+  var calendar = null;
+
+  function updateDashboardStats(summary) {
+    if (!summary) {
+      return;
+    }
+
+    var statMap = {
+      totalActivities: 'dashboard-total-activities',
+      todayActivities: 'dashboard-today-activities',
+      internalActivities: 'dashboard-internal-activities',
+      externalActivities: 'dashboard-external-activities'
+    };
+
+    Object.keys(statMap).forEach(function(key) {
+      var element = document.getElementById(statMap[key]);
+      if (element && typeof summary[key] !== 'undefined') {
+        element.textContent = summary[key];
+      }
+    });
+  }
+
+  function refreshDashboardState() {
+    if (calendar) {
+      calendar.refetchEvents();
+    }
+
+    var summaryUrl = window.Schedulo?.routes?.dashboardSummary;
+    if (!summaryUrl) {
+      return;
+    }
+
+    fetch(summaryUrl, {
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+      .then(function(response) {
+        if (!response.ok) {
+          throw new Error('Gagal memuat ringkasan dashboard.');
+        }
+
+        return response.json();
+      })
+      .then(updateDashboardStats)
+      .catch(function() {
+      });
+  }
+
+  function escapeHtml(value) {
+    return String(value || '').replace(/[&<>"']/g, function(character) {
+      return {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      }[character];
+    });
+  }
+
+  function nl2br(value) {
+    return escapeHtml(value).replace(/\r?\n/g, '<br>');
+  }
+
+  function formatEventDateTime(start, end) {
+    if (!start) {
+      return '-';
+    }
+
+    var dateText = start.toLocaleDateString('id-ID', {
+      weekday: 'long',
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric'
+    });
+    var startText = start.toLocaleTimeString('id-ID', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+
+    if (!end) {
+      return dateText + ', ' + startText + ' WIB';
+    }
+
+    var endText = end.toLocaleTimeString('id-ID', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+
+    return dateText + ', ' + startText + ' - ' + endText + ' WIB';
+  }
+
+  function buildTypeBadges(props) {
+    if (props.type === 'external') {
+      var organizer = props.organizer_name ? escapeHtml(props.organizer_name) : '';
+      var organizerBadge = organizer
+        ? '<span class="badge badge-light border text-dark">' + organizer + '</span>'
+        : '';
+
+      return '<span class="badge badge-info text-white">Eksternal</span>' + organizerBadge;
+    }
+
+    return '<span class="badge badge-primary text-white" style="background-color: #004085;">Internal</span>';
+  }
+
+  function locationModeBadge(className, label) {
+    return '<span class="event-detail-location-mode ' + className + '">' + label + '</span>';
+  }
+
+  function buildMeetingHtml(props) {
+    var detailRows = [];
+
+    if (props.meeting_id) {
+      detailRows.push('<span><strong>ID:</strong> ' + escapeHtml(props.meeting_id) + '</span>');
+    }
+
+    if (props.passcode) {
+      detailRows.push('<span><strong>Passcode:</strong> ' + escapeHtml(props.passcode) + '</span>');
+    }
+
+    if (!props.meeting_link && detailRows.length === 0) {
+      return '';
+    }
+
+    var html = '<div class="event-detail-meeting">';
+
+    if (props.meeting_link) {
+      var link = String(props.meeting_link);
+      if (link.startsWith('http')) {
+        html += '<a href="' + escapeHtml(link) + '" target="_blank" rel="noopener" class="d-block mb-1">' + escapeHtml(link) + '</a>';
+      } else {
+        html += '<div class="mb-1">' + escapeHtml(link) + '</div>';
+      }
+    }
+
+    if (detailRows.length > 0) {
+      html += '<div class="event-detail-muted event-detail-meeting-meta">' + detailRows.join('') + '</div>';
+    }
+
+    html += '</div>';
+
+    return html;
+  }
+
+  function buildLocationHtml(props) {
+    var media = props.media_online ? ' (' + escapeHtml(props.media_online) + ')' : '';
+    var meetingHtml = buildMeetingHtml(props);
+
+    if (props.location_type === 'offline') {
+      return locationModeBadge('offline', 'Offline')
+        + '<div>' + nl2br(props.location || '-') + '</div>';
+    }
+
+    if (props.location_type === 'online') {
+      return locationModeBadge('online', 'Online' + media)
+        + (meetingHtml || '<div class="event-detail-muted">Detail media belum tersedia.</div>');
+    }
+
+    if (props.location_type === 'hybrid') {
+      return locationModeBadge('hybrid', 'Hybrid')
+        + '<div class="mb-2">' + nl2br(props.location || '-') + '</div>'
+        + (meetingHtml || '<div class="event-detail-muted">Detail media online belum tersedia.</div>');
+    }
+
+    return '<span class="event-detail-muted">-</span>';
+  }
+
+  function picBadgeClass(label) {
+    if (label.includes('Komjakum') || label.includes('Kebijakan')) {
+      return 'badge-komjakum';
+    }
+    if (label.includes('PME') || label.includes('Monitoring')) {
+      return 'badge-pme';
+    }
+    if (label.includes('Sekretariat') || label.includes('Sekretaris')) {
+      return 'badge-sekretariat';
+    }
+    if (label.includes('Ketua')) {
+      return 'badge-ketua';
+    }
+    if (label.includes('Anggota')) {
+      return 'badge-djsn';
+    }
+
+    return 'badge-info';
+  }
+
+  function buildPicHtml(props) {
+    if (!props.pic || (Array.isArray(props.pic) && props.pic.length === 0)) {
+      return '<span class="event-detail-muted">Belum ada PIC / disposisi.</span>';
+    }
+
+    if (!Array.isArray(props.pic)) {
+      return escapeHtml(props.pic);
+    }
+
+    return props.pic.map(function(p) {
+      var label = String(p || '');
+      var tooltipContent = props.pic_details && props.pic_details[p] ? props.pic_details[p] : '';
+      var tooltipAttrs = tooltipContent
+        ? ' data-toggle="tooltip" data-html="true" data-placement="top" title="' + escapeHtml(tooltipContent) + '"'
+        : '';
+
+      return '<span class="badge pill ' + picBadgeClass(label) + '"' + tooltipAttrs + '>'
+        + escapeHtml(label)
+        + '</span>';
+    }).join('');
+  }
+
   if (calendarEl) {
-    var calendar = new FullCalendar.Calendar(calendarEl, {
+    calendar = new FullCalendar.Calendar(calendarEl, {
       plugins: ['dayGrid', 'timeGrid', 'list', 'interaction'],
       header: {
         left: 'prev,next today',
@@ -302,135 +873,27 @@ document.addEventListener('DOMContentLoaded', function() {
         minute: '2-digit',
         hour12: false
       },
-      events: '{{ route("dashboard.events.get") }}',
+      events: window.Schedulo?.routes?.dashboardEvents || '{{ route("dashboard.events.get") }}',
       eventClick: function(info) {
-        // Populate Modal
         $('#eventDetailTitle').text(info.event.title);
-        
-        // Format Time
-        var start = info.event.start;
-        var end = info.event.end;
-        var timeString = start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        if(end) {
-            timeString += ' - ' + end.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        }
-        $('#eventDetailTime').text(timeString);
 
-        // Extended Props
         var props = info.event.extendedProps;
-        
-        // Type Badge
-        var typeBadge = '';
-        if (props.type === 'external') {
-            var label = props.organizer_name ? props.organizer_name : 'Eksternal';
-            typeBadge = '<span class="badge badge-pill badge-info text-white px-3 py-2">' + label + '</span>';
+
+        $('#eventDetailTime').text(formatEventDateTime(info.event.start, info.event.end));
+        $('#eventDetailType').html(buildTypeBadges(props));
+        $('#eventDetailLocation').html(buildLocationHtml(props));
+        $('#eventDetailPic').html(buildPicHtml(props));
+
+        if (props.description && String(props.description).trim() !== '-') {
+             $('#eventDetailDescription')
+                .html(props.description)
+                .addClass('markdown-content')
+                .removeClass('event-detail-empty text-secondary');
         } else {
-             typeBadge = '<span class="badge badge-pill badge-primary px-3 py-2" style="background-color: #004085;">Internal</span>';
-        }
-        $('#eventDetailType').html(typeBadge);
-
-        // Location Logic
-        // Location Logic
-        var locationHtml = '';
-        if (props.location_type === 'offline') {
-            locationHtml = '<span class="badge badge-secondary mb-1">Offline</span>';
-            locationHtml += '<p class="text-dark mb-0"><i class="fe fe-map-pin mr-1 text-muted"></i>' + (props.location || '-') + '</p>';
-        } else if (props.location_type === 'online') {
-            locationHtml = '<span class="badge badge-secondary mb-1">Online' + (props.media_online ? ' (' + props.media_online + ')' : '') + '</span>';
-            
-            if (props.meeting_link) {
-                var link = props.meeting_link;
-                if(link.startsWith('http')) {
-                     locationHtml += '<p class="mb-0 mt-1"><a href="' + link + '" target="_blank" class="text-truncate d-block text-primary">' + link + '</a></p>';
-                } else {
-                     locationHtml += '<p class="mb-0 mt-1">' + link + '</p>';
-                }
-            }
-
-            if(props.meeting_id || props.passcode) {
-                locationHtml += '<div class="mt-1 small text-muted">';
-                if (props.meeting_id) {
-                    locationHtml += '<strong>ID:</strong> ' + props.meeting_id + '<br>';
-                }
-                if (props.passcode) {
-                    locationHtml += '<strong>Pass:</strong> ' + props.passcode;
-                }
-                locationHtml += '</div>';
-            }
-        } else if (props.location_type === 'hybrid') {
-            locationHtml = '<span class="badge badge-secondary mb-1">Hybrid</span>';
-            
-            // Offline part
-            locationHtml += '<div class="mb-2">';
-            locationHtml += '<small class="text-muted font-weight-bold d-block">Offline:</small>';
-            locationHtml += '<p class="text-dark mb-0 pl-2 border-left"><i class="fe fe-map-pin mr-1 text-muted"></i>' + (props.location || '-') + '</p>';
-            locationHtml += '</div>';
-
-            // Online part
-            locationHtml += '<div class="mb-0">';
-            locationHtml += '<small class="text-muted font-weight-bold d-block">Online' + (props.media_online ? ' (' + props.media_online + ')' : '') + ':</small>';
-            locationHtml += '<div class="pl-2 border-left">';
-            
-            if (props.meeting_link) {
-                 var link = props.meeting_link;
-                if(link.startsWith('http')) {
-                     locationHtml += '<p class="mb-1"><a href="' + link + '" target="_blank" class="text-truncate d-block text-primary">' + link + '</a></p>';
-                } else {
-                     locationHtml += '<p class="mb-1">' + link + '</p>';
-                }
-            }
-            
-            if(props.meeting_id || props.passcode) {
-                locationHtml += '<div class="small text-muted">';
-                if (props.meeting_id) {
-                    locationHtml += '<strong>ID:</strong> ' + props.meeting_id + '<br>';
-                }
-                if (props.passcode) {
-                    locationHtml += '<strong>Pass:</strong> ' + props.passcode;
-                }
-                locationHtml += '</div>';
-            }
-            locationHtml += '</div></div>';
-        } else {
-             locationHtml = '-';
-        }
-
-        $('#eventDetailLocation').html(locationHtml);
-
-        // PIC Logic
-        var picHtml = '';
-        if (props.pic) {
-            if (Array.isArray(props.pic)) {
-                props.pic.forEach(function(p) {
-                    var badgeClass = 'badge-info';
-                    
-                    if(p.includes('Komjakum') || p.includes('Kebijakan')) badgeClass = 'badge-komjakum';
-                    else if(p.includes('PME') || p.includes('Monitoring')) badgeClass = 'badge-pme';
-                    else if(p.includes('Sekretariat') || p.includes('Sekretaris')) badgeClass = 'badge-sekretariat';
-                    else if(p.includes('Ketua')) badgeClass = 'badge-ketua';
-                    else if(p.includes('Anggota')) badgeClass = 'badge-djsn';
-                    
-                    var tooltipContent = props.pic_details && props.pic_details[p] ? props.pic_details[p] : '';
-                    
-                    picHtml += '<span class="badge pill ' + badgeClass + ' mr-1 mb-1 px-2 py-1" ' + 
-                               'data-toggle="tooltip" data-html="true" data-placement="top" title="' + tooltipContent + '" ' +
-                               'style="cursor: help;">' + p + '</span>';
-                });
-            } else {
-                picHtml = props.pic;
-            }
-        } else {
-            picHtml = '-';
-        }
-        $('#eventDetailPic').html(picHtml);
-
-        if (props.description && props.description !== '-') {
-             // Basic newline to br if plain text, but if HTML passed assume it's good
-             // Since we removed strip_tags, we trust the content.
-             // If it's pure markdown, we'd need a parser. But Quill saves HTML.
-             $('#eventDetailDescription').html(props.description).addClass('markdown-content').removeClass('text-secondary');
-        } else {
-             $('#eventDetailDescription').text('-').removeClass('markdown-content').addClass('text-secondary');
+             $('#eventDetailDescription')
+                .html('<span>Belum ada keterangan tambahan.</span>')
+                .removeClass('markdown-content')
+                .addClass('event-detail-empty');
         }
 
         // Buttons
@@ -474,6 +937,16 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     calendar.render();
   }
+
+  window.addEventListener('schedulo:realtime', function(event) {
+    if (!window.scheduloRealtime?.matchesAnyTopic(event.detail, ['activities', 'dashboard'])) {
+      return;
+    }
+
+    window.scheduloRealtime.queueRefresh('dashboard-state', refreshDashboardState, {
+      delay: 300
+    });
+  });
 });
 </script>
 @endpush

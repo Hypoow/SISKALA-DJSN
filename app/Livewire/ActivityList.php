@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Activity;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\WithPagination;
 
@@ -45,9 +46,8 @@ class ActivityList extends Component
 
     public $search = '';
     public $type = '';
+    public $pic = '';
     public $dispositionFilter = '';
-
-    public $sortDirection = 'asc';
 
     public function mount()
     {
@@ -66,8 +66,8 @@ class ActivityList extends Component
     protected $queryString = [
         'search' => ['except' => ''],
         'type' => ['except' => ''],
+        'pic' => ['except' => ''],
         'dispositionFilter' => ['except' => ''],
-        'sortDirection' => ['except' => 'asc']
     ];
 
     public function updatingSearch()
@@ -82,13 +82,13 @@ class ActivityList extends Component
         $this->resetPage();
     }
 
-    public function updatingDispositionFilter()
+    public function updatingPic()
     {
         $this->resetSelectionState();
         $this->resetPage();
     }
 
-    public function updatingSortDirection()
+    public function updatingDispositionFilter()
     {
         $this->resetSelectionState();
         $this->resetPage();
@@ -167,7 +167,11 @@ class ActivityList extends Component
         abort_unless(auth()->user()->canManageActivities(), 403);
 
         if (!empty($this->deletedIds)) {
-            Activity::withTrashed()->whereIn('id', $this->deletedIds)->restore();
+            Activity::withTrashed()
+                ->whereIn('id', $this->deletedIds)
+                ->get()
+                ->each
+                ->restore();
             $this->deletedIds = [];
             $this->dispatch('alert', type: 'success', message: 'Penghapusan dibatalkan.');
         }
@@ -209,7 +213,7 @@ class ActivityList extends Component
         }
 
         $query->where('start_date', '>=', now()->startOfDay())
-              ->orderBy('start_date', $this->sortDirection)
+              ->orderBy('start_date', 'asc')
               ->orderBy('start_time', 'asc');
 
         if ($this->type && in_array($this->type, ['external', 'internal'])) {
@@ -230,7 +234,30 @@ class ActivityList extends Component
             });
         }
 
+        if ($this->pic) {
+            $this->applyPicFilter($query, $this->pic);
+        }
+
         return $query;
+    }
+
+    private function applyPicFilter(Builder $query, string $pic): void
+    {
+        $matchingDispositionNames = User::with(['division', 'position'])
+            ->get()
+            ->filter(fn (User $user) => Activity::resolveInternalPicGroupForUser($user) === $pic)
+            ->pluck('name')
+            ->values()
+            ->all();
+
+        $query->where(function (Builder $picQuery) use ($pic, $matchingDispositionNames) {
+            $picQuery->whereJsonContains('pic', $pic)
+                ->orWhere('pic', 'like', '%' . $pic . '%');
+
+            foreach ($matchingDispositionNames as $name) {
+                $picQuery->orWhereJsonContains('disposition_to', $name);
+            }
+        });
     }
 
     private function getCurrentPageActivityIds(): array

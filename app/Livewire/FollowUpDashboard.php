@@ -30,6 +30,7 @@ class FollowUpDashboard extends Component
     // UI Logic
     public $editingProgressId = null;
     public $progressNote = '';
+    public $realtimeRefreshToken = 0;
 
     public $existingTopics = [];
     public $existingPics = [];
@@ -51,7 +52,31 @@ class FollowUpDashboard extends Component
 
     public function getListeners()
     {
-        return ['followup-updated' => '$refresh'];
+        $listeners = [
+            'followup-saved' => 'refreshFromRealtime',
+            'followup-updated' => 'refreshFromRealtime',
+            'followup-realtime-refresh' => 'refreshFromRealtime',
+        ];
+
+        if (auth()->check()) {
+            $listeners['echo-private:App.Models.User.' . auth()->id() . ',.schedulo.realtime.synced'] = 'handleRealtimeSync';
+        }
+
+        return $listeners;
+    }
+
+    public function handleRealtimeSync($payload = []): void
+    {
+        if (!$this->hasRealtimeTopic($payload, ['followups', 'followup-dashboard'])) {
+            return;
+        }
+
+        $this->refreshFromRealtime();
+    }
+
+    public function refreshFromRealtime(): void
+    {
+        $this->realtimeRefreshToken++;
     }
 
     public function getPicColor($picName)
@@ -88,6 +113,17 @@ class FollowUpDashboard extends Component
             return $topic->color;
         }
         return '#007bff'; // Default blue
+    }
+
+    private function hasRealtimeTopic($payload, array $topics): bool
+    {
+        $payloadTopics = data_get($payload, 'topics', []);
+
+        if (!is_array($payloadTopics)) {
+            return false;
+        }
+
+        return !empty(array_intersect($topics, $payloadTopics));
     }
 
     public function editProgress($id)

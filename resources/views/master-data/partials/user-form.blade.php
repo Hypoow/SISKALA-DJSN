@@ -63,22 +63,13 @@
                     </div>
 
                     <div class="form-row">
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label class="small font-weight-bold text-muted">Sapaan</label>
-                                <select class="form-control shadow-sm" name="prefix">
-                                    <option value="Bapak" {{ old('prefix', $user->prefix ?? 'Bapak') === 'Bapak' ? 'selected' : '' }}>Bapak</option>
-                                    <option value="Ibu" {{ old('prefix', $user->prefix ?? 'Bapak') === 'Ibu' ? 'selected' : '' }}>Ibu</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-5">
+                        <div class="col-md-6">
                             <div class="form-group">
                                 <label class="small font-weight-bold text-muted">Nama Lengkap</label>
                                 <input type="text" class="form-control shadow-sm" name="name" value="{{ old('name', $user?->name) }}" required>
                             </div>
                         </div>
-                        <div class="col-md-5">
+                        <div class="col-md-6">
                             <div class="form-group">
                                 <label class="small font-weight-bold text-muted">Email</label>
                                 <input type="email" class="form-control shadow-sm" name="email" value="{{ old('email', $user?->email) }}" required>
@@ -321,6 +312,58 @@
             });
 
             updatePreview();
+
+            const realtime = window.scheduloRealtime;
+            const form = document.querySelector('form[action="{{ $formAction }}"]');
+            let structureChangeNoticeShown = false;
+
+            function captureFormState() {
+                if (!form) {
+                    return '';
+                }
+
+                return new URLSearchParams(new FormData(form)).toString();
+            }
+
+            let initialState = captureFormState();
+
+            if (!realtime || !form) {
+                return;
+            }
+
+            form.addEventListener('submit', function () {
+                initialState = captureFormState();
+                structureChangeNoticeShown = false;
+            });
+
+            window.addEventListener('schedulo:realtime', function (event) {
+                const detail = event.detail || {};
+
+                if (!realtime.matchesAnyTopic(detail, ['structure'])) {
+                    return;
+                }
+
+                if (captureFormState() === initialState) {
+                    realtime.queueRefresh('master-data.user-form.structure', function () {
+                        window.location.reload();
+                    }, { delay: 400 });
+
+                    return;
+                }
+
+                if (structureChangeNoticeShown) {
+                    return;
+                }
+
+                structureChangeNoticeShown = true;
+
+                if (window.Toast) {
+                    window.Toast.fire({
+                        icon: 'info',
+                        title: 'Struktur akun berubah di tab lain. Muat ulang setelah selesai mengedit.'
+                    });
+                }
+            });
         });
     </script>
 @endpush

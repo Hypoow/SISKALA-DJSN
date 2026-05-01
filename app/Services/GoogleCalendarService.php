@@ -135,7 +135,7 @@ class GoogleCalendarService
                 $activity, 
                 'sekretariat', 
                 [], // No attendees
-                self::buildSekretariatDescription($activity) . "\n\nKeterangan: Belum ada dispo",
+                self::buildUndisposedDescription($activity),
                 '11' // Force Red Color
             );
             
@@ -281,6 +281,15 @@ class GoogleCalendarService
         $desc = "Yth.\n";
 
         // === TEMPLATE 1 & 3: Header Logic ===
+        if ($activity->type === 'internal') {
+            $desc .= self::buildInternalDewanDescriptionBody($activity, $invitedDewan);
+            return $desc;
+        }
+
+        if (self::usesExternalInvitationTemplate($activity)) {
+            return self::buildExternalDewanDescription($activity, $invitedDewan);
+        }
+
         if ($activity->invitation_type == 'inbound') {
             // --- TEMPLATE 1 (External) ---
             // List Names Directly
@@ -311,8 +320,7 @@ class GoogleCalendarService
              // We'll trust $invitedDewan which is already sorted by 'order' from line 226.
              
              foreach ($invitedDewan as $member) {
-                 $salutation = $member->prefix ?? 'Bapak';
-                 $desc .= "{$counter}. {$salutation} {$member->name}\n";
+                 $desc .= "{$counter}. {$member->name}\n";
                  $counter++;
              }
              $desc .= "\n";
@@ -376,8 +384,393 @@ class GoogleCalendarService
         return $desc;
     }
 
+    private static function usesExternalInvitationTemplate(Activity $activity): bool
+    {
+        return $activity->type === 'external' || $activity->invitation_type === 'inbound';
+    }
+
+    private static function buildExternalDewanDescription(Activity $activity, $invitedDewan): string
+    {
+        return self::buildInvitationMemoDescription(
+            $activity,
+            self::resolveExternalDewanRecipientLines($invitedDewan),
+            self::buildExternalInvitationIntro($activity)
+        );
+    }
+
+    private static function buildExternalSekretariatDescription(Activity $activity): string
+    {
+        $status = Activity::normalizeSecretaryDispositionStatus($activity->secretary_disposition_status);
+        $targetLabel = $status === Activity::SECRETARY_DISPOSITION_STATUS_MENGETAHUI
+            ? self::resolveExternalSekretariatMengetahuiTargetLabel($activity)
+            : 'Sekretaris DJSN';
+
+        return self::buildInvitationMemoDescription(
+            $activity,
+            ['Bapak Sekretaris DJSN'],
+            self::buildExternalInvitationIntro($activity),
+            $targetLabel
+        );
+    }
+
+    private static function buildUndisposedDescription(Activity $activity): string
+    {
+        return self::buildInvitationMemoDescription(
+            $activity,
+            ['Plh. Ketua DJSN'],
+            self::buildExternalInvitationIntro($activity),
+            'Plh. Ketua DJSN'
+        );
+    }
+
+    private static function buildInvitationMemoDescription(
+        Activity $activity,
+        array $recipientLines,
+        string $intro,
+        ?string $targetLabel = null
+    ): string {
+        $lines = ['Yth.'];
+        $lines = array_merge($lines, self::normalizeTextList($recipientLines));
+        $lines[] = '';
+        $lines[] = $intro;
+        $lines[] = '';
+        $lines[] = 'Hari, tanggal : ' . self::formatInvitationDate($activity);
+        $lines[] = 'Waktu : ' . self::formatInvitationTime($activity);
+        $lines[] = self::formatInvitationLocationLine($activity);
+
+        $onlineMeetingLines = self::formatInvitationOnlineMeetingLines($activity);
+        if (!empty($onlineMeetingLines)) {
+            $lines[] = '';
+            $lines = array_merge($lines, $onlineMeetingLines);
+        }
+
+        $targetLabel = trim((string) $targetLabel);
+        if ($targetLabel !== '') {
+            $lines[] = '';
+            $lines[] = 'Kegiatan ditujukan untuk : ' . $targetLabel;
+        }
+
+        $lines[] = '';
+        $lines[] = 'Demikian disampaikan, terima kasih.';
+
+        return implode("\n", $lines);
+    }
+
+    private static function buildExternalInvitationIntro(Activity $activity): string
+    {
+        $organizer = trim((string) $activity->organizer_name);
+        if ($organizer === '') {
+            $organizer = 'Pihak Penyelenggara';
+        }
+
+        $agenda = trim((string) $activity->name);
+        if ($agenda === '') {
+            $agenda = 'kegiatan';
+        }
+
+        return "Mohon izin menyampaikan Undangan dari {$organizer} terkait {$agenda}, yang akan diselenggarakan pada:";
+    }
+
+    private static function formatInvitationDate(Activity $activity): string
+    {
+        $startDate = Carbon::parse($activity->start_date);
+        $endDate = $activity->end_date ? Carbon::parse($activity->end_date) : null;
+
+        if (!$endDate || $startDate->isSameDay($endDate)) {
+            return $startDate->translatedFormat('l, j F Y');
+        }
+
+        if ($startDate->isSameMonth($endDate) && $startDate->isSameYear($endDate)) {
+            return $startDate->translatedFormat('l') . '-' . $endDate->translatedFormat('l')
+                . ', ' . $startDate->format('j') . '-' . $endDate->format('j') . ' '
+                . $endDate->translatedFormat('F Y');
+        }
+
+        return $startDate->translatedFormat('l, j F Y') . ' - ' . $endDate->translatedFormat('l, j F Y');
+    }
+
+    private static function formatInvitationTime(Activity $activity): string
+    {
+        if (!$activity->start_time) {
+            return 'rundown terlampir';
+        }
+
+        $startTime = Carbon::parse($activity->start_time)->format('H.i');
+
+        if (!$activity->end_time) {
+            return "{$startTime} WIB s.d. Selesai";
+        }
+
+        $endTime = Carbon::parse($activity->end_time)->format('H.i');
+
+        return "{$startTime} - {$endTime} WIB";
+    }
+
+    private static function formatInvitationLocationLine(Activity $activity): string
+    {
+        if ($activity->location_type === 'online') {
+            return 'Media : ' . self::formatOnlineMediaLabel($activity);
+        }
+
+        $location = trim((string) $activity->location);
+
+        return 'Tempat : ' . ($location !== '' ? $location : '-');
+    }
+
+    private static function formatInvitationOnlineMeetingLines(Activity $activity): array
+    {
+        if ($activity->location_type === 'offline') {
+            return [];
+        }
+
+        $lines = [];
+        $hasMeetingDetails = $activity->meeting_link || $activity->meeting_id || $activity->passcode;
+
+        if ($hasMeetingDetails) {
+            $lines[] = self::formatOnlineMeetingLabel($activity);
+        }
+
+        if ($activity->meeting_link) {
+            $lines[] = trim((string) $activity->meeting_link);
+        }
+
+        if ($activity->meeting_id) {
+            $lines[] = 'Meeting ID : ' . trim((string) $activity->meeting_id);
+        }
+
+        if ($activity->passcode) {
+            $lines[] = 'Passcode : ' . trim((string) $activity->passcode);
+        }
+
+        return $lines;
+    }
+
+    private static function formatOnlineMediaLabel(Activity $activity): string
+    {
+        $media = trim((string) $activity->media_online);
+
+        if ($media === '' || str_contains(strtolower($media), 'zoom')) {
+            return 'Zoom Meeting';
+        }
+
+        return $media;
+    }
+
+    private static function resolveExternalDewanRecipientLines($invitedDewan): array
+    {
+        if ($invitedDewan->isNotEmpty() && self::isAllDewanSelected($invitedDewan)) {
+            return ['Seluruh Anggota DJSN'];
+        }
+
+        $labels = $invitedDewan
+            ->map(fn (User $user) => self::resolveExternalDewanCalendarLabel($user))
+            ->filter()
+            ->values()
+            ->all();
+
+        return empty($labels) ? ['Anggota DJSN'] : $labels;
+    }
+
+    private static function resolveExternalSekretariatMengetahuiTargetLabel(Activity $activity): string
+    {
+        $dewanLabels = self::resolveSelectedDewan($activity)
+            ->map(fn (User $user) => self::resolveExternalDewanCalendarLabel($user))
+            ->filter()
+            ->values()
+            ->all();
+
+        if (!empty($dewanLabels)) {
+            return self::formatIndonesianList($dewanLabels);
+        }
+
+        return 'Sekretaris DJSN';
+    }
+
+    private static function resolveSelectedDewan(Activity $activity)
+    {
+        $disposition = $activity->disposition_to ?? [];
+        if (!is_array($disposition) || empty($disposition)) {
+            return collect();
+        }
+
+        return User::with(['division', 'position'])
+            ->whereIn('name', $disposition)
+            ->orderBy('order')
+            ->get()
+            ->filter(fn (User $user) => $user->isDewan())
+            ->values();
+    }
+
+    private static function isAllDewanSelected($selectedDewan): bool
+    {
+        $totalDewan = User::with(['division', 'position'])
+            ->orderBy('order')
+            ->get()
+            ->filter(fn (User $user) => $user->isDewan())
+            ->count();
+
+        return $totalDewan > 0 && $selectedDewan->count() >= $totalDewan;
+    }
+
+    private static function normalizeTextList(array $items): array
+    {
+        return array_values(array_filter(array_map(
+            static fn ($item) => trim((string) $item),
+            $items
+        )));
+    }
+
+    private static function formatIndonesianList(array $items): string
+    {
+        $items = array_values(array_unique(self::normalizeTextList($items)));
+        $count = count($items);
+
+        if ($count === 0) {
+            return '-';
+        }
+
+        if ($count === 1) {
+            return $items[0];
+        }
+
+        if ($count === 2) {
+            return $items[0] . ' dan ' . $items[1];
+        }
+
+        return implode(', ', array_slice($items, 0, -1)) . ', dan ' . $items[$count - 1];
+    }
+
+    private static function buildInternalDewanDescriptionBody(Activity $activity, $invitedDewan): string
+    {
+        $lines = ['A. Anggota Dewan Jaminan Sosial Nasional'];
+
+        foreach ($invitedDewan as $index => $member) {
+            $lines[] = ($index + 1) . ". {$member->name}";
+        }
+
+        $audienceSections = [];
+
+        if (self::hasInternalDewanSekretariatSection($activity)) {
+            $audienceSections[] = "B. Sekretariat DJSN";
+        }
+
+        if ((bool) $activity->include_tenaga_ahli) {
+            $audienceSections[] = "C. Tenaga Ahli DJSN";
+        }
+
+        if (!empty($audienceSections)) {
+            $lines[] = '';
+            $lines = array_merge($lines, $audienceSections);
+        }
+
+        $dateStr = Carbon::parse($activity->start_date)->translatedFormat('l, d F Y');
+        $startTime = Carbon::parse($activity->start_time)->format('H.i');
+        $endTime = $activity->end_time
+            ? Carbon::parse($activity->end_time)->format('H.i') . ' WIB'
+            : 'Selesai';
+
+        $lines[] = '';
+        $lines[] = "Disampaikan dengan hormat, kami mengundang Bapak/Ibu dalam rapat yang akan diselenggarakan pada:";
+        $lines[] = '';
+        $lines[] = self::formatInternalDewanDescriptionRow('Hari, Tanggal', $dateStr);
+        $lines[] = self::formatInternalDewanDescriptionRow('Waktu', "{$startTime} s.d. {$endTime}");
+        $lines[] = self::formatInternalDewanDescriptionRow('Agenda', $activity->name);
+        $lines[] = self::formatInternalDewanDescriptionRow('Tempat', self::formatInternalDewanLocation($activity));
+
+        if ($activity->location_type !== 'offline') {
+            if ($activity->meeting_link) {
+                $lines[] = self::formatInternalDewanDescriptionRow('Link Meeting', $activity->meeting_link);
+            }
+            if ($activity->meeting_id) {
+                $lines[] = self::formatInternalDewanDescriptionRow('Meeting ID', $activity->meeting_id);
+            }
+            if ($activity->passcode) {
+                $lines[] = self::formatInternalDewanDescriptionRow('Passcode', $activity->passcode);
+            }
+        }
+
+        $lines[] = '';
+        $lines[] = "Mengingat pentingnya acara ini, diharapkan Bapak/Ibu dapat hadir pada Rapat tersebut.";
+        $lines[] = "Demikian disampaikan, atas perhatian Bapak/Ibu kami ucapkan terima kasih.";
+
+        return implode("\n", $lines);
+    }
+
+    private static function formatInternalDewanDescriptionRow(string $label, ?string $value): string
+    {
+        return str_pad($label, 13) . ' : ' . trim((string) $value);
+    }
+
+    private static function hasInternalDewanSekretariatSection(Activity $activity): bool
+    {
+        $disposition = $activity->disposition_to ?? [];
+        if (!is_array($disposition) || empty($disposition)) {
+            return false;
+        }
+
+        $selectedUsers = User::with(['division', 'position'])
+            ->whereIn('name', $disposition)
+            ->get()
+            ->keyBy('name');
+
+        foreach ($disposition as $name) {
+            $user = $selectedUsers->get($name);
+
+            if ($user) {
+                if (!$user->isDewan() && !$user->isTA()) {
+                    return true;
+                }
+
+                continue;
+            }
+
+            $group = Activity::normalizeInternalPicLabel($name);
+            if (in_array($group, ['Sekretaris DJSN', 'Sekretariat DJSN'], true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static function formatInternalDewanLocation(Activity $activity): string
+    {
+        $location = trim((string) $activity->location);
+
+        if ($activity->location_type === 'offline') {
+            return $location !== '' ? $location : '-';
+        }
+
+        $onlineLabel = self::formatOnlineMeetingLabel($activity);
+
+        if ($activity->location_type === 'hybrid' && $location !== '') {
+            return trim($location . ' ' . $onlineLabel);
+        }
+
+        return $onlineLabel;
+    }
+
+    private static function formatOnlineMeetingLabel(Activity $activity): string
+    {
+        $media = trim((string) $activity->media_online);
+
+        if ($media === '' || strcasecmp($media, 'Zoom') === 0 || str_contains(strtolower($media), 'zoom')) {
+            return 'Join Zoom Meeting';
+        }
+
+        return $media;
+    }
+
     private static function buildSekretariatDescription(Activity $activity)
     {
+        if (self::usesInternalSekretariatDisposisiTemplate($activity)) {
+            return self::buildInternalSekretariatDisposisiDescription($activity);
+        }
+
+        if (self::usesExternalInvitationTemplate($activity)) {
+            return self::buildExternalSekretariatDescription($activity);
+        }
+
         $desc = "Yth.\n";
         $desc .= "Bapak Sekretaris DJSN\n\n";
         
@@ -423,6 +816,167 @@ class GoogleCalendarService
         return $desc;
     }
 
+    private static function usesInternalSekretariatDisposisiTemplate(Activity $activity): bool
+    {
+        return $activity->type === 'internal'
+            && $activity->hasDispositionRecipients()
+            && Activity::normalizeSecretaryDispositionStatus($activity->secretary_disposition_status) === Activity::SECRETARY_DISPOSITION_STATUS_DISPOSISI;
+    }
+
+    private static function buildInternalSekretariatDisposisiDescription(Activity $activity): string
+    {
+        $agenda = trim((string) $activity->name);
+        if ($agenda === '') {
+            $agenda = 'kegiatan';
+        }
+
+        $lines = [
+            'Yth.',
+            'Bapak Sekretaris DJSN',
+            '',
+            "Mohon izin menyampaikan Undangan Rapat terkait {$agenda}, yang akan diselenggarakan pada:",
+            '',
+            'Hari, tanggal : ' . self::formatInvitationDate($activity),
+            'Waktu : ' . self::formatSekretariatTimeRange($activity),
+            'Tempat : ' . self::formatSekretariatLocation($activity),
+        ];
+
+        $onlineMeetingLines = self::formatSekretariatOnlineMeetingLines($activity);
+        if (!empty($onlineMeetingLines)) {
+            $lines[] = '';
+            $lines = array_merge($lines, $onlineMeetingLines);
+        }
+
+        $lines[] = '';
+        $lines[] = 'Kegiatan ditujukan untuk : ' . self::resolveInternalSekretariatDisposisiTargetLabel($activity);
+        $lines[] = '';
+        $lines[] = 'Demikian disampaikan, terima kasih.';
+
+        return implode("\n", $lines);
+    }
+
+    private static function formatSekretariatTimeRange(Activity $activity): string
+    {
+        $startTime = Carbon::parse($activity->start_time)->format('H.i');
+
+        if (!$activity->end_time) {
+            return "{$startTime} WIB s.d. Selesai";
+        }
+
+        $endTime = Carbon::parse($activity->end_time)->format('H.i');
+
+        return "{$startTime} - {$endTime} WIB";
+    }
+
+    private static function formatSekretariatLocation(Activity $activity): string
+    {
+        $location = trim((string) $activity->location);
+
+        if ($activity->location_type === 'online') {
+            return self::formatOnlineMediaLabel($activity);
+        }
+
+        return $location !== '' ? $location : '-';
+    }
+
+    private static function formatSekretariatOnlineMeetingLines(Activity $activity): array
+    {
+        if ($activity->location_type === 'offline') {
+            return [];
+        }
+
+        $lines = [];
+        $hasMeetingDetails = $activity->meeting_link || $activity->meeting_id || $activity->passcode;
+
+        if ($hasMeetingDetails) {
+            $lines[] = self::formatOnlineMeetingLabel($activity);
+        }
+
+        if ($activity->meeting_link) {
+            $lines[] = trim((string) $activity->meeting_link);
+        }
+
+        if ($activity->meeting_id) {
+            $lines[] = 'Meeting ID : ' . trim((string) $activity->meeting_id);
+        }
+
+        if ($activity->passcode) {
+            $lines[] = 'Passcode : ' . trim((string) $activity->passcode);
+        }
+
+        return $lines;
+    }
+
+    private static function resolveInternalSekretariatDisposisiTargetLabel(Activity $activity): string
+    {
+        $disposition = $activity->disposition_to ?? [];
+        if (!is_array($disposition) || empty($disposition)) {
+            return '-';
+        }
+
+        $selectedUsers = User::with(['division', 'position'])
+            ->whereIn('name', $disposition)
+            ->orderBy('order')
+            ->get()
+            ->keyBy('name');
+
+        $selectedDewan = collect($disposition)
+            ->map(fn ($name) => $selectedUsers->get($name))
+            ->filter(fn ($user) => $user instanceof User && $user->isDewan())
+            ->values();
+
+        $labels = [];
+        $hasSekretariat = false;
+
+        if ($selectedDewan->isNotEmpty()) {
+            if (self::isAllDewanSelected($selectedDewan)) {
+                $labels[] = 'Seluruh Anggota DJSN';
+            } else {
+                $labels = array_merge($labels, Activity::sortInternalPicGroups(
+                    $selectedDewan
+                        ->map(fn (User $user) => Activity::resolveInternalPicGroupForUser($user))
+                        ->filter()
+                        ->all()
+                ));
+            }
+        }
+
+        foreach ($disposition as $name) {
+            $user = $selectedUsers->get($name);
+
+            if ($user instanceof User) {
+                if (!$user->isDewan() && !$user->isTA()) {
+                    $hasSekretariat = true;
+                    break;
+                }
+
+                continue;
+            }
+
+            $group = Activity::normalizeInternalPicLabel($name);
+            if (in_array($group, ['Sekretaris DJSN', 'Sekretariat DJSN'], true)) {
+                $hasSekretariat = true;
+                break;
+            }
+        }
+
+        if ($hasSekretariat) {
+            $labels[] = 'Tim Sekretariat DJSN';
+        }
+
+        if ((bool) $activity->include_tenaga_ahli) {
+            $labels[] = 'TA DJSN';
+        }
+
+        if (empty($labels)) {
+            $labels = self::resolveSecretariatTargetLabels($activity);
+        }
+
+        $labels = array_values(array_unique(array_filter($labels)));
+
+        return self::formatIndonesianList($labels);
+    }
+
     private static function hasSekretariatAudience(Activity $activity, $sekretariatUsers): bool
     {
         return $sekretariatUsers->count() > 0 || (bool) $activity->include_tenaga_ahli;
@@ -437,9 +991,7 @@ class GoogleCalendarService
             return $label;
         }
 
-        $salutation = trim((string) ($user->prefix ?? 'Bapak'));
-
-        return trim($salutation . ' ' . ($label !== '' ? $label : $name));
+        return $label !== '' ? $label : $name;
     }
 
     private static function resolveSecretariatTargetLabels(Activity $activity): array

@@ -153,16 +153,18 @@
                         </div>
                     </div>
 
-                    <!-- Sort -->
+                    <!-- PIC -->
                     <div class="col-12 col-md-2 px-1 mb-2 mb-md-0" x-data="{ open: false }" @click.away="open = false">
                         <div class="position-relative">
                             <button type="button" @click="open = !open" class="btn bg-white w-100 shadow-sm text-left d-flex align-items-center justify-content-between px-3 rounded-pill" style="border: 1px solid #e2e8f0; height: 38px;">
-                                <span class="text-truncate font-weight-bold text-dark" style="font-size: 0.9rem;" x-text="$wire.sortDirection === 'asc' ? 'Waktu Terdekat' : 'Waktu Terjauh'">Waktu Terdekat</span>
+                                <span class="text-truncate font-weight-bold text-dark" style="font-size: 0.9rem;" x-text="$wire.pic ? $wire.pic : 'PIC Kegiatan'">PIC Kegiatan</span>
                                 <i class="fe fe-chevron-down ml-1 text-muted flex-shrink-0" :style="open ? 'transform: rotate(180deg);' : ''" style="transition: transform 0.2s;"></i>
                             </button>
-                            <div class="dropdown-menu custom-dropdown-menu shadow-lg w-100 rounded-lg mt-1 dropdown-menu-md-right" :class="{ 'd-block': open }" x-show="open" x-transition style="display: none; position: absolute; z-index: 1050;">
-                                <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.sortDirection === 'asc' }" @click="$wire.set('sortDirection', 'asc'); open = false">Waktu Terdekat</button>
-                                <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.sortDirection === 'desc' }" @click="$wire.set('sortDirection', 'desc'); open = false">Waktu Terjauh</button>
+                            <div class="dropdown-menu custom-dropdown-menu shadow-lg w-100 rounded-lg mt-1 dropdown-menu-md-right" :class="{ 'd-block': open }" x-show="open" x-transition style="display: none; max-height: 250px; overflow-y: auto; position: absolute; z-index: 1050;">
+                                <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.pic === '' }" @click="$wire.set('pic', ''); open = false">Semua PIC</button>
+                                @foreach(\App\Models\Activity::internalPicOptions() as $opt)
+                                    <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.pic === @js($opt) }" @click="$wire.set('pic', @js($opt)); open = false">{{ $opt }}</button>
+                                @endforeach
                             </div>
                         </div>
                     </div>
@@ -434,19 +436,19 @@
             });
         });
 
-        // Auto Refresh Logic
-        let lastActive = Date.now();
-        const updateLastActive = () => { lastActive = Date.now(); };
-        ['mousemove', 'click', 'scroll', 'keydown', 'touchstart'].forEach(evt => 
-            document.addEventListener(evt, updateLastActive)
-        );
-
-        setInterval(() => {
-            const idleTime = Date.now() - lastActive;
-            if (idleTime > 10000 && idleTime < 300000) { // Refresh only when idle > 10s but < 5 mins to prevent server overload
+        const queueRealtimeRefresh = () => {
+            window.scheduloRealtime?.queueRefresh('activity-list', () => {
                 @this.$refresh();
+            });
+        };
+
+        window.addEventListener('schedulo:realtime', (event) => {
+            if (!window.scheduloRealtime?.matchesAnyTopic(event.detail, ['activities'])) {
+                return;
             }
-        }, 15000);
+
+            queueRealtimeRefresh();
+        });
     });
 </script>
 

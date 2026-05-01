@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="SISKALA">
     <meta name="author" content="">
-    <link rel="icon" href="{{ asset('assets/images/djsn.png') }}">
+    @include('partials.favicon')
     <title>@yield('title', 'SISKALA')</title>
     <!-- Simple bar CSS -->
     <link rel="stylesheet" href="{{ asset('tinydash/css/simplebar.css') }}">

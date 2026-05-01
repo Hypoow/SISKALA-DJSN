@@ -118,17 +118,18 @@
 
 <script>
     document.addEventListener('livewire:initialized', () => {
-        let lastActive = Date.now();
-        const updateLastActive = () => { lastActive = Date.now(); };
-        ['mousemove', 'click', 'scroll', 'keydown', 'touchstart'].forEach(evt =>
-            document.addEventListener(evt, updateLastActive)
-        );
-
-        setInterval(() => {
-            const idleTime = Date.now() - lastActive;
-            if (idleTime > 10000 && idleTime < 300000) { // Refresh only when idle > 10s but < 5 mins to prevent server overload
+        const queueRealtimeRefresh = () => {
+            window.scheduloRealtime?.queueRefresh('notification-bell', () => {
                 @this.$refresh();
+            });
+        };
+
+        window.addEventListener('schedulo:realtime', (event) => {
+            if (!window.scheduloRealtime?.matchesAnyTopic(event.detail, ['activities', 'followups', 'notifications'])) {
+                return;
             }
-        }, 15000);
+
+            queueRealtimeRefresh();
+        });
     });
 </script>

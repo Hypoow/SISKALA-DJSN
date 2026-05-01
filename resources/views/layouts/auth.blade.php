@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description"
         content="@yield('meta_description', 'SISKALA - Sistem Kelola Agenda, Tindak Lanjut, dan Administrasi Dewan Jaminan Sosial Nasional')">
-    <link rel="icon" href="{{ asset('images/logo.svg') }}">
+    @include('partials.favicon')
     <title>@yield('title', 'SISKALA')</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
@@ -1112,6 +1112,7 @@
                     <span class="auth-footer-separator" aria-hidden="true">|</span>
                     <a href="{{ route('developer') }}" class="auth-footer-link"
                         aria-label="Lihat halaman developer SISKALA">
+                        <span class="sr-only">Lihat halaman developer SISKALA</span>
                         &lt;&gt; Pengembang
                     </a>
                 </p>

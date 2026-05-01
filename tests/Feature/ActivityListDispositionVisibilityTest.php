@@ -59,6 +59,68 @@ class ActivityListDispositionVisibilityTest extends TestCase
             ->assertOk();
     }
 
+    public function test_ketua_can_see_external_activity_without_disposition_on_dashboard_calendar(): void
+    {
+        $ketua = User::factory()->create([
+            'name' => 'Plh Ketua',
+            'role' => User::ROLE_DEWAN,
+            'divisi' => 'Ketua DJSN',
+        ]);
+        $ketuaKomisi = User::factory()->create([
+            'name' => 'Ketua Komisi PME',
+            'role' => User::ROLE_DEWAN,
+            'divisi' => 'Ketua Komisi PME',
+        ]);
+        $otherDewan = User::factory()->create([
+            'name' => 'Dewan PME',
+            'role' => User::ROLE_DEWAN,
+            'divisi' => 'Komisi PME',
+        ]);
+
+        $activity = $this->createActivity([
+            'name' => 'Undangan Eksternal Belum Disposisi',
+            'type' => 'external',
+            'pic' => [],
+            'invitation_status' => Activity::INV_EXT_PROCESS,
+            'disposition_to' => [],
+        ]);
+
+        $this->actingAs($ketua)
+            ->getJson(route('dashboard.events.get'))
+            ->assertOk()
+            ->assertJsonFragment([
+                'title' => $activity->name,
+                'pic' => ['Ketua DJSN', 'Ketua Komisi'],
+            ]);
+
+        $this->actingAs($ketua)
+            ->get(route('activities.show', $activity))
+            ->assertOk();
+
+        $this->actingAs($ketuaKomisi)
+            ->getJson(route('dashboard.events.get'))
+            ->assertOk()
+            ->assertJsonFragment([
+                'title' => $activity->name,
+                'pic' => ['Ketua DJSN', 'Ketua Komisi'],
+            ]);
+
+        $this->actingAs($ketuaKomisi)
+            ->get(route('activities.show', $activity))
+            ->assertOk();
+
+        $this->actingAs($otherDewan)
+            ->getJson(route('dashboard.events.get'))
+            ->assertOk()
+            ->assertJsonMissing([
+                'title' => $activity->name,
+            ]);
+
+        $this->actingAs($otherDewan)
+            ->get(route('activities.show', $activity))
+            ->assertForbidden();
+    }
+
     public function test_dewan_does_not_see_activity_disposed_to_other_dewan(): void
     {
         $user = User::factory()->create([
@@ -109,6 +171,39 @@ class ActivityListDispositionVisibilityTest extends TestCase
             ->assertDontSee($disposedActivity->name);
     }
 
+    public function test_activity_list_can_filter_by_pic_label(): void
+    {
+        $user = $this->createAdminUser();
+
+        User::factory()->create([
+            'name' => 'Dewan PME Filter',
+            'role' => User::ROLE_DEWAN,
+            'disposition_group_label' => 'Komisi PME',
+        ]);
+
+        $pmeActivity = $this->createActivity([
+            'name' => 'Kegiatan PIC PME',
+            'start_date' => now()->addDays(5)->toDateString(),
+            'end_date' => now()->addDays(5)->toDateString(),
+            'pic' => [],
+            'disposition_to' => ['Dewan PME Filter'],
+        ]);
+
+        $komjakumActivity = $this->createActivity([
+            'name' => 'Kegiatan PIC Komjakum',
+            'start_date' => now()->addDays(6)->toDateString(),
+            'end_date' => now()->addDays(6)->toDateString(),
+            'pic' => ['Komjakum'],
+            'disposition_to' => [],
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(ActivityList::class)
+            ->set('pic', 'Komisi PME')
+            ->assertSee($pmeActivity->name)
+            ->assertDontSee($komjakumActivity->name);
+    }
+
     public function test_index_page_renders_disposition_filter(): void
     {
         $user = $this->createAdminUser();
@@ -118,6 +213,9 @@ class ActivityListDispositionVisibilityTest extends TestCase
         $response->assertOk();
         $response->assertSee('Status Disposisi');
         $response->assertSee('Tanpa Disposisi');
+        $response->assertSee('PIC Kegiatan');
+        $response->assertSee('Semua PIC');
+        $response->assertDontSee('Waktu Terdekat');
     }
 
     private function createAdminUser(): User

@@ -314,7 +314,7 @@
                                             <input type="date" class="form-control" name="end_date" value="{{ old('end_date', $activity->end_date->format('Y-m-d')) }}">
                                         </div>
                                         <div class="col-6">
-                                            <small class="text-muted d-block mb-1">Sampai Jam (Opsional, menit 00/05/10/...)</small>
+                                            <small class="text-muted d-block mb-1">Sampai Jam (Opsional)</small>
                                             @include('activities.partials.time-select', [
                                                 'name' => 'end_time',
                                                 'id' => 'end_time',
@@ -572,7 +572,7 @@
                                 <div class="collapse mt-3" id="collapseMom">
                                     <div class="form-group">
                                         <label for="mom_title" class="small font-weight-bold mb-1">Judul MoM <span class="text-danger">*</span></label>
-                                        <input type="text" id="mom_title" class="form-control form-control-sm mb-2" placeholder="Judul MoM" required>
+                                        <input type="text" id="mom_title" class="form-control form-control-sm mb-2" placeholder="Judul MoM">
 
                                         <div class="custom-file">
                                             <input type="file" class="custom-file-input" id="mom_file" accept=".pdf,application/pdf">
@@ -660,7 +660,7 @@
                                 <div class="collapse mt-3" id="collapseMaterial">
                                     <div class="form-group">
                                         <label for="material_title" class="small font-weight-bold mb-1">Judul Materi <span class="text-danger">*</span></label>
-                                        <input type="text" id="material_title" class="form-control form-control-sm mb-2" placeholder="Judul Materi" required>
+                                        <input type="text" id="material_title" class="form-control form-control-sm mb-2" placeholder="Judul Materi">
                                         <small class="text-muted d-block mb-2">
                                             Ukuran maksimal 20 MB per file. Format umum: PDF, DOC/DOCX, PPT/PPTX, XLS/XLSX, dan CSV.
                                         </small>

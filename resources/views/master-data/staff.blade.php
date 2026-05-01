@@ -288,6 +288,26 @@
                 showConfirmButton: false
             });
         @endif
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const realtime = window.scheduloRealtime;
+
+            if (!realtime) {
+                return;
+            }
+
+            window.addEventListener('schedulo:realtime', function (event) {
+                const detail = event.detail || {};
+
+                if (!realtime.matchesAnyTopic(detail, ['staff'])) {
+                    return;
+                }
+
+                realtime.queueRefresh('master-data.staff.index', function () {
+                    window.location.reload();
+                }, { delay: 400 });
+            });
+        });
     </script>
 
     <style>

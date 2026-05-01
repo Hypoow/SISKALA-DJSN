@@ -12,7 +12,7 @@
 
 @extends('layouts.app')
 
-@section('title', 'Visualisasi Mutasi Kegiatan')
+@section('title', 'Visualisasi Rekapan Kegiatan')
 
 @section('content')
 <div class="container-fluid">
@@ -21,8 +21,8 @@
             
             <!-- Page Header Container -->
             <div class="mb-4">
-                <h2 class="h3 font-weight-bold mb-1 text-dark">Visualisasi Mutasi Kegiatan</h2>
-                <p class="text-muted mb-3">Jadwal kegiatan berdasarkan rentang mutasi waktu</p>
+                <h2 class="h3 font-weight-bold mb-1 text-dark">Visualisasi Rekapan Kegiatan</h2>
+                <p class="text-muted mb-3">Visualisasi daftar kegiatan berdasarkan rentang tanggal yang dipilih.</p>
                 
                 <div class="d-inline-block mt-2">
                     <div class="bg-white rounded-pill shadow-sm border border-light p-2 d-flex align-items-center">
@@ -71,6 +71,9 @@
 
                             $dispositions = array_values(array_unique($dispositions));
                             $pics = array_values(array_unique($pics));
+                            if ($activity->type !== 'external') {
+                                $pics = \App\Models\Activity::sortInternalPicGroups($pics);
+                            }
                             $visualizationGroups = collect();
 
                             if ($activity->type !== 'external') {

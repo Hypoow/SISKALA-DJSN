@@ -88,7 +88,6 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
-        'prefix',
         'report_target_label',
         'receives_disposition',
         'disposition_group_label',
@@ -257,6 +256,68 @@ class User extends Authenticatable
     public function isDewan()
     {
         return $this->hasResolvedAccessProfile(self::ACCESS_PROFILE_DEWAN);
+    }
+
+    public function isKetuaDjsn(): bool
+    {
+        $sources = [
+            $this->resolved_report_target_label,
+            $this->disposition_group_label,
+            $this->division?->name,
+            $this->division?->category,
+            $this->divisi,
+        ];
+
+        foreach ($sources as $source) {
+            $normalized = $this->normalizePermissionText($source);
+
+            if ($normalized === 'KETUA DJSN' || str_contains($normalized, 'KETUA DJSN')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function isKetuaKomisi(): bool
+    {
+        if (!$this->isDewan()) {
+            return false;
+        }
+
+        $position = $this->resolvePositionModel();
+        $sources = [
+            $position?->code,
+            $position?->name,
+            $this->division?->name,
+            $this->divisi,
+        ];
+
+        foreach ($sources as $source) {
+            $normalized = $this->normalizePermissionText($source);
+
+            if ($normalized === 'KETUA KOMISI' || str_contains($normalized, 'KETUA KOMISI')) {
+                return true;
+            }
+
+            if (
+                str_contains($normalized, 'KETUA')
+                && (
+                    str_contains($normalized, 'KOMJAKUM')
+                    || str_contains($normalized, 'PME')
+                )
+                && !str_contains($normalized, 'KETUA DJSN')
+            ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function canViewUndisposedExternalActivities(): bool
+    {
+        return $this->isKetuaDjsn() || $this->isKetuaKomisi();
     }
 
     public function isSetDjsn()
@@ -430,6 +491,10 @@ class User extends Authenticatable
             && $activity->type === 'internal'
             && !$activity->hasDispositionRecipients()
         ) {
+            return true;
+        }
+
+        if ($this->canViewUndisposedExternalActivities() && $activity->shouldNotifyDewanLeadsForUndisposed()) {
             return true;
         }
 

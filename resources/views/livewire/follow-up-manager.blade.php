@@ -622,7 +622,27 @@
     };
 
     document.addEventListener('livewire:initialized', () => {
-        // Alpine handles init now
+        const currentActivityId = '{{ $activity->id }}';
+        const queueRealtimeRefresh = () => {
+            window.scheduloRealtime?.queueRefresh(`followup-manager-${currentActivityId}`, () => {
+                @this.$refresh();
+            });
+        };
+
+        window.addEventListener('schedulo:realtime', (event) => {
+            const detail = event.detail ?? {};
+            const activityId = String(detail?.entity?.activity_id ?? '');
+
+            if (!window.scheduloRealtime?.matchesAnyTopic(detail, ['followups'])) {
+                return;
+            }
+
+            if (activityId !== '' && activityId !== currentActivityId) {
+                return;
+            }
+
+            queueRealtimeRefresh();
+        });
     });
 
     Livewire.on('followup-saved', () => {

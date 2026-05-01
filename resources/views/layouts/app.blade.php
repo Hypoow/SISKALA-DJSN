@@ -5,8 +5,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <meta name="description" content="SISKALA">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <meta name="author" content="">
-  <link rel="icon" href="{{ asset('images/logo.svg') }}">
+  @include('partials.favicon')
   <title>@yield('title', 'SISKALA')</title>
   <!-- Simple bar CSS -->
   <!-- Simple bar CSS removed -->
@@ -26,6 +27,17 @@
   <!-- SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   @livewireStyles
+  <script>
+    window.Schedulo = {
+      user: @json(auth()->check() ? ['id' => (int) auth()->id(), 'name' => auth()->user()->name] : null),
+      routes: {
+        dashboardSummary: @json(route('dashboard.summary')),
+        dashboardEvents: @json(route('dashboard.events.get'))
+      },
+      timezone: @json(config('app.timezone'))
+    };
+  </script>
+  @vite(['resources/css/app.css', 'resources/js/app.js'])
   <style>
     /* FIX: Prevent Layout Shift when Modal Opens */
     body.modal-open {

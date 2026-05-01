@@ -59,13 +59,15 @@ class MasterDataStructurePageTest extends TestCase
             ->assertOk()
             ->assertSee('Tambah Akun Baru')
             ->assertSee('Penempatan Struktur')
-            ->assertSee('Ringkasan Hak Akses');
+            ->assertSee('Ringkasan Hak Akses')
+            ->assertDontSee('Sapaan');
 
         $this->actingAs($admin)
             ->get(route('master-data.edit', $managedUser))
             ->assertOk()
             ->assertSee('Edit Akun Pengguna')
             ->assertSee('Penempatan Struktur')
-            ->assertSee('Ringkasan Hak Akses');
+            ->assertSee('Ringkasan Hak Akses')
+            ->assertDontSee('Sapaan');
     }
 }

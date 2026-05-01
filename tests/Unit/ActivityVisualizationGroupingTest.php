@@ -49,14 +49,28 @@ class ActivityVisualizationGroupingTest extends TestCase
         ], $usersMap);
 
         $this->assertSame(
-            ['Ketua DJSN', 'Komisi Komjakum', 'Komisi PME', 'Sekretariat DJSN'],
+            ['Ketua DJSN', 'Komisi PME', 'Komisi Komjakum', 'Sekretariat DJSN'],
             $groups->pluck('label')->all()
         );
 
         $this->assertSame(['Indah Anggoro Putri'], $groups->get(0)['members']);
-        $this->assertSame(['Royanto Purba', 'Mickael Bobby Hoelman'], $groups->get(1)['members']);
-        $this->assertSame(['Nikodemus Beriman Purba', 'Robben Rico'], $groups->get(2)['members']);
+        $this->assertSame(['Nikodemus Beriman Purba', 'Robben Rico'], $groups->get(1)['members']);
+        $this->assertSame(['Royanto Purba', 'Mickael Bobby Hoelman'], $groups->get(2)['members']);
         $this->assertSame(['Imron Rosadi'], $groups->get(3)['members']);
+    }
+
+    public function test_past_activity_badge_groups_skip_secretariat_labels(): void
+    {
+        $this->assertSame(
+            ['Komisi PME', 'Komjakum'],
+            Activity::withoutSecretariatPicGroups([
+                'Sekretaris DJSN',
+                'Komisi PME',
+                'Sekretariat DJSN',
+                'Komjakum',
+                'Set. DJSN',
+            ])
+        );
     }
 
     private function makeUser(string $name, string $role, string $divisionName, string $category): User

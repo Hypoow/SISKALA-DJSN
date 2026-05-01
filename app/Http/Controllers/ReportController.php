@@ -16,7 +16,7 @@ class ReportController extends Controller
 
     public function index(Request $request)
     {
-        abort_unless(auth()->user()->canAccessH1Report(), 403, 'Anda tidak memiliki hak akses untuk pelaporan H-1.');
+        abort_unless(auth()->user()->canAccessH1Report(), 403, 'Anda tidak memiliki hak akses untuk melihat rekapan daftar kegiatan.');
 
         // Default to tomorrow to tomorrow if not specified
         $startDateStr = $request->input('start_date', Carbon::tomorrow()->format('Y-m-d'));
@@ -185,12 +185,6 @@ class ReportController extends Controller
             }
 
             $targetStr = empty($targets) ? '-' : implode(', ', $targets);
-            
-            // Fix "Bapak/Ibu" prefix if needed? 
-            // User example: "Bapak Niko, Bapak Agus..."
-            // Our DB stores names like "Nikodemus Beriman...". 
-            // Mapping full names to nicknames ("Bapak Niko") is hard without a mapping table.
-            // I will output full names for now.
             
             $text .= "Kegiatan ditujukan untuk : {$targetStr}\n\n";
         }

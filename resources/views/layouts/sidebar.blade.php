@@ -21,7 +21,7 @@
             class="app-sidebar-brand-expanded-image">
         </span>
         <span class="app-sidebar-brand-collapsed" aria-hidden="true">
-          <img src="{{ asset('images/logo-siskala-S.svg') }}" alt=""
+          <img src="{{ asset('images/siskala-logo.svg') }}" alt=""
             class="app-sidebar-brand-collapsed-image">
         </span>
       </a>
@@ -44,22 +44,22 @@
 
       <section class="app-sidebar-group">
         <p class="text-muted nav-heading mt-2 mb-1 px-3">
-          <span>Laporan Mutasi</span>
+          <span>Laporan Rekapan</span>
         </p>
         <ul class="navbar-nav flex-fill w-100 mb-2">
           <li class="nav-item w-100 {{ request()->routeIs('report.h1-visual') ? 'active' : '' }}">
-            <a class="nav-link" href="{{ route('report.h1-visual') }}" data-sidebar-label="Visualisasi Mutasi"
-              aria-label="Visualisasi Mutasi">
+            <a class="nav-link" href="{{ route('report.h1-visual') }}" data-sidebar-label="Visualisasi Rekapan"
+              aria-label="Visualisasi Rekapan">
               <i class="fe fe-monitor fe-16"></i>
-              <span class="ml-3 item-text">Visualisasi Mutasi</span>
+              <span class="ml-3 item-text">Visualisasi Rekapan</span>
             </a>
           </li>
           @if(auth()->check() && auth()->user()->canAccessH1Report())
             <li class="nav-item w-100 {{ request()->routeIs('report.h1') ? 'active' : '' }}">
-              <a class="nav-link" href="{{ route('report.h1') }}" data-sidebar-label="Pelaporan Mutasi"
-                aria-label="Pelaporan Mutasi">
+              <a class="nav-link" href="{{ route('report.h1') }}" data-sidebar-label="Daftar Rekapan"
+                aria-label="Daftar Rekapan">
                 <i class="fe fe-file-text fe-16"></i>
-                <span class="ml-3 item-text">Pelaporan Mutasi</span>
+                <span class="ml-3 item-text">Daftar Rekapan</span>
               </a>
             </li>
           @endif

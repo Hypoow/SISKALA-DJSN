@@ -247,17 +247,7 @@
                                 Kontak</h6>
 
                             <div class="row">
-                                <div class="col-md-2 pr-md-1">
-                                    <div class="form-group mb-3">
-                                        <label for="userPrefix"
-                                            class="form-control-label small font-weight-bold">Sapaan</label>
-                                        <select class="form-control shadow-sm" id="userPrefix" name="prefix">
-                                            <option value="Bapak">Bapak</option>
-                                            <option value="Ibu">Ibu</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 pl-md-1 pr-md-2">
+                                <div class="col-md-4 pr-md-2">
                                     <div class="form-group mb-3">
                                         <label for="userName" class="form-control-label small font-weight-bold">Nama
                                             Lengkap</label>
@@ -270,7 +260,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-3 pl-md-2 pr-md-1">
+                                <div class="col-md-4 px-md-1">
                                     <div class="form-group mb-3">
                                         <label for="userEmail" class="form-control-label small font-weight-bold">Alamat
                                             Email</label>
@@ -283,7 +273,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-3 pl-md-1">
+                                <div class="col-md-4 pl-md-2">
                                     <div class="form-group mb-3">
                                         <label for="userPassword" class="form-control-label small font-weight-bold">Kata
                                             Sandi</label>
@@ -765,7 +755,6 @@
 
         .input-group.input-group-merge .input-group-text,
         .input-group.input-group-merge .form-control,
-        #userPrefix,
         #userDivisionId,
         #userPositionId {
             min-height: 48px;
@@ -777,7 +766,6 @@
             border-color: #dbe4f0;
         }
 
-        #userPrefix,
         #userDivisionId,
         #userPositionId,
         .input-group.input-group-merge .form-control {
@@ -908,6 +896,26 @@
                     }
                 });
             }
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const realtime = window.scheduloRealtime;
+
+            if (!realtime) {
+                return;
+            }
+
+            window.addEventListener('schedulo:realtime', function (event) {
+                const detail = event.detail || {};
+
+                if (!realtime.matchesAnyTopic(detail, ['accounts', 'structure'])) {
+                    return;
+                }
+
+                realtime.queueRefresh('master-data.accounts.index', function () {
+                    window.location.reload();
+                }, { delay: 400 });
+            });
         });
     </script>
 @endpush

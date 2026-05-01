@@ -68,16 +68,7 @@
                                     <div class="card-body p-4">
                                         <h6 class="heading-small text-muted mb-4 text-uppercase border-bottom pb-3"><i class="fe fe-info mr-2"></i>Informasi Dasar & Kontak</h6>
                                         <div class="row">
-                                            <div class="col-md-2 pr-md-1">
-                                                <div class="form-group mb-3">
-                                                    <label for="userPrefix" class="form-control-label small font-weight-bold">Sapaan</label>
-                                                    <select class="form-control shadow-sm" id="userPrefix" name="prefix">
-                                                        <option value="Bapak">Bapak</option>
-                                                        <option value="Ibu">Ibu</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4 pl-md-1 pr-md-2">
+                                            <div class="col-md-4 pr-md-2">
                                                 <div class="form-group mb-3">
                                                     <label for="userName" class="form-control-label small font-weight-bold">Nama Lengkap</label>
                                                     <div class="input-group input-group-merge shadow-sm">
@@ -88,7 +79,7 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="col-md-3 pl-md-2 pr-md-1">
+                                            <div class="col-md-4 px-md-1">
                                                 <div class="form-group mb-3">
                                                     <label for="userEmail" class="form-control-label small font-weight-bold">Alamat Email</label>
                                                     <div class="input-group input-group-merge shadow-sm">
@@ -99,7 +90,7 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="col-md-3 pl-md-1">
+                                            <div class="col-md-4 pl-md-2">
                                                 <div class="form-group mb-3">
                                                     <label for="userPassword" class="form-control-label small font-weight-bold">Kata Sandi</label>
                                                     <div class="input-group input-group-merge shadow-sm">
@@ -275,7 +266,6 @@
     }
     .input-group.input-group-merge .input-group-text,
     .input-group.input-group-merge .form-control,
-    #userPrefix,
     #userDivisionId,
     #userPositionId {
         min-height: 48px;
@@ -285,7 +275,6 @@
         color: #5c6b82;
         border-color: #dbe4f0;
     }
-    #userPrefix,
     #userDivisionId,
     #userPositionId,
     .input-group.input-group-merge .form-control {

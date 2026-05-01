@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\Activity;
 use App\Models\ActivityMom;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
 use Livewire\WithFileUploads;
@@ -222,7 +223,11 @@ class PastActivityList extends Component
         $this->ensureCanManageActivities();
 
         if (!empty($this->deletedIds)) {
-            Activity::withTrashed()->whereIn('id', $this->deletedIds)->restore();
+            Activity::withTrashed()
+                ->whereIn('id', $this->deletedIds)
+                ->get()
+                ->each
+                ->restore();
             $this->deletedIds = [];
             $this->dispatch('alert', type: 'success', message: 'Penghapusan dibatalkan.');
         }
@@ -604,8 +609,8 @@ class PastActivityList extends Component
                 return;
             }
 
-            $originalName = $this->newMaterialFile->getClientOriginalName();
-            $path = $this->newMaterialFile->storeAs("activity_materials/{$this->activeActivityId}", $originalName, 'public');
+            $filename = $activity->nextMaterialFilename($this->newMaterialFile->getClientOriginalExtension());
+            $path = $this->newMaterialFile->storeAs($activity->materialStorageDirectory(), $filename, 'public');
             
             \App\Models\ActivityMaterial::create([
                 'activity_id' => $this->activeActivityId,
@@ -863,35 +868,37 @@ class PastActivityList extends Component
             ->filter(fn ($user) => $user->canReceiveDisposition())
             ->groupBy(fn ($user) => $user->disposition_group_label)
             ->sortBy(function ($users, $key) {
-                $sampleUser = $users->first();
-                $normalized = mb_strtoupper(trim((string) $key));
-
-                if ($normalized === 'KETUA DJSN') {
-                    return 1;
-                }
-
-                if ($sampleUser?->division?->structure_group === \App\Models\Division::STRUCTURE_GROUP_SECRETARY) {
-                    return 50;
-                }
-
-                if ($sampleUser?->division?->is_commission) {
-                    return 100 + ($sampleUser->division->order ?? 0);
-                }
-
-                if ($sampleUser?->division) {
-                    return 500 + ($sampleUser->division->order ?? 0);
-                }
-
-                return 999;
+                return Activity::getInternalPicPriority($key);
             });
+
+        $attendanceSecretaryGroups = $dewanUsers->filter(
+            fn (Collection $users) => $this->isSecretaryDispositionGroup($users)
+        );
+
+        $attendanceDewanGroups = $dewanUsers->reject(
+            fn (Collection $users) => $this->isSecretaryDispositionGroup($users)
+        );
 
         return view('livewire.past-activity-list', [
             'groupedActivities' => $groupedActivities,
             'activities' => $activities, // Pass paginator
-            'dewanUsers' => $dewanUsers,
+            'attendanceDewanGroups' => $attendanceDewanGroups,
+            'attendanceSecretaryGroups' => $attendanceSecretaryGroups,
             'staffSekretariat' => \App\Models\Staff::where('type', 'sekretariat')->orderBy('name')->get(),
             'staffTA' => \App\Models\Staff::where('type', 'ta')->orderBy('name')->get()
         ]);
+    }
+
+    private function isSecretaryDispositionGroup(Collection $users): bool
+    {
+        $sampleUser = $users->first();
+
+        if (!$sampleUser instanceof \App\Models\User) {
+            return false;
+        }
+
+        return $sampleUser->division?->structure_group === \App\Models\Division::STRUCTURE_GROUP_SECRETARY
+            || $sampleUser->isSetDjsn();
     }
 
     private function getFilteredActivitiesQuery(): Builder

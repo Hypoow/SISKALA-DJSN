@@ -159,6 +159,44 @@ class PostActivityAssetRulesTest extends TestCase
             ->assertSee('Minimal 4, Maks 8 Foto');
     }
 
+    public function test_past_activity_summary_actions_use_clear_button_labels(): void
+    {
+        $user = $this->createSuperAdmin();
+
+        $this->createPastActivity([
+            'name' => 'Rapat Belum Ada Ringkasan',
+        ]);
+
+        $this->createPastActivity([
+            'name' => 'Rapat Sudah Ada Ringkasan',
+            'start_date' => now()->subDays(2)->toDateString(),
+            'end_date' => now()->subDays(2)->toDateString(),
+            'summary_content' => '<p>Ringkasan rapat sudah tersedia.</p>',
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(PastActivityList::class)
+            ->assertSee('Isi Ringkasan')
+            ->assertSee('Lihat Ringkasan')
+            ->assertDontSee('Ringkasan Rapat Terisi');
+    }
+
+    public function test_past_activity_list_does_not_show_secretariat_as_pic_label(): void
+    {
+        $user = $this->createSuperAdmin();
+
+        $this->createPastActivity([
+            'name' => 'Rapat Dewan Dengan Sekretariat',
+            'pic' => ['Komisi PME', 'Sekretaris DJSN', 'Sekretariat DJSN'],
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(PastActivityList::class)
+            ->assertSee('Komisi PME')
+            ->assertDontSee('Sekretaris DJSN')
+            ->assertDontSee('Sekretariat DJSN');
+    }
+
     public function test_past_activity_material_modal_can_mark_activity_as_having_no_materials(): void
     {
         $user = $this->createSuperAdmin();
@@ -176,13 +214,16 @@ class PostActivityAssetRulesTest extends TestCase
         ]);
     }
 
-    public function test_upload_material_route_clears_no_material_status(): void
+    public function test_upload_material_route_renames_file_and_clears_no_material_status(): void
     {
         Storage::fake('tmp-for-tests');
         Storage::fake('public');
 
         $user = $this->createSuperAdmin();
         $activity = $this->createActivity([
+            'name' => 'Undangan blablabla',
+            'start_date' => '2026-02-23',
+            'end_date' => '2026-02-23',
             'has_no_materials' => true,
         ]);
 
@@ -190,6 +231,8 @@ class PostActivityAssetRulesTest extends TestCase
             'title' => 'Paparan Dewan',
             'file_path' => UploadedFile::fake()->create('paparan.pdf', 128, 'application/pdf'),
         ]);
+
+        $expectedPath = "activity_materials/{$activity->id}/20260223_UndanganBlablabla.pdf";
 
         $response->assertSessionDoesntHaveErrors();
         $this->assertDatabaseHas('activities', [
@@ -199,7 +242,9 @@ class PostActivityAssetRulesTest extends TestCase
         $this->assertDatabaseHas('activity_materials', [
             'activity_id' => $activity->id,
             'title' => 'Paparan Dewan',
+            'file_path' => $expectedPath,
         ]);
+        Storage::disk('public')->assertExists($expectedPath);
     }
 
     public function test_legacy_persidangan_user_can_upload_material(): void
@@ -227,6 +272,79 @@ class PostActivityAssetRulesTest extends TestCase
             'activity_id' => $activity->id,
             'title' => 'Paparan Komisi PME',
         ]);
+    }
+
+    public function test_past_activity_material_upload_uses_activity_date_and_name_for_filename(): void
+    {
+        Storage::fake('tmp-for-tests');
+        Storage::fake('public');
+
+        $user = $this->createSuperAdmin();
+        $activity = $this->createPastActivity([
+            'name' => 'Undangan blablabla',
+            'start_date' => '2026-02-23',
+            'end_date' => '2026-02-23',
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(PastActivityList::class)
+            ->call('openMaterialModal', $activity->id)
+            ->set('newMaterialTitle', 'Paparan Dewan')
+            ->set('newMaterialFile', UploadedFile::fake()->create('paparan.pdf', 128, 'application/pdf'))
+            ->call('saveMaterial')
+            ->assertHasNoErrors();
+
+        $expectedPath = "activity_materials/{$activity->id}/20260223_UndanganBlablabla.pdf";
+
+        $this->assertDatabaseHas('activity_materials', [
+            'activity_id' => $activity->id,
+            'title' => 'Paparan Dewan',
+            'file_path' => $expectedPath,
+        ]);
+        Storage::disk('public')->assertExists($expectedPath);
+    }
+
+    public function test_attendance_modal_places_secretary_section_after_dewan_groups(): void
+    {
+        $user = $this->createSuperAdmin();
+        $activity = $this->createPastActivity();
+
+        User::factory()->create([
+            'name' => 'Nikodemus Beriman Purba',
+            'email' => 'nikodemus@example.com',
+            'role' => User::ROLE_DEWAN,
+            'divisi' => 'Komisi PME',
+            'disposition_group_label' => 'Komisi PME',
+            'order' => 1,
+        ]);
+
+        User::factory()->create([
+            'name' => 'Imron Rosadi',
+            'email' => 'imron@example.com',
+            'role' => User::ROLE_SECRETARIAT,
+            'divisi' => 'Sekretaris DJSN',
+            'disposition_group_label' => 'Sekretaris DJSN',
+            'receives_disposition' => true,
+            'order' => 2,
+        ]);
+
+        $activity->update([
+            'disposition_to' => [
+                'Nikodemus Beriman Purba',
+                'Imron Rosadi',
+            ],
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(PastActivityList::class)
+            ->call('openAssignmentModal', $activity->id)
+            ->assertSeeInOrder([
+                'Komisi PME',
+                'Nikodemus Beriman Purba',
+                'Sekretaris DJSN',
+                'Imron Rosadi',
+                'Diwakili',
+            ]);
     }
 
     private function createSuperAdmin(): User

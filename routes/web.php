@@ -35,6 +35,7 @@ Route::view('/developer', 'developer.index')->name('developer');
 Route::middleware('auth')->group(function () {
     Route::get('/', [DashboardController::class, 'index']);
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/summary', [DashboardController::class, 'summary'])->name('dashboard.summary');
     Route::get('/dashboard/events', [DashboardController::class, 'getEvents'])->name('dashboard.events.get');
     Route::post('/dashboard/events', [DashboardController::class, 'store'])->name('dashboard.events.store');
     Route::put('/dashboard/events/{event}', [DashboardController::class, 'update'])->name('dashboard.events.update');

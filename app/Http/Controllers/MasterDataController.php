@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Division;
 use App\Models\Position;
+use App\Support\RealtimeBroadcaster;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -116,7 +117,6 @@ class MasterDataController extends Controller
             'is_super_admin' => 'nullable|boolean',
             'division_id' => 'nullable|exists:divisions,id',
             'position_id' => 'nullable|exists:positions,id',
-            'prefix' => 'nullable|string|max:20',
             'report_target_label' => 'nullable|string|max:255',
             'receives_disposition' => 'nullable|boolean',
             'disposition_group_label' => 'nullable|string|max:255',
@@ -127,7 +127,6 @@ class MasterDataController extends Controller
 
         User::create([
             'name' => $request->name,
-            'prefix' => $request->prefix ?? 'Bapak',
             'report_target_label' => $request->filled('report_target_label') ? $request->report_target_label : null,
             'receives_disposition' => $this->normalizeNullableBoolean($request->input('receives_disposition')),
             'disposition_group_label' => $request->filled('disposition_group_label') ? $request->disposition_group_label : null,
@@ -153,7 +152,6 @@ class MasterDataController extends Controller
             'is_super_admin' => 'nullable|boolean',
             'division_id' => 'nullable|exists:divisions,id',
             'position_id' => 'nullable|exists:positions,id',
-            'prefix' => 'nullable|string|max:20',
             'report_target_label' => 'nullable|string|max:255',
             'receives_disposition' => 'nullable|boolean',
             'disposition_group_label' => 'nullable|string|max:255',
@@ -175,7 +173,6 @@ class MasterDataController extends Controller
             'division_id' => $request->division_id,
             'position_id' => $request->position_id,
             'divisi' => $division?->name,
-            'prefix' => $request->prefix ?? 'Bapak',
             'report_target_label' => $request->filled('report_target_label') ? $request->report_target_label : null,
             'receives_disposition' => $this->normalizeNullableBoolean($request->input('receives_disposition')),
             'disposition_group_label' => $request->filled('disposition_group_label') ? $request->disposition_group_label : null,
@@ -213,6 +210,11 @@ class MasterDataController extends Controller
                 User::where('id', $id)->update(['order' => $currentOrders[$index]]);
             }
         }
+
+        RealtimeBroadcaster::broadcastAdminArea('accounts', 'reordered', [
+            'type' => 'users',
+            'ids' => array_map(static fn ($id) => (int) $id, $ids),
+        ]);
 
         return response()->json(['success' => true]);
     }
@@ -319,6 +321,8 @@ class MasterDataController extends Controller
     {
         $request->validate(['order' => 'required|array']);
 
+        $updatedIds = [];
+
         foreach ($request->order as $index => $item) {
             $id = is_array($item) ? ($item['id'] ?? null) : $item;
             $structureGroup = is_array($item) ? ($item['structure_group'] ?? null) : null;
@@ -339,7 +343,13 @@ class MasterDataController extends Controller
             }
 
             Division::where('id', $id)->update($payload);
+            $updatedIds[] = (int) $id;
         }
+
+        RealtimeBroadcaster::broadcastAdminArea('structure', 'reordered', [
+            'type' => 'divisions',
+            'ids' => array_values(array_unique($updatedIds)),
+        ]);
 
         return response()->json(['success' => true]);
     }
@@ -410,6 +420,8 @@ class MasterDataController extends Controller
     {
         $request->validate(['order' => 'required|array']);
 
+        $updatedIds = [];
+
         foreach ($request->order as $index => $item) {
             $id = is_array($item) ? ($item['id'] ?? null) : $item;
             $structureGroup = is_array($item) ? ($item['structure_group'] ?? null) : null;
@@ -425,7 +437,13 @@ class MasterDataController extends Controller
             }
 
             Position::where('id', $id)->update($payload);
+            $updatedIds[] = (int) $id;
         }
+
+        RealtimeBroadcaster::broadcastAdminArea('structure', 'reordered', [
+            'type' => 'positions',
+            'ids' => array_values(array_unique($updatedIds)),
+        ]);
 
         return response()->json(['success' => true]);
     }

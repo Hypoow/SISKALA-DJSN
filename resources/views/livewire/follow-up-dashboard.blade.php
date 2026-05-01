@@ -843,7 +843,7 @@
             }
         </style>
 
-        <!-- Scripts for Auto-Refresh and Highlight -->
+        <!-- Scripts for Tooltips and Highlight -->
         <script>
             document.addEventListener('livewire:initialized', () => {
                 // Re-init tooltips safely
@@ -862,19 +862,6 @@
                         setTimeout(() => { initTooltips(); }, 100);
                     });
                 });
-
-                let lastActive = Date.now();
-                const updateLastActive = () => { lastActive = Date.now(); };
-                ['mousemove', 'click', 'scroll', 'keydown', 'touchstart'].forEach(evt =>
-                    document.addEventListener(evt, updateLastActive)
-                );
-
-                setInterval(() => {
-                    const idleTime = Date.now() - lastActive;
-                    if (idleTime > 10000 && idleTime < 300000) { // Refresh only when idle > 10s but < 5 mins to prevent server overload
-                        @this.$refresh();
-                    }
-                }, 15000);
 
                 // Check for highlight_id in URL
                 const urlParams = new URLSearchParams(window.location.search);

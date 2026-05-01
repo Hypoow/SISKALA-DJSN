@@ -46,7 +46,7 @@
             </div>
         </div>
     </div>
-    <div class="card shadow border-0 rounded-lg my-4" style="overflow: visible;">
+    <div class="card shadow border-0 rounded-lg my-4 past-activity-card" style="overflow: visible;">
         <!-- Header -->
         <div class="card-header bg-primary text-white p-4" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
              <div class="d-flex justify-content-between align-items-center">
@@ -140,6 +140,510 @@
             .pagination-loading-badge.active {
                 display: flex;
             }
+
+            .past-activity-card,
+            .past-activity-card:hover,
+            .past-activity-card:focus-within {
+                transform: none !important;
+            }
+
+            .past-activity-card .table tbody tr,
+            .past-activity-card .table tbody tr:hover {
+                transform: none !important;
+            }
+
+            .attendance-representative-box {
+                padding-left: 1.75rem;
+            }
+
+            .attendance-representative-label {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.35rem;
+                margin-bottom: 0.45rem;
+                font-size: 0.78rem;
+                font-weight: 700;
+                color: #0d6efd;
+                text-transform: uppercase;
+                letter-spacing: 0.03em;
+            }
+
+            .summary-action {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 132px;
+                gap: 0.45rem;
+                border-radius: 999px;
+                font-weight: 700;
+                line-height: 1.2;
+                white-space: nowrap;
+                transition: all 0.18s ease;
+            }
+            .summary-action:hover {
+                transform: translateY(-1px);
+            }
+            .summary-action__icon {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 1.35rem;
+                height: 1.35rem;
+                border-radius: 999px;
+                flex: 0 0 auto;
+            }
+            .summary-action__content {
+                display: inline-flex;
+                align-items: center;
+            }
+            .summary-action--filled {
+                color: #047857 !important;
+                background: #ecfdf5 !important;
+                border: 1px solid #34d399 !important;
+                box-shadow: 0 6px 14px rgba(4, 120, 87, 0.12);
+            }
+            .summary-action--filled:hover {
+                color: #065f46 !important;
+                background: #d1fae5 !important;
+            }
+            .summary-action--filled .summary-action__icon {
+                color: #ffffff;
+                background: #10b981;
+            }
+            .summary-action--empty {
+                color: #075985 !important;
+                background: #ffffff !important;
+                border: 1px solid #7dd3fc !important;
+                box-shadow: 0 6px 14px rgba(14, 165, 233, 0.12);
+            }
+            .summary-action--empty:hover {
+                color: #0c4a6e !important;
+                background: #f0f9ff !important;
+            }
+            .summary-action--empty .summary-action__icon {
+                color: #0284c7;
+                background: #e0f2fe;
+            }
+
+            .past-modal {
+                --past-modal-primary: #2563eb;
+                --past-modal-success: #059669;
+                --past-modal-info: #0891b2;
+                --past-modal-warning: #d97706;
+                --past-modal-danger: #dc2626;
+                --past-modal-ink: #0f172a;
+                --past-modal-muted: #64748b;
+                --past-modal-line: #e2e8f0;
+                --past-modal-soft: #f8fafc;
+            }
+
+            .past-modal .modal-content {
+                border: 0;
+                border-radius: 10px;
+                overflow: hidden;
+                box-shadow: 0 22px 55px rgba(15, 23, 42, 0.2);
+            }
+
+            .past-modal .modal-header {
+                align-items: flex-start;
+                background: #ffffff;
+                border-bottom: 1px solid var(--past-modal-line);
+                padding: 1.25rem 1.5rem;
+            }
+
+            .past-modal .modal-body {
+                background: var(--past-modal-soft);
+                padding: 1.5rem;
+            }
+
+            .past-modal-heading {
+                display: flex;
+                align-items: flex-start;
+                min-width: 0;
+            }
+
+            .past-modal-icon {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 44px;
+                height: 44px;
+                margin-right: 0.9rem;
+                border-radius: 8px;
+                color: #ffffff;
+                background: var(--past-modal-primary);
+                box-shadow: 0 10px 18px rgba(37, 99, 235, 0.18);
+                flex: 0 0 auto;
+            }
+
+            .past-modal-icon--success {
+                background: var(--past-modal-success);
+                box-shadow: 0 10px 18px rgba(5, 150, 105, 0.18);
+            }
+
+            .past-modal-icon--info {
+                background: var(--past-modal-info);
+                box-shadow: 0 10px 18px rgba(8, 145, 178, 0.18);
+            }
+
+            .past-modal-icon--warning {
+                background: var(--past-modal-warning);
+                box-shadow: 0 10px 18px rgba(217, 119, 6, 0.18);
+            }
+
+            .past-modal-title {
+                margin-bottom: 0.15rem;
+                color: var(--past-modal-ink);
+                font-size: 1.05rem;
+                font-weight: 800;
+                letter-spacing: 0;
+                line-height: 1.25;
+            }
+
+            .past-modal-subtitle {
+                display: block;
+                max-width: 620px;
+                color: var(--past-modal-muted);
+                font-size: 0.82rem;
+                line-height: 1.45;
+            }
+
+            .past-modal .modal-header .close {
+                width: 36px;
+                height: 36px;
+                margin: -0.25rem -0.25rem -0.25rem 1rem;
+                padding: 0;
+                border-radius: 999px;
+                color: #475569;
+                background: #f1f5f9;
+                opacity: 1;
+                text-shadow: none;
+                transition: all 0.18s ease;
+            }
+
+            .past-modal .modal-header .close:hover {
+                color: #0f172a;
+                background: #e2e8f0;
+            }
+
+            .past-activity-strip {
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                gap: 1rem;
+                margin-bottom: 1rem;
+                padding: 1rem;
+                border: 1px solid var(--past-modal-line);
+                border-radius: 8px;
+                background: #ffffff;
+            }
+
+            .past-activity-strip__label {
+                display: block;
+                margin-bottom: 0.25rem;
+                color: var(--past-modal-muted);
+                font-size: 0.68rem;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+            }
+
+            .past-activity-strip__title {
+                margin-bottom: 0;
+                color: var(--past-modal-ink);
+                font-weight: 800;
+                line-height: 1.35;
+            }
+
+            .past-activity-strip__meta {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 108px;
+                padding: 0.45rem 0.75rem;
+                border: 1px solid var(--past-modal-line);
+                border-radius: 999px;
+                color: #334155;
+                background: #f8fafc;
+                font-size: 0.76rem;
+                font-weight: 700;
+                white-space: nowrap;
+            }
+
+            .past-modal-section {
+                padding: 1rem;
+                border: 1px solid var(--past-modal-line);
+                border-radius: 8px;
+                background: #ffffff;
+                box-shadow: 0 8px 22px rgba(15, 23, 42, 0.04);
+            }
+
+            .past-modal-section + .past-modal-section {
+                margin-top: 1rem;
+            }
+
+            .past-section-heading {
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                gap: 1rem;
+                margin-bottom: 1rem;
+            }
+
+            .past-section-title {
+                margin-bottom: 0.15rem;
+                color: var(--past-modal-ink);
+                font-size: 0.95rem;
+                font-weight: 800;
+                line-height: 1.3;
+            }
+
+            .past-section-subtitle {
+                margin-bottom: 0;
+                color: var(--past-modal-muted);
+                font-size: 0.78rem;
+                line-height: 1.45;
+            }
+
+            .past-modal .form-group label,
+            .past-modal .custom-control-label {
+                color: #1e293b;
+                font-size: 0.8rem;
+                font-weight: 800;
+            }
+
+            .past-modal .form-control,
+            .past-modal .custom-file-label,
+            .past-modal .select2-container--bootstrap4 .select2-selection {
+                border-color: #cbd5e1;
+                border-radius: 8px;
+                color: #0f172a;
+                box-shadow: none;
+            }
+
+            .past-modal .form-control:focus,
+            .past-modal .custom-file-input:focus ~ .custom-file-label {
+                border-color: #93c5fd;
+                box-shadow: 0 0 0 0.18rem rgba(37, 99, 235, 0.12);
+            }
+
+            .past-upload-status {
+                display: flex;
+                align-items: flex-start;
+                padding: 0.75rem;
+                border: 1px solid #dbeafe;
+                border-radius: 8px;
+                background: #eff6ff;
+            }
+
+            .past-upload-status__icon {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 36px;
+                height: 36px;
+                margin-right: 0.75rem;
+                border-radius: 8px;
+                color: var(--past-modal-primary);
+                background: #ffffff;
+                flex: 0 0 auto;
+            }
+
+            .past-file-link {
+                display: flex;
+                align-items: center;
+                color: #0f172a;
+                text-decoration: none;
+            }
+
+            .past-file-link:hover {
+                color: var(--past-modal-primary);
+                text-decoration: none;
+            }
+
+            .past-file-icon {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 38px;
+                height: 38px;
+                margin-right: 0.75rem;
+                border-radius: 8px;
+                background: #f1f5f9;
+                flex: 0 0 auto;
+            }
+
+            .past-modal-table {
+                margin-bottom: 0;
+                border: 1px solid var(--past-modal-line);
+                border-radius: 8px;
+                overflow: hidden;
+                background: #ffffff;
+            }
+
+            .past-modal-table .table {
+                margin-bottom: 0;
+            }
+
+            .past-modal-table thead th {
+                border-top: 0;
+                color: #475569;
+                font-size: 0.7rem;
+                font-weight: 800;
+                letter-spacing: 0.04em;
+                text-transform: uppercase;
+            }
+
+            .past-empty-state {
+                display: flex;
+                min-height: 190px;
+                align-items: center;
+                justify-content: center;
+                flex-direction: column;
+                padding: 2rem 1rem;
+                border: 1px dashed #cbd5e1;
+                border-radius: 8px;
+                color: var(--past-modal-muted);
+                background: #ffffff;
+                text-align: center;
+            }
+
+            .past-empty-state__icon {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 64px;
+                height: 64px;
+                margin-bottom: 0.9rem;
+                border-radius: 999px;
+                color: #64748b;
+                background: #f1f5f9;
+                font-size: 1.7rem;
+            }
+
+            .past-modal .btn {
+                font-weight: 700;
+            }
+
+            .past-modal .btn-icon {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .past-tabs {
+                overflow: hidden;
+                border: 1px solid var(--past-modal-line);
+                border-radius: 8px;
+                background: #ffffff;
+            }
+
+            .past-tabs .nav-link {
+                border: 0;
+                border-radius: 0;
+                color: #64748b;
+                font-size: 0.85rem;
+            }
+
+            .past-tabs .nav-link.active {
+                color: var(--past-modal-primary);
+                background: #eff6ff;
+                box-shadow: inset 0 -2px 0 var(--past-modal-primary);
+            }
+
+            .past-support-doc {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.75rem;
+                padding: 0.75rem;
+                border: 1px solid var(--past-modal-line);
+                border-radius: 8px;
+                background: #ffffff;
+            }
+
+            .past-documentation-toolbar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 1rem;
+                margin-bottom: 1rem;
+                padding: 1rem;
+                border: 1px solid var(--past-modal-line);
+                border-radius: 8px;
+                background: #ffffff;
+            }
+
+            .past-photo-card {
+                overflow: hidden;
+                border: 1px solid var(--past-modal-line);
+                border-radius: 8px;
+                background: #ffffff;
+                box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+            }
+
+            .past-photo-card__image {
+                height: 200px;
+                background: #f8fafc;
+            }
+
+            .past-photo-card__overlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                padding: 0.65rem;
+                background: linear-gradient(180deg, rgba(15, 23, 42, 0.55) 0%, rgba(15, 23, 42, 0) 100%);
+            }
+
+            .past-summary-editor {
+                overflow: hidden;
+                border: 1px solid #cbd5e1;
+                border-radius: 8px;
+                background: #ffffff;
+            }
+
+            .past-summary-editor .ql-toolbar.ql-snow {
+                border: 0;
+                border-bottom: 1px solid #e2e8f0;
+                background: #f8fafc;
+            }
+
+            .past-summary-editor .ql-container.ql-snow {
+                border: 0;
+            }
+
+            .past-summary-readonly {
+                min-height: 220px;
+                max-height: 60vh;
+                overflow-y: auto;
+                padding: 1rem;
+                border: 1px solid var(--past-modal-line);
+                border-radius: 8px;
+                background: #ffffff;
+            }
+
+            @media (max-width: 767.98px) {
+                .past-modal .modal-dialog {
+                    margin: 0.5rem;
+                }
+
+                .past-modal .modal-header,
+                .past-modal .modal-body {
+                    padding: 1rem;
+                }
+
+                .past-activity-strip,
+                .past-section-heading,
+                .past-documentation-toolbar {
+                    flex-direction: column;
+                    align-items: stretch;
+                }
+
+                .past-activity-strip__meta {
+                    width: 100%;
+                }
+            }
         </style>
         <!-- Toolbar -->
         <div class="bg-light border-bottom p-3" style="position: relative; z-index: 100; overflow: visible;">
@@ -218,7 +722,7 @@
                          </button>
                          <div class="dropdown-menu custom-dropdown-menu shadow-lg w-100 rounded-lg mt-1" :class="{ 'd-block': open }" x-show="open" x-transition style="display: none; max-height: 250px; overflow-y: auto; position: absolute; z-index: 1050;">
                              <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.pic === '' }" @click="$wire.set('pic', ''); open = false">Semua PIC</button>
-                             @foreach(\App\Models\Activity::INTERNAL_PICS as $opt)
+                             @foreach(\App\Models\Activity::withoutSecretariatPicGroups(\App\Models\Activity::internalPicOptions()) as $opt)
                                 <button type="button" class="dropdown-item custom-dropdown-item text-left w-100 border-0" :class="{ 'bg-primary text-white': $wire.pic === '{{ $opt }}' }" @click="$wire.set('pic', '{{ $opt }}'); open = false">{{ $opt }}</button>
                              @endforeach
                          </div>
@@ -365,35 +869,19 @@
                                         </div>
                                         
                                         {{-- PIC Badges --}}
-                                        @if(!empty($activity->display_pic_groups))
+                                        @php
+                                            $pics = \App\Models\Activity::withoutSecretariatPicGroups((array) $activity->display_pic_groups);
+                                        @endphp
+                                        @if(!empty($pics))
                                             <div class="d-flex flex-wrap mt-1">
                                                 @php
-                                                    $pics = $activity->display_pic_groups;
-                                                    
                                                     // Mapping matching App\Livewire\ActivityList::getPicColor
                                                     $classMap = [
                                                         'Ketua DJSN' => 'badge-ketua',
                                                         'Komisi PME' => 'badge-pme',
                                                         'Komjakum' => 'badge-komjakum',
-                                                        'Sekretariat DJSN' => 'badge-sekretariat',
-                                                        'Sekretaris DJSN' => 'badge-sekretariat',
                                                         'Anggota DJSN' => 'badge-djsn'
                                                     ];
-
-                                                    // Priority Sort
-                                                    $priority = [
-                                                        'Ketua DJSN' => 1,
-                                                        'Komisi PME' => 2,
-                                                        'Komjakum' => 3,
-                                                        'Sekretariat DJSN' => 4,
-                                                        'Sekretaris DJSN' => 4
-                                                    ];
-
-                                                    usort($pics, function($a, $b) use ($priority) {
-                                                        $pa = $priority[$a] ?? 99;
-                                                        $pb = $priority[$b] ?? 99;
-                                                        return $pa <=> $pb;
-                                                    });
                                                 @endphp
                                                 @foreach($pics as $picName)
                                                     @php
@@ -410,7 +898,6 @@
                                                         // Fallback specific checks if needed (copied from ActivityList logic)
                                                         if (str_contains(strtoupper($picName), 'PME')) $badgeClass = 'badge-pme';
                                                         if (str_contains(strtoupper($picName), 'KOMJAKUM')) $badgeClass = 'badge-komjakum';
-                                                        if (str_contains(strtoupper($picName), 'SEKRETARIAT') || str_contains(strtoupper($picName), 'SEKRETARIS')) $badgeClass = 'badge-sekretariat';
 
                                                     @endphp
                                                     <span class="badge badge-pill {{ $badgeClass }} mr-1 mb-1 px-2" style="font-size: 0.65rem;">
@@ -430,27 +917,40 @@
 
                                         <div class="mt-2">
                                             @if(!empty($activity->summary_content) && trim(strip_tags($activity->summary_content)) != '')
-                                                <small class="text-success font-weight-bold" 
-                                                    style="cursor: pointer;" wire:click="openSummaryModal({{ $activity->id }})" title="Klik untuk lihat ringkasan">
-                                                    <span wire:loading.remove wire:target="openSummaryModal({{ $activity->id }})"><i class="fe fe-check-circle mr-1"></i></span>
-                                                    <span wire:loading wire:target="openSummaryModal({{ $activity->id }})" class="spinner-border spinner-border-sm mr-1" role="status" aria-hidden="true"></span>
-                                                    Ringkasan Rapat Terisi
-                                                </small>
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-sm summary-action summary-action--filled"
+                                                    wire:click="openSummaryModal({{ $activity->id }})"
+                                                    wire:loading.attr="disabled"
+                                                    wire:target="openSummaryModal({{ $activity->id }})"
+                                                    title="Lihat atau ubah ringkasan rapat"
+                                                >
+                                                    <span wire:loading.remove wire:target="openSummaryModal({{ $activity->id }})" class="summary-action__content">
+                                                        <span class="summary-action__icon mr-2"><i class="fe fe-check"></i></span>
+                                                        Lihat Ringkasan
+                                                    </span>
+                                                    <span wire:loading wire:target="openSummaryModal({{ $activity->id }})" class="summary-action__content">
+                                                        <span class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>
+                                                        Membuka...
+                                                    </span>
+                                                </button>
                                             @else
                                                 @if(auth()->user()->canManagePostActivity())
                                                     <button
                                                         type="button"
-                                                        class="btn btn-sm btn-outline-secondary rounded-pill shadow-sm px-3"
+                                                        class="btn btn-sm summary-action summary-action--empty"
                                                         wire:click="openSummaryModal({{ $activity->id }})"
                                                         wire:loading.attr="disabled"
                                                         wire:target="openSummaryModal({{ $activity->id }})"
                                                         title="Isi ringkasan rapat"
                                                     >
-                                                        <span wire:loading.remove wire:target="openSummaryModal({{ $activity->id }})">
-                                                            <i class="fe fe-edit-2 mr-1"></i> Isi Ringkasan
+                                                        <span wire:loading.remove wire:target="openSummaryModal({{ $activity->id }})" class="summary-action__content">
+                                                            <span class="summary-action__icon mr-2"><i class="fe fe-edit-3"></i></span>
+                                                            Isi Ringkasan
                                                         </span>
-                                                        <span wire:loading wire:target="openSummaryModal({{ $activity->id }})">
-                                                            <span class="spinner-border spinner-border-sm mr-1" role="status" aria-hidden="true"></span> Membuka...
+                                                        <span wire:loading wire:target="openSummaryModal({{ $activity->id }})" class="summary-action__content">
+                                                            <span class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>
+                                                            Membuka...
                                                         </span>
                                                     </button>
                                                 @else
@@ -464,7 +964,7 @@
                                     <td class="align-middle text-center" style="min-width: 170px;">
                                         <!-- MoM (Minutes of Meeting) Button -->
                                         <div class="mb-2">
-                                            <button type="button" onclick="$('#momModal').modal('show')" wire:click="openMomModal({{ $activity->id }})" wire:loading.attr="disabled" class="btn btn-sm btn-outline-primary rounded-pill shadow-sm px-3 w-100 d-flex align-items-center justify-content-center text-nowrap">
+                                            <button type="button" wire:click="openMomModal({{ $activity->id }})" wire:loading.attr="disabled" class="btn btn-sm btn-outline-primary rounded-pill shadow-sm px-3 w-100 d-flex align-items-center justify-content-center text-nowrap">
                                                 <span wire:loading.remove wire:target="openMomModal({{ $activity->id }})"><i class="fe fe-file-text mr-2"></i></span>
                                                 <span wire:loading wire:target="openMomModal({{ $activity->id }})" class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>
                                                 MoM
@@ -476,14 +976,14 @@
                                         
                                         <!-- Materials Button -->
                                         <div>
-                                            <button type="button" onclick="$('#materialModal').modal('show')" wire:click="openMaterialModal({{ $activity->id }})" wire:loading.attr="disabled" class="btn btn-sm btn-outline-info rounded-pill shadow-sm px-3 w-100 d-flex align-items-center justify-content-center text-nowrap">
+                                            <button type="button" wire:click="openMaterialModal({{ $activity->id }})" wire:loading.attr="disabled" class="btn btn-sm btn-outline-info rounded-pill shadow-sm px-3 w-100 d-flex align-items-center justify-content-center text-nowrap">
                                                 <span wire:loading.remove wire:target="openMaterialModal({{ $activity->id }})"><i class="fe fe-folder mr-2"></i></span>
                                                 <span wire:loading wire:target="openMaterialModal({{ $activity->id }})" class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>
                                                 Bahan Materi 
                                                 @if($activity->materials->count() > 0)
                                                     <span class="badge badge-info ml-2">{{ $activity->materials->count() }}</span>
                                                 @elseif($activity->shows_no_materials_notice)
-                                                    <span class="badge badge-secondary ml-2">Tidak Ada</span>
+                                                    <span class="badge badge-danger ml-2" title="Tidak ada bahan materi" aria-label="Tidak ada bahan materi">X</span>
                                                 @endif
                                             </button>
                                         </div>
@@ -835,45 +1335,70 @@
     </script>
 
     <!-- Material Management Modal -->
-    <div wire:ignore.self class="modal fade" id="materialModal" tabindex="-1" role="dialog" aria-labelledby="materialModalLabel" aria-hidden="true" style="z-index: 10000 !important;">
-        <div class="modal-dialog modal-lg" role="document">
+    <div wire:ignore.self class="modal fade past-modal" id="materialModal" tabindex="-1" role="dialog" aria-labelledby="materialModalLabel" aria-hidden="true" style="z-index: 10000 !important;">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" role="document">
             <div class="modal-content">
+                @php
+                    $materialActivity = $activeActivityId ? \App\Models\Activity::find($activeActivityId) : null;
+                    $hasMaterialFiles = collect($materialList)->isNotEmpty();
+                @endphp
                 <div class="modal-header">
-                    <h5 class="modal-title" id="materialModalLabel">Kelola Bahan Materi Kegiatan</h5>
+                    <div class="past-modal-heading">
+                        <span class="past-modal-icon past-modal-icon--info">
+                            <i class="fe fe-folder"></i>
+                        </span>
+                        <div>
+                            <h5 class="modal-title past-modal-title" id="materialModalLabel">Bahan Materi</h5>
+                            <span class="past-modal-subtitle">Kelola dokumen materi pendukung dan tandai kegiatan tanpa materi bila memang tidak tersedia.</span>
+                        </div>
+                    </div>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
-                    @php $hasMaterialFiles = collect($materialList)->isNotEmpty(); @endphp
+                    @if($materialActivity)
+                        <div class="past-activity-strip">
+                            <div>
+                                <span class="past-activity-strip__label">Kegiatan</span>
+                                <p class="past-activity-strip__title">{{ $materialActivity->name }}</p>
+                            </div>
+                            <span class="past-activity-strip__meta">
+                                <i class="fe fe-calendar mr-2"></i>
+                                {{ $materialActivity->date_time ? $materialActivity->date_time->format('d M Y') : 'Tanggal belum diset' }}
+                            </span>
+                        </div>
+                    @endif
 
                     @if(auth()->user()->canManagePostActivity())
-                    <div class="alert {{ $hasNoMaterials ? 'alert-warning' : 'alert-light' }} border shadow-sm d-flex justify-content-between align-items-start flex-column flex-md-row">
-                        <div class="pr-md-3">
-                            <div class="custom-control custom-checkbox">
-                                <input
-                                    type="checkbox"
-                                    class="custom-control-input"
-                                    id="pastHasNoMaterials"
-                                    wire:change="toggleNoMaterialStatus"
-                                    {{ $hasNoMaterials ? 'checked' : '' }}
-                                    {{ $hasMaterialFiles ? 'disabled' : '' }}
-                                >
-                                <label class="custom-control-label font-weight-bold" for="pastHasNoMaterials">
-                                    Kegiatan ini tidak memiliki bahan materi
-                                </label>
+                    <div class="past-modal-section">
+                        <div class="d-flex justify-content-between align-items-start flex-column flex-md-row">
+                            <div class="pr-md-3">
+                                <div class="custom-control custom-checkbox">
+                                    <input
+                                        type="checkbox"
+                                        class="custom-control-input"
+                                        id="pastHasNoMaterials"
+                                        wire:change="toggleNoMaterialStatus"
+                                        {{ $hasNoMaterials ? 'checked' : '' }}
+                                        {{ $hasMaterialFiles ? 'disabled' : '' }}
+                                    >
+                                    <label class="custom-control-label" for="pastHasNoMaterials">
+                                        Kegiatan ini tidak memiliki bahan materi
+                                    </label>
+                                </div>
+                                <small class="text-muted d-block mt-2">
+                                    @if($hasMaterialFiles)
+                                        Hapus semua file bahan materi terlebih dahulu jika ingin menandai kegiatan tanpa bahan materi.
+                                    @else
+                                        Centang jika kegiatan memang tidak memiliki file bahan materi.
+                                    @endif
+                                </small>
                             </div>
-                            <small class="text-muted d-block mt-2">
-                                @if($hasMaterialFiles)
-                                    Hapus semua file bahan materi terlebih dahulu jika ingin menandai kegiatan tanpa bahan materi.
-                                @else
-                                    Centang jika kegiatan memang tidak memiliki file bahan materi.
-                                @endif
-                            </small>
+                            @if($hasNoMaterials)
+                                <span class="badge badge-warning mt-3 mt-md-0">Tidak ada bahan materi</span>
+                            @endif
                         </div>
-                        @if($hasNoMaterials)
-                            <span class="badge badge-warning mt-3 mt-md-0">Tidak ada bahan materi</span>
-                        @endif
                     </div>
                     @endif
 
@@ -886,11 +1411,14 @@
                         </div>
                     @endif
 
-                    <!-- Add New Material Form -->
                     @if(auth()->user()->canManagePostActivity())
-                    <div class="card bg-light mb-4">
-                        <div class="card-body">
-                            <h6 class="font-weight-bold mb-3">Tambah Materi Baru</h6>
+                    <div class="past-modal-section">
+                        <div class="past-section-heading">
+                            <div>
+                                <h6 class="past-section-title">Tambah Materi Baru</h6>
+                                <p class="past-section-subtitle">Unggah file materi seperti PDF, dokumen, presentasi, spreadsheet, atau CSV.</p>
+                            </div>
+                        </div>
                             <form wire:submit.prevent="saveMaterial">
                                 <div class="row">
                                     <div class="col-md-6">
@@ -913,8 +1441,8 @@
                                                 Format file: PDF, DOC/DOCX, PPT/PPTX, XLS/XLSX, dan CSV.
                                             </small>
                                             @error('newMaterialFile') <span class="text-danger small">{{ $message }}</span> @enderror
-                                            <div wire:loading.flex wire:target="newMaterialFile" class="mt-2 align-items-start border rounded bg-white shadow-sm px-3 py-2">
-                                                <div class="d-inline-flex align-items-center justify-content-center bg-light rounded mr-3 flex-shrink-0" style="width: 34px; height: 34px;">
+                                            <div wire:loading.flex wire:target="newMaterialFile" class="past-upload-status mt-2">
+                                                <div class="past-upload-status__icon">
                                                     <i class="fe fe-folder text-info"></i>
                                                 </div>
                                                 <div class="flex-fill overflow-hidden">
@@ -932,20 +1460,29 @@
                                     </div>
                                 </div>
                                 <div class="text-right">
-                                    <button type="submit" class="btn btn-primary btn-sm" wire:loading.attr="disabled" wire:target="saveMaterial,newMaterialFile">
+                                    <button type="submit" class="btn btn-primary btn-sm rounded-pill px-4" wire:loading.attr="disabled" wire:target="saveMaterial,newMaterialFile">
                                         <i class="fe fe-plus"></i> Tambahkan
                                     </button>
                                 </div>
                             </form>
-                        </div>
                     </div>
                     @endif
 
-                    <!-- Material List -->
-                    <h6 class="font-weight-bold mb-3">Daftar Materi Tersimpan</h6>
+                    <div class="past-modal-section">
+                    <div class="past-section-heading">
+                        <div>
+                            <h6 class="past-section-title">Daftar Materi Tersimpan</h6>
+                            <p class="past-section-subtitle">File yang tersimpan dapat dibuka di tab baru atau dihapus oleh pengelola.</p>
+                        </div>
+                        @if($hasMaterialFiles)
+                            <span class="badge badge-info">{{ collect($materialList)->count() }} file</span>
+                        @elseif($hasNoMaterials)
+                            <span class="badge badge-warning">Tanpa materi</span>
+                        @endif
+                    </div>
                     @if(collect($materialList)->isNotEmpty())
-                        <div class="table-responsive">
-                            <table class="table align-items-center w-100">
+                        <div class="table-responsive past-modal-table">
+                            <table class="table table-hover align-items-center w-100">
                                 <thead class="thead-light">
                                     <tr>
                                         <th>Judul Materi</th>
@@ -977,8 +1514,8 @@
                                                         $color = 'text-success';
                                                     }
                                                 @endphp
-                                                <a href="{{ Storage::url($material->file_path) }}" target="_blank" class="d-flex align-items-center text-dark text-decoration-none">
-                                                    <div class="avatar avatar-sm mr-2 {{ $color }} bg-light rounded">
+                                                <a href="{{ Storage::url($material->file_path) }}" target="_blank" class="past-file-link">
+                                                    <div class="past-file-icon {{ $color }}">
                                                         <i class="fe {{ $icon }} font-weight-bold" style="font-size: 1.2rem;"></i>
                                                     </div>
                                                     <div>
@@ -988,7 +1525,7 @@
                                                 </a>
                                             </td>
                                             <td>
-                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDeleteFile('material', {{ $material->id }})" {{ !auth()->user()->canManagePostActivity() ? 'disabled' : '' }}>
+                                                <button type="button" class="btn btn-sm btn-outline-danger btn-icon rounded-circle" onclick="confirmDeleteFile('material', {{ $material->id }})" {{ !auth()->user()->canManagePostActivity() ? 'disabled' : '' }} title="Hapus materi">
                                                     <i class="fe fe-trash"></i>
                                                 </button>
                                             </td>
@@ -998,8 +1535,8 @@
                             </table>
                         </div>
                     @else
-                        <div class="border rounded-lg bg-light text-center py-5 px-3 w-100">
-                            <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-white shadow-sm mb-3" style="width: 72px; height: 72px;">
+                        <div class="past-empty-state">
+                            <div class="past-empty-state__icon">
                                 <i class="fe fe-folder text-secondary" style="font-size: 2rem;"></i>
                             </div>
                             @if($hasNoMaterials)
@@ -1010,22 +1547,48 @@
                             @endif
                         </div>
                     @endif
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- MoM Management Modal -->
-    <div wire:ignore.self class="modal fade" id="momModal" tabindex="-1" role="dialog" aria-labelledby="momModalLabel" aria-hidden="true" style="z-index: 10000 !important;">
-        <div class="modal-dialog modal-lg" role="document">
+    <div wire:ignore.self class="modal fade past-modal" id="momModal" tabindex="-1" role="dialog" aria-labelledby="momModalLabel" aria-hidden="true" style="z-index: 10000 !important;">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" role="document">
             <div class="modal-content">
+                @php
+                    $momActivity = $activeActivityId ? \App\Models\Activity::find($activeActivityId) : null;
+                    $hasMoms = collect($momList)->isNotEmpty();
+                @endphp
                 <div class="modal-header">
-                    <h5 class="modal-title" id="momModalLabel">Kelola MoM (Notulensi) Kegiatan</h5>
+                    <div class="past-modal-heading">
+                        <span class="past-modal-icon">
+                            <i class="fe fe-file-text"></i>
+                        </span>
+                        <div>
+                            <h5 class="modal-title past-modal-title" id="momModalLabel">MoM (Notulensi)</h5>
+                            <span class="past-modal-subtitle">Simpan, buka, ubah judul, dan hapus dokumen MoM untuk kegiatan selesai.</span>
+                        </div>
+                    </div>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
+                    @if($momActivity)
+                        <div class="past-activity-strip">
+                            <div>
+                                <span class="past-activity-strip__label">Kegiatan</span>
+                                <p class="past-activity-strip__title">{{ $momActivity->name }}</p>
+                            </div>
+                            <span class="past-activity-strip__meta">
+                                <i class="fe fe-calendar mr-2"></i>
+                                {{ $momActivity->date_time ? $momActivity->date_time->format('d M Y') : 'Tanggal belum diset' }}
+                            </span>
+                        </div>
+                    @endif
+
                     @if (session()->has('success_mom'))
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
                             {{ session('success_mom') }}
@@ -1035,11 +1598,14 @@
                         </div>
                     @endif
 
-                    <!-- Add New MoM Form -->
                     @if(auth()->user()->canManagePostActivity())
-                    <div class="card bg-light mb-4">
-                        <div class="card-body">
-                            <h6 class="font-weight-bold mb-3">Tambah MoM Baru</h6>
+                    <div class="past-modal-section">
+                        <div class="past-section-heading">
+                            <div>
+                                <h6 class="past-section-title">Tambah MoM Baru</h6>
+                                <p class="past-section-subtitle">File MoM wajib berformat PDF dengan ukuran maksimal 20 MB.</p>
+                            </div>
+                        </div>
                             <form wire:submit.prevent="saveMom">
                                 <div class="row">
                                     <div class="col-md-6">
@@ -1069,8 +1635,8 @@
                                                 Format file yang didukung: PDF. Ukuran maksimal 20 MB per file.
                                             </small>
                                             @error('newMomFile') <span class="text-danger small">{{ $message }}</span> @enderror
-                                            <div wire:loading.flex wire:target="newMomFile" class="mt-2 align-items-start border rounded bg-white shadow-sm px-3 py-2">
-                                                <div class="d-inline-flex align-items-center justify-content-center bg-light rounded mr-3 flex-shrink-0" style="width: 34px; height: 34px;">
+                                            <div wire:loading.flex wire:target="newMomFile" class="past-upload-status mt-2">
+                                                <div class="past-upload-status__icon">
                                                     <i class="fe fe-file-text text-primary"></i>
                                                 </div>
                                                 <div class="flex-fill overflow-hidden">
@@ -1088,20 +1654,27 @@
                                     </div>
                                 </div>
                                 <div class="text-right">
-                                    <button type="submit" class="btn btn-primary btn-sm" wire:loading.attr="disabled" wire:target="saveMom,newMomFile">
+                                    <button type="submit" class="btn btn-primary btn-sm rounded-pill px-4" wire:loading.attr="disabled" wire:target="saveMom,newMomFile">
                                         <i class="fe fe-plus"></i> Tambahkan
                                     </button>
                                 </div>
                             </form>
-                        </div>
                     </div>
                     @endif
 
-                    <!-- MoM List -->
-                    <h6 class="font-weight-bold mb-3">Daftar MoM Tersimpan</h6>
+                    <div class="past-modal-section">
+                    <div class="past-section-heading">
+                        <div>
+                            <h6 class="past-section-title">Daftar MoM Tersimpan</h6>
+                            <p class="past-section-subtitle">Gunakan ikon edit untuk memperbaiki judul tanpa mengunggah ulang file.</p>
+                        </div>
+                        @if($hasMoms)
+                            <span class="badge badge-primary">{{ collect($momList)->count() }} file</span>
+                        @endif
+                    </div>
                     @if(collect($momList)->isNotEmpty())
-                        <div class="table-responsive">
-                            <table class="table align-items-center w-100">
+                        <div class="table-responsive past-modal-table">
+                            <table class="table table-hover align-items-center w-100">
                                 <thead class="thead-light">
                                     <tr>
                                         <th>Judul MoM</th>
@@ -1149,8 +1722,8 @@
                                                         $color = 'text-success';
                                                     }
                                                 @endphp
-                                                <a href="{{ Storage::url($mom->file_path) }}" target="_blank" class="d-flex align-items-center text-dark text-decoration-none">
-                                                    <div class="avatar avatar-sm mr-2 {{ $color }} bg-light rounded">
+                                                <a href="{{ Storage::url($mom->file_path) }}" target="_blank" class="past-file-link">
+                                                    <div class="past-file-icon {{ $color }}">
                                                         <i class="fe {{ $icon }} font-weight-bold" style="font-size: 1.2rem;"></i>
                                                     </div>
                                                     <div>
@@ -1163,17 +1736,17 @@
                                                 @if(auth()->user()->canManagePostActivity())
                                                     <div class="btn-group btn-group-sm" role="group" aria-label="Aksi MoM">
                                                         @if($editingMomId === $mom->id)
-                                                            <button type="button" class="btn btn-primary" wire:click="updateMom" wire:loading.attr="disabled" wire:target="updateMom">
+                                                            <button type="button" class="btn btn-primary" wire:click="updateMom" wire:loading.attr="disabled" wire:target="updateMom" title="Simpan judul">
                                                                 <i class="fe fe-save"></i>
                                                             </button>
-                                                            <button type="button" class="btn btn-light border" wire:click="cancelEditingMom" wire:loading.attr="disabled" wire:target="updateMom">
+                                                            <button type="button" class="btn btn-light border" wire:click="cancelEditingMom" wire:loading.attr="disabled" wire:target="updateMom" title="Batal edit">
                                                                 <i class="fe fe-x"></i>
                                                             </button>
                                                         @else
-                                                            <button type="button" class="btn btn-outline-primary" wire:click="startEditingMom({{ $mom->id }})">
+                                                            <button type="button" class="btn btn-outline-primary" wire:click="startEditingMom({{ $mom->id }})" title="Edit judul">
                                                                 <i class="fe fe-edit-2"></i>
                                                             </button>
-                                                            <button type="button" class="btn btn-outline-danger" onclick="confirmDeleteFile('mom', {{ $mom->id }})">
+                                                            <button type="button" class="btn btn-outline-danger" onclick="confirmDeleteFile('mom', {{ $mom->id }})" title="Hapus MoM">
                                                                 <i class="fe fe-trash"></i>
                                                             </button>
                                                         @endif
@@ -1188,44 +1761,50 @@
                             </table>
                         </div>
                     @else
-                        <div class="border rounded-lg bg-light text-center py-5 px-3 w-100">
-                            <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-white shadow-sm mb-3" style="width: 72px; height: 72px;">
+                        <div class="past-empty-state">
+                            <div class="past-empty-state__icon">
                                 <i class="fe fe-file-text text-secondary" style="font-size: 2rem;"></i>
                             </div>
                             <p class="text-muted mb-0">Belum ada MoM yang diupload.</p>
                         </div>
                     @endif
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     <!-- Assignment & Validation Modal -->
-    <div wire:ignore.self class="modal fade" id="assignmentModal" tabindex="-1" role="dialog" aria-labelledby="assignmentModalLabel" aria-hidden="true" style="z-index: 10000 !important;">
-        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div wire:ignore.self class="modal fade past-modal" id="assignmentModal" tabindex="-1" role="dialog" aria-labelledby="assignmentModalLabel" aria-hidden="true" style="z-index: 10000 !important;">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" role="document">
             <div class="modal-content">
                 @if($activeActivityId && $activeActivity = \App\Models\Activity::find($activeActivityId))
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title font-weight-bold" id="assignmentModalLabel">
-                        <i class="fe fe-check-square mr-2 text-primary"></i>Kehadiran & Surat Tugas
-                    </h5>
+                <div class="modal-header">
+                    <div class="past-modal-heading">
+                        <span class="past-modal-icon past-modal-icon--success">
+                            <i class="fe fe-check-square"></i>
+                        </span>
+                        <div>
+                            <h5 class="modal-title past-modal-title" id="assignmentModalLabel">Kehadiran & Surat Tugas</h5>
+                            <span class="past-modal-subtitle">Validasi daftar hadir, staf pendamping, surat tugas, surat undangan, dan dokumen notulensi.</span>
+                        </div>
+                    </div>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-12 mb-3">
-                            <h6 class="font-weight-bold text-uppercase text-muted small mb-2">Kegiatan</h6>
-                            <p class="font-weight-bold ml-1 mb-1">{{ $activeActivity->name }}</p>
-                            @if($activeActivity->date_time)
-                                <span class="badge badge-light border ml-1">{{ $activeActivity->date_time->format('d M Y') }}</span>
-                            @else
-                                <span class="badge badge-light border ml-1 text-muted">Tanggal belum diset</span>
-                            @endif
+                    <div class="past-activity-strip">
+                        <div>
+                            <span class="past-activity-strip__label">Kegiatan</span>
+                            <p class="past-activity-strip__title">{{ $activeActivity->name }}</p>
                         </div>
+                        <span class="past-activity-strip__meta">
+                            <i class="fe fe-calendar mr-2"></i>
+                            {{ $activeActivity->date_time ? $activeActivity->date_time->format('d M Y') : 'Tanggal belum diset' }}
+                        </span>
                     </div>
 
-                    <ul class="nav nav-tabs nav-fill mb-4" id="assignmentTab" role="tablist">
+                    <ul class="nav nav-tabs nav-fill mb-4 past-tabs" id="assignmentTab" role="tablist">
                         <li class="nav-item">
                             <a class="nav-link font-weight-bold {{ $activeTab == 'attendance' ? 'active' : '' }}" 
                                wire:click="$set('activeTab', 'attendance')"
@@ -1247,14 +1826,14 @@
                     <div class="tab-content" id="assignmentTabContent">
                         <!-- Tab 1: Attendance -->
                         <div class="tab-pane fade {{ $activeTab == 'attendance' ? 'show active' : '' }}" id="attendance" role="tabpanel">
-                            <div class="alert alert-light border-left-primary border-0 shadow-sm">
-                                <small class="text-muted"><i class="fe fe-info mr-2"></i>Centang nama Dewan yang <strong>hadir</strong> pada kegiatan ini.</small>
+                            <div class="alert alert-light border shadow-sm rounded">
+                                <small class="text-muted"><i class="fe fe-info mr-2"></i>Centang nama Dewan dan Sekretaris DJSN yang <strong>hadir</strong> pada kegiatan ini.</small>
                             </div>
                             
                             @if(!empty($activeActivity->disposition_to))
                                 <div class="row">
-                                    @php $hasDewan = false; @endphp
-                                    @foreach($dewanUsers as $division => $users)
+                                    @php $hasAttendanceUsers = false; @endphp
+                                    @foreach($attendanceDewanGroups as $division => $users)
                                          @php
                                              $filteredUsers = $users->filter(function($u) use ($activeActivity) {
                                                  return is_array($activeActivity->disposition_to) && in_array($u->name, $activeActivity->disposition_to);
@@ -1262,7 +1841,7 @@
                                          @endphp
 
                                          @if($filteredUsers->count() > 0)
-                                            @php $hasDewan = true; @endphp
+                                            @php $hasAttendanceUsers = true; @endphp
                                             <div class="col-12 mt-3">
                                                 <h6 class="font-weight-bold text-primary border-bottom pb-2">{{ $division }}</h6>
                                             </div>
@@ -1277,40 +1856,59 @@
                                                             </span>
                                                         </label>
                                                     </div>
-                                                    
-                                                    {{-- Handling for Sekretariat DJSN Representative (Only for Sekretaris DJSN / Imron Rosadi) --}}
-                                                    @if($user->name === 'Imron Rosadi')
-                                                        @php
-                                                            $isInputPresent = in_array($user->name, $attendanceData);
-                                                            $repValue = $attendanceDetails[$user->id]['representative'] ?? '';
-                                                            $isAdmin = auth()->check() && auth()->user()->canManagePostActivity();
-                                                            // Show if: (Admin) OR (Has Value)
-                                                            // Independent of 'Hadir' checkbox
-                                                            $showRepInput = ($isAdmin) || (!empty($repValue));
-                                                        @endphp
-                                                        @if($showRepInput)
-                                                        <div class="mt-2 fade-in">
-                                                            <div class="input-group input-group-sm shadow-sm rounded">
-                                                                <div class="input-group-prepend">
-                                                                    <span class="input-group-text bg-light border-0"><small class="font-weight-bold">Diwakili:</small></span>
-                                                                </div>
-                                                                <input type="text" 
-                                                                    class="form-control border-0 bg-light" 
-                                                                    placeholder="{{ $isAdmin ? 'Isi Nama Perwakilan...' : '' }}" 
-                                                                    wire:model="attendanceDetails.{{ $user->id }}.representative"
-                                                                    {{ !$isAdmin ? 'readonly' : '' }}>
-                                                            </div>
+                                                </div>
+                                            @endforeach
+                                         @endif
+                                    @endforeach
+
+                                    @foreach($attendanceSecretaryGroups as $division => $users)
+                                         @php
+                                             $filteredUsers = $users->filter(function($u) use ($activeActivity) {
+                                                 return is_array($activeActivity->disposition_to) && in_array($u->name, $activeActivity->disposition_to);
+                                             });
+                                         @endphp
+
+                                         @if($filteredUsers->count() > 0)
+                                            @php $hasAttendanceUsers = true; @endphp
+                                            <div class="col-12 mt-4">
+                                                <h6 class="font-weight-bold text-primary border-bottom pb-2 mb-3">{{ $division }}</h6>
+                                            </div>
+                                            @foreach($filteredUsers as $user)
+                                                @php
+                                                    $repValue = $attendanceDetails[$user->id]['representative'] ?? '';
+                                                    $isAdmin = auth()->check() && auth()->user()->canManagePostActivity();
+                                                    $showRepInput = $isAdmin || !empty($repValue);
+                                                @endphp
+                                                <div class="col-lg-6 mb-3" wire:key="attendance-secretary-user-{{ $user->id }}">
+                                                    <div class="custom-control custom-checkbox image-checkbox h-100">
+                                                        <input type="checkbox" class="custom-control-input" id="attendee_{{ $user->id }}" value="{{ $user->name }}" wire:model.live="attendanceData" {{ !auth()->user()->canManagePostActivity() ? 'disabled' : '' }}>
+                                                        <label class="custom-control-label p-2 border rounded w-100 bg-white shadow-sm h-100 d-flex flex-column justify-content-center" for="attendee_{{ $user->id }}">
+                                                            <span class="d-flex align-items-center">
+                                                                <span class="font-weight-bold text-dark">{{ $user->name }}</span>
+                                                            </span>
+                                                        </label>
+                                                    </div>
+
+                                                    @if($showRepInput)
+                                                        <div class="attendance-representative-box mt-2">
+                                                            <span class="attendance-representative-label">
+                                                                <i class="fe fe-user-check"></i> Diwakili
+                                                            </span>
+                                                            <input type="text"
+                                                                class="form-control form-control-sm shadow-sm"
+                                                                placeholder="{{ $isAdmin ? 'Isi nama perwakilan...' : '' }}"
+                                                                wire:model="attendanceDetails.{{ $user->id }}.representative"
+                                                                {{ !$isAdmin ? 'readonly' : '' }}>
                                                         </div>
-                                                        @endif
                                                     @endif
                                                 </div>
                                             @endforeach
                                          @endif
                                     @endforeach
                                     
-                                    @if(!$hasDewan)
+                                    @if(!$hasAttendanceUsers)
                                         <div class="col-12">
-                                            <p class="text-center text-muted font-italic my-4">Tidak ada Anggota Dewan dalam daftar disposisi.</p>
+                                            <p class="text-center text-muted font-italic my-4">Tidak ada penerima disposisi yang bisa dicatat kehadirannya.</p>
                                         </div>
                                     @endif
                                 </div>
@@ -1319,10 +1917,13 @@
                             @if(auth()->user()->canManagePostActivity())
                             <div class="row mt-5">
                                 <div class="col-12">
-                                    <div class="bg-light p-3 rounded border border-light">
-                                        <h6 class="font-weight-bold text-dark border-bottom pb-2 mb-3">
-                                            <i class="fe fe-user-plus mr-2 text-primary"></i>Staf Pendamping
-                                        </h6>
+                                    <div class="past-modal-section">
+                                        <div class="past-section-heading">
+                                            <div>
+                                                <h6 class="past-section-title"><i class="fe fe-user-plus mr-2 text-primary"></i>Staf Pendamping</h6>
+                                                <p class="past-section-subtitle">Tambahkan Sekretariat DJSN atau Tenaga Ahli yang ikut mendampingi kegiatan.</p>
+                                            </div>
+                                        </div>
 
                                         <div class="form-group mb-3" wire:ignore id="wrapper-sekretariat" style="position: relative;">
                                             <label class="small font-weight-bold text-primary mb-2">
@@ -1354,10 +1955,13 @@
                             @if(!auth()->user()->canManagePostActivity() && (!empty($selectedSekretariat) || !empty($selectedTA)))
                             <div class="row mt-4">
                                 <div class="col-12">
-                                    <div class="bg-white p-3 rounded border shadow-sm">
-                                        <h6 class="font-weight-bold text-dark border-bottom pb-2 mb-3">
-                                            <i class="fe fe-users mr-2 text-muted"></i>Staf Pendamping
-                                        </h6>
+                                    <div class="past-modal-section">
+                                        <div class="past-section-heading">
+                                            <div>
+                                                <h6 class="past-section-title"><i class="fe fe-users mr-2 text-muted"></i>Staf Pendamping</h6>
+                                                <p class="past-section-subtitle">Daftar staf pendamping yang tercatat pada kegiatan ini.</p>
+                                            </div>
+                                        </div>
                                         
                                         @if(!empty($selectedSekretariat))
                                             <div class="mb-3">
@@ -1404,7 +2008,7 @@
                         
                         <!-- Tab 2: Surat Tugas -->
                         <div class="tab-pane fade {{ $activeTab == 'letter' ? 'show active' : '' }}" id="letter" role="tabpanel">
-                            <div class="text-center bg-light rounded p-4 border border-dashed mb-4">
+                            <div class="past-modal-section text-center">
                                 @if($activeActivity->assignment_letter_path)
                                     <div class="mb-3">
                                         <i class="fe fe-file-text text-success display-4"></i>
@@ -1447,7 +2051,7 @@
                                 @endif
 
                                 <!-- Minutes Upload Logic -->
-                                <div class="mb-2">
+                                <div class="mb-2 text-left">
                                     @php
                                         $minutesDocuments = $activeActivity->minutes_documents;
                                         $primaryMinutesDocument = $activeActivity->primary_minutes_document;
@@ -1455,7 +2059,7 @@
                                      <p class="small text-muted font-weight-bold mb-2">Dokumen Pendukung:</p>
                                     
                                     <!-- Surat Undangan (Attachment) -->
-                                    <div class="d-flex align-items-center justify-content-between mb-2 p-2 bg-white border rounded">
+                                    <div class="past-support-doc mb-2">
                                         <div class="d-flex align-items-center overflow-hidden">
                                             @if($activeActivity->attachment_path)
                                                 <a href="{{ Storage::url($activeActivity->attachment_path) }}" target="_blank" class="badge badge-primary mr-2 text-truncate" style="max-width: 200px;" title="Lihat Surat Undangan">
@@ -1484,7 +2088,7 @@
                                     </div>
 
                                     <!-- Notulensi (Minutes) -->
-                                    <div class="d-flex align-items-center justify-content-between mb-1 p-2 bg-white border rounded">
+                                    <div class="past-support-doc mb-1">
                                         <div class="d-flex flex-column align-items-start overflow-hidden">
                                             @if($primaryMinutesDocument)
                                                 <a href="{{ Storage::url($primaryMinutesDocument['file_path']) }}" target="_blank" class="badge badge-success mr-2 text-truncate" title="Lihat Notulensi">
@@ -1549,23 +2153,33 @@
     </div>
 
     <!-- Documentation Modal -->
-    <div wire:ignore.self class="modal fade" id="documentationModal" tabindex="-1" role="dialog" aria-labelledby="docModalLabel" aria-hidden="true" style="z-index: 10000 !important;">
-        <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+    <div wire:ignore.self class="modal fade past-modal" id="documentationModal" tabindex="-1" role="dialog" aria-labelledby="docModalLabel" aria-hidden="true" style="z-index: 10000 !important;">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" role="document">
             <div class="modal-content">
                 @if($activeActivityId && $activeActivity = \App\Models\Activity::find($activeActivityId))
                 <div class="modal-header">
-                    <h5 class="modal-title font-weight-bold" id="docModalLabel">
-                        <i class="fe fe-image mr-2 text-primary"></i>Dokumentasi Kegiatan
-                    </h5>
+                    <div class="past-modal-heading">
+                        <span class="past-modal-icon past-modal-icon--warning">
+                            <i class="fe fe-image"></i>
+                        </span>
+                        <div>
+                            <h5 class="modal-title past-modal-title" id="docModalLabel">Dokumentasi Kegiatan</h5>
+                            <span class="past-modal-subtitle">Unggah, lihat, download, dan kelola foto dokumentasi kegiatan selesai.</span>
+                        </div>
+                    </div>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
-                     <div class="d-flex justify-content-between align-items-center mb-4">
+                     <div class="past-documentation-toolbar">
                         <div>
-                             <h6 class="font-weight-bold mb-1">{{ $activeActivity->name }}</h6>
-                             <small class="text-muted">Total: {{ $activeActivity->documentations->count() }} Foto (Minimal {{ \App\Models\Activity::DOCUMENTATION_MIN_COUNT }}, Maks {{ \App\Models\Activity::DOCUMENTATION_MAX_COUNT }} Foto)</small>
+                             <span class="past-activity-strip__label">Kegiatan</span>
+                             <h6 class="past-activity-strip__title">{{ $activeActivity->name }}</h6>
+                             <small class="text-muted">
+                                Total: {{ $activeActivity->documentations->count() }} Foto
+                                (Minimal {{ \App\Models\Activity::DOCUMENTATION_MIN_COUNT }}, Maks {{ \App\Models\Activity::DOCUMENTATION_MAX_COUNT }} Foto)
+                             </small>
                         </div>
                         @if(auth()->check() && auth()->user()->canManageDocumentation())
                         <div>
@@ -1578,24 +2192,24 @@
                      </div>
 
                      @error('documentationPhotos') <div class="alert alert-danger">{{ $message }}</div> @enderror
-                     @if(session()->has('success_documentation'))
+                      @if(session()->has('success_documentation'))
                         <div class="alert alert-success alert-dismissible fade show">
                             {{ session('success_documentation') }}
                             <button type="button" class="close" data-dismiss="alert">&times;</button>
                         </div>
                      @endif
                      
-                     <div wire:loading wire:target="documentationPhotos" class="alert alert-info border-0 shadow-sm w-100">
+                     <div wire:loading wire:target="documentationPhotos" class="past-upload-status mb-3">
                          <span class="spinner-border spinner-border-sm mr-2"></span> Mengupload foto...
                      </div>
 
                      <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 text-center">
                         @forelse($activeActivity->documentations as $doc)
                             <div class="col mb-4">
-                                <div class="card h-100 shadow-sm border-0 overflow-hidden">
-                                    <div class="position-relative" style="height: 200px; background-color: #f8f9fa;">
+                                <div class="past-photo-card h-100">
+                                    <div class="position-relative past-photo-card__image">
                                         <img src="{{ Storage::url($doc->file_path) }}" class="w-100 h-100" style="object-fit: cover; cursor: pointer;" onclick="window.open('{{ Storage::url($doc->file_path) }}', '_blank')">
-                                        <div class="position-absolute p-2 w-100 d-flex justify-content-between align-items-start fixed-top bg-gradient-top">
+                                        <div class="past-photo-card__overlay d-flex justify-content-between align-items-start">
                                              <a href="{{ Storage::url($doc->file_path) }}" download class="btn btn-sm btn-light btn-icon shadow-sm" title="Download">
                                                 <i class="fe fe-download"></i>
                                              </a>
@@ -1609,10 +2223,12 @@
                                 </div>
                             </div>
                         @empty
-                            <div class="col-12 py-5">
-                                <div class="d-flex flex-column align-items-center justify-content-center text-muted">
-                                    <i class="fe fe-image display-4 mb-3" style="opacity: 0.3"></i>
-                                    <p>Belum ada dokumentasi.</p>
+                            <div class="col-12">
+                                <div class="past-empty-state">
+                                    <div class="past-empty-state__icon">
+                                        <i class="fe fe-image"></i>
+                                    </div>
+                                    <p class="text-muted mb-0">Belum ada dokumentasi.</p>
                                 </div>
                             </div>
                         @endforelse
@@ -1628,25 +2244,54 @@
     </div>
     
     <!-- Summary Editor Modal -->
-    <div wire:ignore.self class="modal fade" id="summaryEditorModal" tabindex="-1" role="dialog" aria-labelledby="summaryEditorModalLabel" aria-hidden="true" style="z-index: 10000 !important;">
-        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div wire:ignore.self class="modal fade past-modal" id="summaryEditorModal" tabindex="-1" role="dialog" aria-labelledby="summaryEditorModalLabel" aria-hidden="true" style="z-index: 10000 !important;">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" role="document">
             <div class="modal-content">
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title font-weight-bold" id="summaryEditorModalLabel">
-                        <i class="fe fe-file-text mr-2 text-primary"></i>Ringkasan Rapat
-                    </h5>
+                @php
+                    $summaryActivity = $summaryActivityId ? \App\Models\Activity::find($summaryActivityId) : null;
+                @endphp
+                <div class="modal-header">
+                    <div class="past-modal-heading">
+                        <span class="past-modal-icon">
+                            <i class="fe fe-edit-3"></i>
+                        </span>
+                        <div>
+                            <h5 class="modal-title past-modal-title" id="summaryEditorModalLabel">Ringkasan Rapat</h5>
+                            <span class="past-modal-subtitle">Catat poin penting, keputusan, dan tindak lanjut dari kegiatan yang sudah selesai.</span>
+                        </div>
+                    </div>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body p-4">
+                <div class="modal-body">
+                    @if($summaryActivity)
+                        <div class="past-activity-strip">
+                            <div>
+                                <span class="past-activity-strip__label">Kegiatan</span>
+                                <p class="past-activity-strip__title">{{ $summaryActivity->name }}</p>
+                            </div>
+                            <span class="past-activity-strip__meta">
+                                <i class="fe fe-calendar mr-2"></i>
+                                {{ $summaryActivity->date_time ? $summaryActivity->date_time->format('d M Y') : 'Tanggal belum diset' }}
+                            </span>
+                        </div>
+                    @endif
+
                     @if(auth()->user()->canManagePostActivity())
                         <form wire:submit.prevent="saveSummary">
-                            <div class="form-group mb-4" wire:ignore>
-                                <label class="font-weight-bold text-dark mb-2">Isi Ringkasan Rapat</label>
+                            <div class="past-modal-section mb-4" wire:ignore>
+                                <div class="past-section-heading">
+                                    <div>
+                                        <h6 class="past-section-title">Isi Ringkasan Rapat</h6>
+                                        <p class="past-section-subtitle">Gunakan format singkat dan terstruktur agar mudah dibaca kembali.</p>
+                                    </div>
+                                </div>
                                 
                                 <!-- Quill Editor Container -->
-                                <div id="summary-editor" style="height: 300px; background: white;"></div>
+                                <div class="past-summary-editor">
+                                    <div id="summary-editor" style="height: 300px; background: white;"></div>
+                                </div>
                                 
                                 <!-- Hidden Input for Data Binding -->
                                 <input type="hidden" id="summary_content_input" wire:model="summaryContent">
@@ -1667,7 +2312,7 @@
                         </form>
                     @else
                         <!-- Read Only View -->
-                        <div class="markdown-content border p-3 rounded bg-white" style="min-height: 200px; max-height: 60vh; overflow-y: auto;">
+                        <div class="markdown-content past-summary-readonly">
                             {!! $summaryContent !!}
                         </div>
                         <div class="mt-3 text-right">
@@ -1728,17 +2373,19 @@
             });
         });
 
-        let lastActive = Date.now();
-        const updateLastActive = () => { lastActive = Date.now(); };
-        ['mousemove', 'click', 'scroll', 'keydown', 'touchstart'].forEach(evt => 
-            document.addEventListener(evt, updateLastActive)
-        );
-
-        setInterval(() => {
-            if (Date.now() - lastActive > 10000) {
+        const queueRealtimeRefresh = () => {
+            window.scheduloRealtime?.queueRefresh('past-activity-list', () => {
                 @this.$refresh();
+            });
+        };
+
+        window.addEventListener('schedulo:realtime', (event) => {
+            if (!window.scheduloRealtime?.matchesAnyTopic(event.detail, ['activities'])) {
+                return;
             }
-        }, 5000);
+
+            queueRealtimeRefresh();
+        });
     });
 </script>
 

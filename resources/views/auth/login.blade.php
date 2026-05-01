@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="Sistem Kelola Agenda, Tindak Lanjut, dan Administrasi">
-    <link rel="icon" href="{{ asset('images/logo.svg') }}">
+    @include('partials.favicon')
     <title>Masuk - SISKALA</title>
     <!-- Fonts - Plus Jakarta Sans -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"

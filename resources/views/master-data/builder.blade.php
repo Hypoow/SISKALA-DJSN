@@ -405,6 +405,24 @@
                     if (result.isConfirmed) form.submit();
                 });
             });
+
+            const realtime = window.scheduloRealtime;
+
+            if (!realtime) {
+                return;
+            }
+
+            window.addEventListener('schedulo:realtime', function (event) {
+                const detail = event.detail || {};
+
+                if (!realtime.matchesAnyTopic(detail, ['accounts', 'structure'])) {
+                    return;
+                }
+
+                realtime.queueRefresh('master-data.builder.index', function () {
+                    window.location.reload();
+                }, { delay: 400 });
+            });
         });
     </script>
 @endpush

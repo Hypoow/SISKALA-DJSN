@@ -997,5 +997,25 @@
     $('#additionalNotesForm').on('submit', function() {
         $('#dispo_note_input').val(notesQuill.root.innerHTML);
     });
+
+    window.addEventListener('schedulo:realtime', function(event) {
+        var detail = event.detail || {};
+        var currentActivityId = '{{ $activity->id }}';
+        var activityId = String(detail?.entity?.activity_id ?? '');
+
+        if (!window.scheduloRealtime?.hasTopic(detail, 'activities')) {
+            return;
+        }
+
+        if (activityId !== '' && activityId !== currentActivityId) {
+            return;
+        }
+
+        window.scheduloRealtime.queueRefresh('activity-show-' + currentActivityId, function() {
+            window.location.reload();
+        }, {
+            delay: 350
+        });
+    });
 </script>
 @endpush

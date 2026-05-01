@@ -38,6 +38,60 @@ Catatan penting:
 - Guard ini tidak bisa mencegah SQL manual dari phpMyAdmin atau akses root MySQL
 - Untuk production tetap disarankan memakai user database khusus aplikasi yang tidak punya izin `DROP`, `CREATE`, atau `ALTER`
 
+## Realtime Dengan Laravel Reverb
+
+Project ini sekarang memakai Laravel Reverb untuk sinkronisasi realtime pada area yang sebelumnya mengandalkan auto refresh, yaitu:
+
+- daftar kegiatan aktif
+- daftar kegiatan lampau
+- dashboard kalender dan ringkasan
+- notifikasi
+- tindak lanjut
+- halaman detail kegiatan
+
+Peningkatan UX yang sudah diterapkan:
+
+- polling `wire:poll` di area realtime diganti event websocket
+- refresh otomatis ditunda saat user sedang mengetik atau ada modal aktif, jadi tidak mengganggu input
+- tab yang kembali aktif setelah lama di background akan sinkron ulang otomatis
+- pergantian hari memicu sinkron ulang supaya agenda dan ringkasan tetap akurat
+
+Kebutuhan minimum:
+
+- PHP `^8.2`
+- Laravel `10.47+`
+- Node/npm untuk membangun asset frontend Echo
+
+Konfigurasi `.env` penting:
+
+```env
+BROADCAST_CONNECTION=reverb
+REVERB_APP_ID=app-id
+REVERB_APP_KEY=app-key
+REVERB_APP_SECRET=app-secret
+REVERB_HOST=127.0.0.1
+REVERB_PORT=8080
+REVERB_SCHEME=http
+REVERB_SERVER_HOST=0.0.0.0
+REVERB_SERVER_PORT=8080
+REVERB_ALLOWED_ORIGINS=127.0.0.1,localhost
+
+VITE_REVERB_APP_KEY="${REVERB_APP_KEY}"
+VITE_REVERB_HOST="${REVERB_HOST}"
+VITE_REVERB_PORT="${REVERB_PORT}"
+VITE_REVERB_SCHEME="${REVERB_SCHEME}"
+```
+
+Menjalankan lokal:
+
+1. `composer install`
+2. `npm install`
+3. `npm run build` atau `npm run dev`
+4. `php artisan serve`
+5. `php artisan reverb:start`
+
+Untuk production, jalankan `php artisan reverb:start` sebagai process terpisah yang dikelola supervisor/service manager, lalu pastikan origin dan port websocket mengikuti domain deployment yang dipakai.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
